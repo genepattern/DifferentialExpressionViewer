@@ -1,0 +1,2 @@
+# ComparativeMarkerSelectionViewer
+Visualizes the results of ComparativeMarkerSelection

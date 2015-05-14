@@ -1,0 +1,35 @@
+author=Marc-Danie Nazaire
+commandLine=cmsviewer.html ? <comparative.marker.selection.file> <dataset.file>
+cpuType=any
+description=Views the results from ComparativeMarkerSelection
+language=HTML, JQuery
+name=ComparativeMarkerSelectionViewer
+privacy=public
+quality=production
+taskType=javascript
+userid=GenePattern
+version=Modified to be a javascript visualizer
+taskDoc=doc.html
+
+p1_default_value=
+p1_description=The output from ComparativeMarkerSelection
+p1_fileFormat=Comparative Marker Selection
+p1_MODE=IN
+p1_name=comparative.marker.selection.file
+p1_optional=
+p1_prefix_when_specified=
+p1_TYPE=FILE
+p1_type=java.io.File
+p1_value=
+
+p2_default_value=
+p2_description=The dataset file used as input to ComparativeMarkerSelection
+p2_fileFormat=res;gct
+p2_MODE=IN
+p2_name=dataset.file
+p2_optional=on
+p2_prefix_when_specified=
+p2_TYPE=FILE
+p2_type=java.io.File
+p2_value=
+publicationDate=

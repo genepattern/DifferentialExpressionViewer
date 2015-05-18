@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Ant build file -->
+
+<project basedir="" default="create-zip" name="ComparativeMarkerSelectionViewer">
+    <property name="dirOffset" value="../common_module_code" />
+    <import file="${dirOffset}/commontargets.xml" />
+
+    <target name="create-zip" depends="init">
+        <antcall target="prezip"/>
+        <zip destfile="${dest.dir}/${ant.project.name}.zip" whenempty="fail" defaultexcludes="true">
+            <fileset dir="." includes="cmsviewer.html, manifest, doc.html"/>
+            <zipfileset dir="js" prefix="js" includes="*.js"/>
+            <zipfileset dir="css" prefix="css" includes="*.css"/>
+            <zipfileset prefix="images" dir="images"/>
+        </zip>
+        <antcall target="postzip"/>
+    </target>
+
+</project>

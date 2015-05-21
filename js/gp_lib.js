@@ -86,9 +86,9 @@ var gpLib = function() {
             //the data starts on line 4 for a gct file
             for(var r=3;r<lines.length;r++)
             {
-                var rowData = lines[3].split(/\t/);
+                var rowData = lines[r].split(/\t/);
                 data.rowNames.push(rowData[0]);
-                data.matrix[r-3] = rowData.slice(2);
+                data.matrix[r-3] = rowData.slice(2).map(Number);
             }
         }
         else
@@ -215,16 +215,26 @@ var gpLib = function() {
      * @param fileURL
      * @param callBack
      */
-    function getDataAtUrl(fileURL, callBack)
+    function getDataAtUrl(fileURL, successCallBack, failCallBack)
     {
         $.ajax({
             contentType: 'text/plain',
-            url: fileURL
+            url: fileURL,
+            xhrFields: {
+                withCredentials: true
+            }
         }).done(function (response, status, xhr) {
-            callBack(response);
+            if(successCallBack)
+            {
+                successCallBack(response);
+            }
         }).fail(function (response, status, xhr)
         {
             console.log(response.statusText);
+            if(failCallBack)
+            {
+                failCallBack(response);
+            }
         });
     }
 

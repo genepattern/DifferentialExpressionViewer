@@ -1,23 +1,63 @@
 <html>
 <head>
 
-    <link rel="stylesheet" type="text/css" href="css/cmsviewer.css"/>
     <link rel="stylesheet" type="text/css" href="css/w2ui-1.4.2.css"/>
+
+
+    <link href="css/sm-core-css.css" rel="stylesheet" type="text/css" />
+
+    <!-- "sm-blue" menu theme (optional, you can use your own CSS, too) -->
+    <link href="css/sm-clean.css" rel="stylesheet" type="text/css" />
+
+    <link rel="stylesheet" type="text/css" href="css/cmsviewer.css"/>
 
     <!-- jQuery JS-->
     <script src="//code.jquery.com/jquery-2.1.4.min.js"></script>
     <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
     <script src="js/highcharts.js"></script>
+    <script src="js/map.js"></script>
     <script src="js/exporting.js"></script>
     <script src="js/gp_lib.js"></script>
     <script src="js/gpUtil.js"></script>
     <script src="js/w2ui-1.4.2.js"></script>
     <script src="js/d3.js"></script>
+
+    <!-- SmartMenus jQuery plugin -->
+    <script type="text/javascript" src="js/jquery.smartmenus.js"></script>
     <script src="js/cmsviewer.js"></script>
+
 </head>
 <body>
 
-    <div id="cmsToolbar"></div>
+    <div id="cmsNavBar">
+        <ul id="cmsMenu" class="sm sm-clean">
+            <li>
+                <a href="#">File</a>
+                <ul>
+                    <li>
+                        <a href="#">Save Feature List</a>
+                    </li>
+                    <li>
+                        <a href="#">Save Dataset</a>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <a href="#">Edit</a>
+                <ul>
+                    <li><a href="">Filter Features</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="#">View</a>
+                <ul>
+                    <li><a href="#">Upregulated Features</a></li>
+                    <li><a href="#">Profile</a></li>
+                    <li id="histMenu"><a href="#">Histogram</a></li>
+                </ul>
+            </li>
+        </ul>
+    </div>
     <div id="plot"></div>
     <div id="cmsScorePlot"></div>
     <div id="cmsTable"></div>

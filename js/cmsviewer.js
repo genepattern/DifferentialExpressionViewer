@@ -22,7 +22,8 @@ function displayViewer(data)
     var columnIndex = $.inArray("Score", cmsOdf.COLUMN_NAMES);
     cmsOdf.COLUMN_NAMES[columnIndex] = testStatisticLabel;
 
-    initToolbar();
+    //initToolbar();
+    initMenu();
     scorePlot();
     initTable();
 }
@@ -97,6 +98,83 @@ function plotHistogram(plotTitle, xDataName, data)
     });
 }
 
+function plotHeatmap()
+{
+    $("#cmsScorePlot").hide();
+
+    /*for(var r=0;r<dataset.matrix.length;r++)
+    {
+
+    }*/
+
+    $('#plot').highcharts({
+        /*data: {
+            csv: document.getElementById('csv').innerHTML
+        },*/
+
+        chart: {
+            type: 'heatmap',
+            inverted: true,
+            backgroundColor: "#E6E6E6"
+        },
+
+        title: {
+            text: 'Heatmap',
+            align: 'left'
+        },
+
+        /*subtitle: {
+            text: 'Temperature variation by day and hour through April 2013',
+            align: 'left'
+        },*/
+        /*xAxis: {
+            tickPixelInterval: 50,
+            min: Date.UTC(2013, 3, 1),
+            max: Date.UTC(2013, 3, 30)
+        },*/
+
+        yAxis: {
+            title: {
+                text: null
+            },
+            /*labels: {
+                format: '{value}:00'
+            },*/
+            minPadding: 0,
+            maxPadding: 0,
+            startOnTick: false,
+            endOnTick: false
+            //tickPositions: [0, 6, 12, 18, 24],
+            //tickWidth: 1,
+            //min: 0,
+            //max: 23
+        },
+
+        colorAxis: {
+            stops: [
+                [-20000, '#3060cf'],
+                [0.5, '#ffffff'],
+                [20000, '#c4463a']
+            ],
+            min: -20000
+        },
+
+        series: [{
+            //data: dataset.matrix,
+            data: dataset.matrix.slice(1, 1),
+            //data: heatmapData,
+            //data: [ [0,0,-0.7, 0.1, 0.-5], [1,0,-3.4, 0.2, 3.0], [2,0,-1.1, 1.4, 3.0], [2,7,-1.0, 1, -2.0] ],
+            borderWidth: 0,
+            /*colsize: 24 * 36e5, // one day */
+            tooltip: {
+                /*headerFormat: 'Temperature<br/>',
+                pointFormat: '{point.x:%e %b, %Y} {point.y}:00: <b>{point.value} ℃</b>'*/
+            }
+        }]
+
+    });
+}
+
 function displayExpressionProfile(plotTitle, xDataName, yDataName, samples, series)
 {
     $("#cmsScorePlot").hide();
@@ -163,7 +241,163 @@ function expressionProfile()
     }
 }
 
-function initToolbar()
+function filterFeatures()
+{
+    w2popup.open({
+        title   : 'Filter Features',
+        width   : 620,
+        opacity: 0,
+        height  : 300,
+        showMax : true,
+        body    : '<div id="filterDialog"></div>',
+        buttons   : '<button class="btn" onclick="w2popup.close();">Cancel</button> '+
+            '<button class="btn" id="applyFilter">OK</button>',
+        onOpen  : function (event) {
+            event.onComplete = function () {
+
+                $("#filterDialog").append("<div id='filterOptions'/>");
+
+                var addFilterBtn = $("<button class='btn'>Add Filter</button>");
+                addFilterBtn.click(function()
+                {
+                    var div = $("<div class='filterRow'/>");
+                    var list = '<input class="filterScore" type="list">';
+                    div.append(list);
+                    div.append("<span> >= " +
+                        "<input type='text' class='greaterThanFilter'> and <= <input type='text' class='lessThanFilter'></span>");
+
+                    $("#filterOptions").append(div);
+                    $(".filterScore").last().w2field('list',
+                        {
+                            items: cmsOdf["COLUMN_NAMES"],
+                            selected: cmsOdf["COLUMN_NAMES"][0]
+                        });
+                });
+
+                $("<div/>").append(addFilterBtn).appendTo("#filterDialog");
+
+                addFilterBtn.click();
+
+                $("#applyFilter").click(function()
+                {
+                    var filterObj = [];
+                    $(".filterRow").each(function(){
+                        var columnName = $(this).find(".filterScore").val();
+                        var greater = parseFloat($(this).find(".greaterThanFilter").val());
+                        var less = parseFloat($(this).find(".lessThanFilter").val());
+
+                        filterObj.push({
+                            columnName: columnName,
+                            greater: greater,
+                            less: less
+                        })
+                    });
+
+                    applyFilter(filterObj);
+
+                    w2popup.close()
+                })
+            };
+        },
+        onToggle: function (event) {
+            event.onComplete = function () {
+                //w2ui.layout.resize();
+            }
+        }
+    });
+
+}
+
+/*
+filterObj: an object containing the fields columnName, greater, and less
+ */
+function applyFilter(filterObj)
+{
+    var records = w2ui['cmsTable'].records;
+
+    var visibleRecords = [];
+    for(var r=0;r<records.length;r++)
+    {
+        var record = records[r];
+        var f=0;
+
+        var stop = false;
+        while(!stop && f < filterObj.length)
+        {
+            var columnName = filterObj[f].columnName;
+            var value = record[columnName];
+            var greater = filterObj[f].greater;
+            var less = filterObj[f].less;
+
+            if (greater !== undefined && $.isNumeric(greater)) {
+                if (value < greater) {
+                    stop = true;
+                }
+            }
+            if (less !== undefined && $.isNumeric(less)) {
+                if (value > less) {
+                    stop = true;
+                }
+            }
+
+            f++;
+        }
+
+        //if we made it to the end of the filter object then the row passes all the filters
+        if (!stop && f == filterObj.length) {
+            visibleRecords.push({ field: 'recid', value: record.recid, operator: 'is'});
+        }
+    }
+
+    if(visibleRecords.length > 0)
+    {
+        w2ui['cmsTable'].search(visibleRecords, 'OR');
+    }
+}
+
+/*
+ function applyFilter(columnName, greater, less)
+ {
+ var records = w2ui['cmsTable'].records;
+
+ var visibleRecords = [];
+ for(var r=0;r<records.length;r++)
+ {
+ var record = records[r];
+ var value = record[columnName];
+ var accept = false;
+ if(greater !== undefined && $.isNumeric(greater))
+ {
+ if(value >= greater)
+ {
+ accept = true;
+ }
+ }
+ if(less !== undefined && $.isNumeric(less))
+ {
+ if(value <= less)
+ {
+ accept = true;
+ }
+ else
+ {
+ accept = false;
+ }
+ }
+
+ if(accept)
+ {
+ visibleRecords.push({ field: 'recid', value: record.recid, operator: 'is'});
+ }
+ }
+
+ if(visibleRecords.length > 0)
+ {
+ w2ui['cmsTable'].search(visibleRecords, 'OR');
+ }
+ }*/
+
+/*function initToolbar()
 {
     $('#cmsToolbar').w2toolbar({
         name: 'cmsToolbar',
@@ -188,7 +422,8 @@ function initToolbar()
             switch (event.target) {
                 case 'file':
                     break;
-                case 'edit':
+                case 'edit:Filter Features':
+                    filterFeatures();
                    // $("#cmsScorePlot").exportChart({
                    //     filename: "myChart"
                     //});
@@ -210,12 +445,13 @@ function initToolbar()
                 case 'view:Profile':
                     expressionProfile();
                     break;
-                case 'view:Heatmap':
-                    break;
+                //case 'view:Heatmap':
+                //    plotHeatmap();
+                //    break;
             }
         }
     });
-}
+}*/
 
 function updateLinePlot(plotTitle, xData, yData, series)
 {
@@ -437,6 +673,66 @@ function initTable()
     }
 }
 
+function initMenu()
+{
+    var columnNames = cmsOdf["COLUMN_NAMES"];
+    if(columnNames.length > 0)
+    {
+        var histogramSubMenu = $("<ul/>");
+
+        for(var c=0;c<columnNames.length;c++)
+        {
+            if(columnNames[c] != "k")
+            {
+                histogramSubMenu.append("<li><a href='#'>" + columnNames[c] + '</a></li>');
+            }
+        }
+
+        $('#histMenu').append(histogramSubMenu);
+    }
+
+    $('#cmsMenu').smartmenus();
+
+    $('#cmsMenu').bind('click.smapi', function(e, item)
+    {
+        var highlightedParent = $(".highlighted").last().contents()[1].textContent;
+
+        if($(item).contents().length == 1)
+        {
+            var text = $(item).contents()[0].textContent;
+
+            if (highlightedParent === "Histogram") {
+                plotHistogram(text + " Histogram", text, cmsOdf[text]);
+            }
+            else if(text == "Upregulated Features")
+            {
+                if($("#cmsScorePlot").length == 0)
+                {
+                    scorePlot();
+                }
+                else
+                {
+                    $("#plot").hide();
+                    $("#cmsScorePlot").show();
+                }
+            }
+            else if(text == "Profile")
+            {
+                expressionProfile();
+            }
+            else if(text == "Filter Features")
+            {
+                filterFeatures();
+            }
+
+        }
+        else
+        {
+            event.preventDefault();
+        }
+    });
+
+}
 $(function()
 {
 
@@ -462,5 +758,11 @@ $(function()
         {
             alert("Failed to load the dataset at " + datasetFile);
         });
+
+        //load the expression dataset
+        /*gpLib.getDataAtUrl("https://dm.genomespace.org/datamanager/file/Home/Public/mocana2/GenomeSpaceSetupData/0.9/prod_webtool.db", loadDataset, function()
+         {
+         alert("Failed to load the dataset at https://dm.genomespace.org/datamanager/file/Home/Public/mocana2/GenomeSpaceSetupData/0.9/prod_webtool.db");
+         });*/
     }
 });

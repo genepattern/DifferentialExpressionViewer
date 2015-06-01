@@ -16,3 +16,42 @@
     margin-bottom: 4px;
     margin-top: 3px;
 }
+
+
+.sm-clean {
+    padding:0 3px;
+    background:#eee;
+    -moz-border-radius:1px;
+    -webkit-border-radius:1px;
+    border-radius:1px;
+}
+
+
+.sm-clean a {
+    padding:7px;
+    color:#555;
+    font-size:14px;
+    line-height:15px;
+    font-family:'Lucida Sans Unicode','Lucida Sans','Lucida Grande',Arial,sans-serif;
+    text-decoration:none;
+}
+
+.sm-clean ul a {
+    font-size:12px;
+}
+
+#filterDialog
+{
+    padding-top: 30px;
+    padding-left: 19px;
+}
+
+#filterOptions div
+{
+    margin-bottom: 8px;
+}
+
+#filterOptions
+{
+    margin-bottom: 7px;
+}

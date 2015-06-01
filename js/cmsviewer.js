@@ -24,8 +24,8 @@ function displayViewer(data)
 
     //initToolbar();
     initMenu();
-    scorePlot();
     initTable();
+    scorePlot(w2ui['cmsTable'].records);
 }
 
 function plotHistogram(plotTitle, xDataName, data)
@@ -158,7 +158,6 @@ function plotHeatmap()
             ],
             min: -20000
         },
-
         series: [{
             //data: dataset.matrix,
             data: dataset.matrix.slice(1, 1),
@@ -171,7 +170,6 @@ function plotHeatmap()
                 pointFormat: '{point.x:%e %b, %Y} {point.y}:00: <b>{point.value} ℃</b>'*/
             }
         }]
-
     });
 }
 
@@ -305,7 +303,6 @@ function filterFeatures()
             }
         }
     });
-
 }
 
 /*
@@ -352,6 +349,8 @@ function applyFilter(filterObj)
     if(visibleRecords.length > 0)
     {
         w2ui['cmsTable'].search(visibleRecords, 'OR');
+
+        scorePlot(w2ui['cmsTable'].records, w2ui['cmsTable'].last.searchIds);
     }
 }
 
@@ -468,12 +467,6 @@ function updateLinePlot(plotTitle, xData, yData, series)
             spline: {
                 turboThreshold: 10000,
                 lineWidth: 2,
-                /*states: {
-                    hover: {
-                        enabled: true,
-                        lineWidth: 3
-                    }
-                },*/
                 marker: {
                     enabled: false,
                     states: {
@@ -524,8 +517,13 @@ function updateLinePlot(plotTitle, xData, yData, series)
     });
 }
 
-function scorePlot()
+function scorePlot(records, subsetIds)
 {
+    if(records == undefined || records.length < 1)
+    {
+        console.log("No data found to plot scores");
+        return;
+    }
     //create a two dimensional array of the x and y points
     var upRegulatedClassZero = [];
     var upRegulatedClassOne = [];
@@ -533,28 +531,35 @@ function scorePlot()
 
     var xData= "Feature";
     var yData= cmsOdf["Test Statistic"];
-    var numPoints = cmsOdf[xData].length;
-    for(var x=0;x<numPoints;x++) {
+    //var numPoints = cmsOdf[xData].length;
 
-        var xValue = cmsOdf[xData][x];
-        var yValue = cmsOdf[yData][x];
-        if (yValue > 0)
+    var recordCount = 0;
+    for(var x=0;x<records.length;x++)
+    {
+        if(subsetIds == undefined || subsetIds.length == 0
+            || $.inArray(records[x].recid, subsetIds) !== -1)
         {
-            upRegulatedClassZero.push([x, yValue]);
-
-        }
-        else if (yValue < 0)
-        {
-            upRegulatedClassOne.push([x, yValue]);
-        }
-        else
-        {
-            if(isNaN(yValue))
+            ///var xValue = records[x][xData];
+            var yValue = records[x][yData];
+            if (yValue > 0)
             {
-                yValue = 0;
+                upRegulatedClassZero.push([recordCount, yValue]);
+            }
+            else if (yValue < 0)
+            {
+                upRegulatedClassOne.push([recordCount, yValue]);
+            }
+            else
+            {
+                if(isNaN(yValue))
+                {
+                    yValue = 0;
+                }
+
+                equal.push([recordCount, yValue]);
             }
 
-            equal.push([x, yValue]);
+            recordCount++;
         }
     }
 
@@ -724,18 +729,19 @@ function initMenu()
             {
                 filterFeatures();
             }
+            else if(text == "Save Feature list")
+            {
 
+            }
         }
         else
         {
             event.preventDefault();
         }
     });
-
 }
 $(function()
 {
-
     var requestParams = gpUtil.parseQueryString();
 
     jobResultNumber = requestParams["job.number"];

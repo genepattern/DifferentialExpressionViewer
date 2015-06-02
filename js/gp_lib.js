@@ -29,11 +29,110 @@ var gpLib = function() {
         });
     }
 
+    function downloadFile(fileName, contents)
+    {
+        var blob = new Blob([ contents ], {
+            type : "text/plain;charset=utf-8"
+        });
+
+        saveAs(blob, fileName);
+    }
+
     /**
      * This function displays a dialog displaying the directories in the Files Tab for the current GP user
      * @param callBack - a callback function if a directory in the Files Tab was selected
      */
-    function saveToGPDialog(callBack) {
+    function saveFileDialog(contents, callBack) {
+        //create dialog
+        w2popup.open({
+            title: 'Save File',
+            width: 450,
+            height: 380,
+            showMax: true,
+            modal: true,
+            body: '<div id="gpDialog" style="margin: 14px 15px 2px 15px;"><label>File name: <input type="text" id="fileName"/>' +
+                '</label><div style="margin: 8px 8px 8px 2px;"><input name="saveMethod" value="gp" type="radio" checked="checked"/>Save To GenePattern' +
+                '<input name="saveMethod" type="radio" value="download"/>Download</div>' +
+                '<div id="gpSave">Select save location:<br/><div id="fileTree" style="height: 200px;border:2px solid white"/></div> </div>',
+            buttons: '<button class="btn" onclick="w2popup.close();">Cancel</button> ' +
+                '<button id="closePopup" class="btn" onclick="w2popup.close();" disabled="disabled">OK</button>',
+            onOpen: function (event) {
+                event.onComplete = function () {
+                    $("input[name='saveMethod']").click(function()
+                    {
+                        var checkedValue = $(this).filter(':checked').val();
+                        if(checkedValue == "gp")
+                        {
+                            $("#gpSave").show();
+                            $("#closePopup").prop( "disabled", true );
+                        }
+                        else
+                        {
+                            $("#closePopup").prop( "disabled", false );
+
+                            $("#gpSave").hide();
+                        }
+                    });
+
+                    $("#fileTree").gpUploadsTree(
+                    {
+                        name: "Uploads_Tab_Tree",
+                        onChange: function(directory)
+                        {
+                            //enable the OK button if a directory was selected
+                            if(directory != undefined && directory.url.length > 0)
+                            {
+                                $("#closePopup").prop( "disabled", false );
+                            }
+                        }
+                    });
+                };
+            },
+            onClose: function (event) {
+                var selectedGpDirObj = $("#fileTree").gpUploadsTree("selectedDir");
+                var saveMethod = $("input[name='saveMethod']:checked").val();
+                var fileName = $("#fileName").val();
+
+                event.onComplete = function () {
+                    var result = "success";
+                    $("#fileTree").gpUploadsTree("destroy");
+
+                    if(saveMethod == "gp")
+                    {
+                        var text = [];
+                        text.push(contents);
+
+                        var saveLocation = selectedGpDirObj.url + fileName;
+                        console.log("save location: " + saveLocation);
+                        uploadDataToFilesTab(saveLocation, text, function(result)
+                        {
+                            if(result !== "success")
+                            {
+                                w2alert("Error saving file. " + result, 'File Save Error');
+                            }
+                            else
+                            {
+                                w2alert("File " + fileName + " saved.", 'File Save' );
+                            }
+                        });
+                    }
+                    else
+                    {
+                        downloadFile(fileName, contents);
+                    }
+                    //save the file either to GenePattern or locally
+                    callBack(result);
+
+                }
+            }
+        });
+    }
+
+    /**
+     * This function displays a dialog displaying the directories in the Files Tab for the current GP user
+     * @param callBack - a callback function if a directory in the Files Tab was selected
+     */
+    function browseFilesTab(callBack) {
         //create dialog
         w2popup.open({
             title: 'Select Directory from Files Tab',
@@ -218,11 +317,12 @@ var gpLib = function() {
     function getDataAtUrl(fileURL, successCallBack, failCallBack)
     {
         $.ajax({
-            contentType: 'text/plain',
+            contentType: null,
             url: fileURL,
             xhrFields: {
                 withCredentials: true
-            }
+            },
+            crossDomain: true
         }).done(function (response, status, xhr) {
             if(successCallBack)
             {
@@ -241,7 +341,8 @@ var gpLib = function() {
     // declare 'public' functions
     return {
         uploadDataToFilesTab:uploadDataToFilesTab,
-        saveToGPDialog: saveToGPDialog,
+        browseFilesTab: browseFilesTab,
+        saveFileDialog: saveFileDialog,
         getDataAtUrl: getDataAtUrl,
         parseGCTFile: parseGCTFile,
         parseODF: parseODF
@@ -254,7 +355,8 @@ var gpLib = function() {
         options: {
             name: "",
             onSuccess: null,
-            nodes: []
+            nodes: [],
+            onChange: null
         },
         topLevelNodeCounter: 0,
         _create: function() {
@@ -341,6 +443,12 @@ var gpLib = function() {
                         name: w2ui[this.name].get(nodeId).text,
                         url : dirUrl
                     };
+
+                    //call on change function if specified
+                    if(self.options.onChange != undefined && $.isFunction(self.options.onChange))
+                    {
+                        self.options.onChange(self.directory);
+                    }
                 },
                 onExpand: function(event) {
                     console.log(event);

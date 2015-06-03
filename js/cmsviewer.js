@@ -678,6 +678,83 @@ function initTable()
     }
 }
 
+function createDataset()
+{
+    if(dataset == undefined || dataset.length == 0)
+    {
+        w2alert("Error: The dataset was not loaded.", "Save Dataset Error");
+        return;
+    }
+
+    var selectedRecidsArr = w2ui['cmsTable'].getSelection();
+    var dataMatrix = dataset.matrix;
+
+    var content = "#1.2\n";
+
+    //add the number of rows and samples
+    content += selectedRecidsArr.length + "\t" + dataset.sampleNames.length + "\n";
+
+    //add the header with the column and sample names
+    content += "Name\t" + "Description\t" + dataset.sampleNames.join("\t") + "\n";
+
+    for(var s=0;s<selectedRecidsArr.length;s++)
+    {
+        var row = dataMatrix[w2ui['cmsTable'].get(selectedRecidsArr[s]).recid];
+        content += dataset.rowNames[selectedRecidsArr[s]] + '\t';
+        content += dataset.rowDescriptions[selectedRecidsArr[s]] + '\t';
+        content += row.join("\t");
+        content += "\n";
+    }
+
+    return content;
+}
+
+function createFeatureList(selectedOnly)
+{
+    var content = "";
+
+    if(selectedOnly == true)
+    {
+        var selectedRecidsArr = w2ui['cmsTable'].getSelection();
+        for(var s=0;s<selectedRecidsArr.length;s++)
+        {
+            var feature = w2ui['cmsTable'].get(selectedRecidsArr[s]).Feature;
+            content += feature;
+            content += "\n";
+        }
+    }
+    else
+    {
+        var records = w2ui['cmsTable'].records;
+        for(var r=0;r<records.length;r++)
+        {
+            var columnNames = Object.keys(records[r]);
+            content += records[r][columnNames[0]];
+            content += "\n";
+        }
+    }
+
+    return content;
+}
+
+function exportTable()
+{
+    var records = w2ui['cmsTable'].records;
+    var content = "";
+    for(var r=0;r<records.length;r++)
+    {
+        var columnNames = Object.keys(records[r]);
+        for(var c=0;c<columnNames.length;c++)
+        {
+            content += records[r][columnNames[c]];
+            content += "\t";
+        }
+        content += "\n";
+    }
+
+    return content;
+}
+
 function initMenu()
 {
     var columnNames = cmsOdf["COLUMN_NAMES"];
@@ -709,14 +786,11 @@ function initMenu()
             if (highlightedParent === "Histogram") {
                 plotHistogram(text + " Histogram", text, cmsOdf[text]);
             }
-            else if(text == "Upregulated Features")
-            {
-                if($("#cmsScorePlot").length == 0)
-                {
+            else if(text == "Upregulated Features") {
+                if ($("#cmsScorePlot").length == 0) {
                     scorePlot();
                 }
-                else
-                {
+                else {
                     $("#plot").hide();
                     $("#cmsScorePlot").show();
                 }
@@ -729,9 +803,76 @@ function initMenu()
             {
                 filterFeatures();
             }
-            else if(text == "Save Feature list")
+            else if(text == "Save Image")
             {
+                var content = exportTable();
+                if(content != undefined && content.length > 0)
+                {
+                    gpLib.saveFileDialog(content, ".txt");
+                }
+            }
+            else if(text == "Save Table")
+            {
+                var content = exportTable();
+                if(content != undefined && content.length > 0)
+                {
+                    gpLib.saveFileDialog(content, ".txt");
+                }
+            }
+            else if(text == "Save Feature List")
+            {
+                /*var selectedOnly = null;
+                //prompt the user whether to save all the features or a subset
+                w2popup.open({
+                    title: 'Save Feature List',
+                    width: 600,
+                    height: 320,
+                    showMax: true,
+                    modal: true,
+                    body: '<div id="gpDialog"><div/><input type="radio" name="selected"/>' +
+                        '<label><input type="radio" name="selected"/>All Features</label></div>',
+                    buttons: '<button class="btn" onclick="w2popup.close();">Cancel</button> <button class="btn" onclick="w2popup.close();">OK</button>',
+                    onOpen: function (event) {
+                        event.onComplete = function () {
 
+                        };
+                    },
+                    onClose: function (event) {
+
+                    }
+                });*/
+
+                var selectedRecordsList = w2ui['cmsTable'].getSelection();
+
+                if(selectedRecordsList.length == 0)
+                {
+                    w2alert("Please select rows from the table!", "Save Feature List Error");
+                }
+                else
+                {
+                    content = createFeatureList(true);
+                    if(content != undefined && content.length > 0)
+                    {
+                        gpLib.saveFileDialog(content, ".txt");
+                    }
+                }
+            }
+            else if(text == "Save Dataset")
+            {
+                var selectedRecordsList = w2ui['cmsTable'].getSelection();
+
+                if(selectedRecordsList.length == 0)
+                {
+                    w2alert("Please select rows from the table!", "Save Feature List Error");
+                }
+                else
+                {
+                    content = createDataset();
+                    if(content != undefined && content.length > 0)
+                    {
+                        gpLib.saveFileDialog(content, ".gct");
+                    }
+                }
             }
         }
         else

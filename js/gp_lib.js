@@ -42,7 +42,7 @@ var gpLib = function() {
      * This function displays a dialog displaying the directories in the Files Tab for the current GP user
      * @param callBack - a callback function if a directory in the Files Tab was selected
      */
-    function saveFileDialog(contents, callBack) {
+    function saveFileDialog(contents, extension, callBack) {
         //create dialog
         w2popup.open({
             title: 'Save File',
@@ -51,7 +51,7 @@ var gpLib = function() {
             showMax: true,
             modal: true,
             body: '<div id="gpDialog" style="margin: 14px 15px 2px 15px;"><label>File name: <input type="text" id="fileName"/>' +
-                '</label><div style="margin: 8px 8px 8px 2px;"><input name="saveMethod" value="gp" type="radio" checked="checked"/>Save To GenePattern' +
+                '</label><div style="margin: 8px 8px 8px 2px;"><input name="saveMethod" value="gp" type="radio" checked="checked" style="margin-right: 5px"/>Save To GenePattern' +
                 '<input name="saveMethod" type="radio" value="download"/>Download</div>' +
                 '<div id="gpSave">Select save location:<br/><div id="fileTree" style="height: 200px;border:2px solid white"/></div> </div>',
             buttons: '<button class="btn" onclick="w2popup.close();">Cancel</button> ' +
@@ -93,10 +93,15 @@ var gpLib = function() {
                 var saveMethod = $("input[name='saveMethod']:checked").val();
                 var fileName = $("#fileName").val();
 
+                if(extension != undefined && !gpUtil.endsWith(fileName, extension))
+                {
+                    fileName += extension;
+                }
                 event.onComplete = function () {
                     var result = "success";
                     $("#fileTree").gpUploadsTree("destroy");
 
+                    //save the file either to GenePattern or locally
                     if(saveMethod == "gp")
                     {
                         var text = [];
@@ -120,8 +125,11 @@ var gpLib = function() {
                     {
                         downloadFile(fileName, contents);
                     }
-                    //save the file either to GenePattern or locally
-                    callBack(result);
+
+                    if($.isFunction(callBack))
+                    {
+                        callBack(result);
+                    }
 
                 }
             }

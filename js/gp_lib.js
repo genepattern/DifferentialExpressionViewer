@@ -348,16 +348,6 @@ var gpLib = function() {
         $.ajax({
             contentType: null,
             url: fileURL,
-            /*beforeSend: function(xhr) {
-                xhr.setRequestHeader("gs-token", "GpxIzpGclpCqZ3j1dVv+Yrp0+qKx1tcD");
-                xhr.setRequestHeader("gs-username", "nazaire");
-            },
-            headers:
-             {
-                 "gs-token": "GpxIzpGclpCqZ3j1dVv+Yrp0+qKx1tcD",
-                "gs-username": "nazaire"
-            },*/
-            // options.header,
             xhrFields: {
                 withCredentials: true
             },
@@ -377,6 +367,73 @@ var gpLib = function() {
         });
     }
 
+    /*
+     * Logs an action the Broad Institute AppLogger REST Service
+     */
+    function logToAppLogger(application, action, entity, user, successCallBack, failCallBack)
+    {
+        if(user == undefined || user.length == 0)
+        {
+            user = "anonymous";
+        }
+
+        if(application == undefined || application.length == 0)
+        {
+            w2alert("An application must be specified");
+            return;
+        }
+
+        if(entity == undefined || entity.length == 0)
+        {
+            w2alert("An entity must be specified");
+            return;
+        }
+
+        if(action == undefined || action.length == 0)
+        {
+            w2alert("An action must be specified");
+            return;
+        }
+
+        var usage = {
+            usage: {
+                application: application,
+                user: user,
+                entity: entity,
+                action: action
+            }
+        };
+
+        $.getJSON("http://jsonip.com?callback=?", function (data)
+        {
+            usage["ip_address"] = data.ip;
+        }).complete(function(xhr, status)
+        {
+            var url = "http://vcapplog:3000/usages";
+            $.ajax({
+                method: "POST",
+                url: "http://vcapplog:3000/usages",
+                contentType: "application/json",
+                data: JSON.stringify(usage),
+                dataType: "json",
+                crossDomain: true
+                //accepts: "application/json"
+            }).done(function (response, status, xhr) {
+                if($.isFunction(successCallBack))
+                {
+                    successCallBack(response);
+                }
+            }).fail(function (response, status, xhr)
+            {
+                console.log(response.statusText);
+                if($.isFunction(failCallBack))
+                {
+                    failCallBack(response);
+                }
+            });
+        });
+    }
+
     // declare 'public' functions
     return {
         uploadDataToFilesTab:uploadDataToFilesTab,
@@ -385,7 +442,8 @@ var gpLib = function() {
         getDataAtUrl: getDataAtUrl,
         parseGCTFile: parseGCTFile,
         parseODF: parseODF,
-        isGenomeSpaceFile: isGenomeSpaceFile
+        isGenomeSpaceFile: isGenomeSpaceFile,
+        logToAppLogger: logToAppLogger
     };
 }
 

@@ -317,31 +317,62 @@ var gpLib = function() {
         return data;
     }
 
+    function isGenomeSpaceFile(fileUrl)
+    {
+        var parser = $('<a/>');
+        parser.attr("href", fileUrl);
+
+        if(parser[0].hostname.indexOf("genomespace.org") != -1)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
     /**
      * Retrieves the contents of a file from a URL
      * @param fileURL
      * @param callBack
      */
-    function getDataAtUrl(fileURL, successCallBack, failCallBack)
+    function getDataAtUrl(fileURL, options)
     {
+        if(options == undefined)
+        {
+            options = {
+                header: {}
+            };
+        }
+
+
         $.ajax({
             contentType: null,
             url: fileURL,
+            /*beforeSend: function(xhr) {
+                xhr.setRequestHeader("gs-token", "GpxIzpGclpCqZ3j1dVv+Yrp0+qKx1tcD");
+                xhr.setRequestHeader("gs-username", "nazaire");
+            },
+            headers:
+             {
+                 "gs-token": "GpxIzpGclpCqZ3j1dVv+Yrp0+qKx1tcD",
+                "gs-username": "nazaire"
+            },*/
+            // options.header,
             xhrFields: {
                 withCredentials: true
             },
             crossDomain: true
         }).done(function (response, status, xhr) {
-            if(successCallBack)
+            if($.isFunction(options.successCallBack))
             {
-                successCallBack(response);
+                options.successCallBack(response);
             }
         }).fail(function (response, status, xhr)
         {
             console.log(response.statusText);
-            if(failCallBack)
+            if($.isFunction(options.failCallBack))
             {
-                failCallBack(response);
+                options.failCallBack(response);
             }
         });
     }
@@ -353,7 +384,8 @@ var gpLib = function() {
         saveFileDialog: saveFileDialog,
         getDataAtUrl: getDataAtUrl,
         parseGCTFile: parseGCTFile,
-        parseODF: parseODF
+        parseODF: parseODF,
+        isGenomeSpaceFile: isGenomeSpaceFile
     };
 }
 

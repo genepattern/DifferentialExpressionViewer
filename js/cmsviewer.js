@@ -48,6 +48,11 @@ function plotHistogram(plotTitle, xDataName, data)
             text: plotTitle,
             x: -20 //center
         },
+        navigation: {
+            buttonOptions: {
+                enabled: false
+            }
+        },
         chart: {
             type: 'column',
             borderWidth: 2
@@ -111,13 +116,16 @@ function plotHeatmap()
         /*data: {
             csv: document.getElementById('csv').innerHTML
         },*/
-
         chart: {
             type: 'heatmap',
             inverted: true,
             backgroundColor: "#E6E6E6"
         },
-
+        navigation: {
+            buttonOptions: {
+                enabled: false
+            }
+        },
         title: {
             text: 'Heatmap',
             align: 'left'
@@ -179,6 +187,11 @@ function displayExpressionProfile(plotTitle, xDataName, yDataName, samples, seri
     $('#plot').show();
 
     $("#plot").highcharts({
+        navigation: {
+            buttonOptions: {
+                enabled: false
+            }
+        },
         title: {
             text: plotTitle,
             x: -20 //center
@@ -455,12 +468,17 @@ function applyFilter(filterObj)
 function updateLinePlot(plotTitle, xData, yData, series)
 {
     $('#cmsScorePlot').highcharts({
+        chart:{
+            borderWidth: 2
+        },
+        navigation: {
+            buttonOptions: {
+                enabled: false
+            }
+        },
         title: {
             text: plotTitle,
             x: -20 //center
-        },
-        chart:{
-            borderWidth: 2
         },
         plotOptions:
         {
@@ -519,6 +537,10 @@ function updateLinePlot(plotTitle, xData, yData, series)
 
 function scorePlot(records, subsetIds)
 {
+    //hide the no plot
+    $("#cmsScorePlot").show();
+    $('#plot').hide();
+
     if(records == undefined || records.length < 1)
     {
         console.log("No data found to plot scores");
@@ -755,6 +777,74 @@ function exportTable()
     return content;
 }
 
+function saveImage(type)
+{
+    w2popup.open({
+        title: 'Save Image',
+        width: 350,
+        height: 200,
+        showMax: true,
+        modal: true,
+        body: '<div id="gpDialog" style="margin: 30px 15px 2px 25px;"><label>File name: <input type="text" id="fileName"/></label></div>',
+        buttons: '<button class="btn" onclick="w2popup.close();">Cancel</button> ' +
+            '<button id="closePopup" class="btn" onclick="w2popup.close();" disabled="disabled">OK</button>',
+        onOpen: function (event) {
+            event.onComplete = function () {
+                $("#fileName").keyup(function()
+                {
+                    var value = $(this).val();
+                    if(value.length == 0)
+                    {
+                        $("#closePopup").prop( "disabled", true );
+                    }
+                    else
+                    {
+                        $("#closePopup").prop( "disabled", false );
+                    }
+                });
+            };
+        },
+        onClose: function (event) {
+            var fileName = $("#fileName").val();
+            event.onComplete = function () {
+                var plot = $('#cmsScorePlot');
+
+                if($('#plot').is(":visible"))
+                {
+                    plot = $('#plot');
+                }
+                var chart = plot.highcharts();
+
+                if(type.toLowerCase() === "jpeg")
+                {
+                    type = "image/jpeg";
+
+                }
+                else if(type.toLowerCase() === "svg")
+                {
+                    type = "image/svg+xml";
+
+                }
+                else if(type.toLowerCase() === "pdf")
+                {
+                    type = "application/pdf";
+
+                }
+                else
+                {
+                    type = "image/png";
+
+                }
+
+                chart.exportChart({
+                    type: type,
+                    filename: fileName
+                });
+            }
+        }
+    });
+}
+
 function initMenu()
 {
     var columnNames = cmsOdf["COLUMN_NAMES"];
@@ -764,7 +854,8 @@ function initMenu()
 
         for(var c=0;c<columnNames.length;c++)
         {
-            if(columnNames[c] != "k")
+            if(columnNames[c] != "k" && columnNames[c] != "Rank"
+                && columnNames[c] != "Feature" && columnNames[c] != "Description")
             {
                 histogramSubMenu.append("<li><a href='#'>" + columnNames[c] + '</a></li>');
             }
@@ -802,14 +893,6 @@ function initMenu()
             else if(text == "Filter Features")
             {
                 filterFeatures();
-            }
-            else if(text == "Save Image")
-            {
-                var content = exportTable();
-                if(content != undefined && content.length > 0)
-                {
-                    gpLib.saveFileDialog(content, ".txt");
-                }
             }
             else if(text == "Save Table")
             {
@@ -874,6 +957,10 @@ function initMenu()
                     }
                 }
             }
+            else if(text == "PNG" || text == "JPEG" || text == "SVG" || text == "PDF")
+            {
+                saveImage(text);
+            }
         }
         else
         {
@@ -897,19 +984,42 @@ $(function()
     }
     else
     {
-        //load the odf file and display plot and table
-        gpLib.getDataAtUrl(odfFile, displayViewer);
+        var headers = {};
 
-        //load the expression dataset
-        gpLib.getDataAtUrl(datasetFile, loadDataset, function()
+        if(gpLib.isGenomeSpaceFile(odfFile))
         {
-            alert("Failed to load the dataset at " + datasetFile);
+            if(requestParams["|gst"] !== undefined && requestParams["|gsu"] !== undefined) {
+                headers = {
+                    "gs-token": requestParams["|gst"].join(),  //should only be one item
+                    "gs-username": requestParams["|gsu"].join()
+                };
+            }
+        }
+        //load the odf file and display plot and table
+        gpLib.getDataAtUrl(odfFile,
+        {   headers: headers,
+            successCallBack: displayViewer
         });
 
+
+        headers = {};
+        /*if(gpLib.isGenomeSpaceFile(datasetFile))
+        {
+            if(requestParams["|gst"] !== undefined && requestParams["|gsu"] !== undefined) {
+                headers = {
+                    "gs-token": requestParams["|gst"].join(),
+                    "gs-username": requestParams["|gsu"].join()
+                };
+            }
+        }*/
         //load the expression dataset
-        /*gpLib.getDataAtUrl("https://dm.genomespace.org/datamanager/file/Home/Public/mocana2/GenomeSpaceSetupData/0.9/prod_webtool.db", loadDataset, function()
-         {
-         alert("Failed to load the dataset at https://dm.genomespace.org/datamanager/file/Home/Public/mocana2/GenomeSpaceSetupData/0.9/prod_webtool.db");
-         });*/
+        gpLib.getDataAtUrl(datasetFile,
+        {
+            headers: headers,
+            successCallBack: loadDataset,
+            failCallBack: function() {
+                alert("Failed to load the dataset at " + datasetFile);
+            }
+        });
     }
 });

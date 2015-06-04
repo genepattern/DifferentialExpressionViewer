@@ -395,7 +395,7 @@ var gpLib = function() {
             return;
         }
 
-        var usage = {
+        var usageObj = {
             usage: {
                 application: application,
                 user: user,
@@ -404,17 +404,21 @@ var gpLib = function() {
             }
         };
 
-        $.getJSON("http://jsonip.com?callback=?", function (data)
+        $.get("http://ipinfo.io", function (response)
         {
-            usage["ip_address"] = data.ip;
-        }).complete(function(xhr, status)
+            if (response !== undefined && response.ip !== undefined)
+            {
+                usageObj.usage["ip_address"]  = response.ip;
+            }
+
+        }, "jsonp").always(function()
         {
             var url = "http://vcapplog:3000/usages";
             $.ajax({
                 method: "POST",
                 url: "http://vcapplog:3000/usages",
                 contentType: "application/json",
-                data: JSON.stringify(usage),
+                data: JSON.stringify(usageObj),
                 dataType: "json",
                 crossDomain: true
                 //accepts: "application/json"

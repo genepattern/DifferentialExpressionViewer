@@ -55,3 +55,17 @@
 {
     margin-bottom: 7px;
 }
+
+#histogramBins
+{
+    border: 2px solid #4572A7;
+    border-top: 0;
+    padding-left: 33%;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+#numBins
+{
+    margin: 0 auto;
+}

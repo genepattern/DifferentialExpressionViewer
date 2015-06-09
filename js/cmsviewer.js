@@ -1,3 +1,4 @@
+var APPLICATION_NAME= "ComparativeMarkerSelectionViewer version 1";
 var jobResultNumber;
 var dataset;
 var cmsOdf;
@@ -7,6 +8,11 @@ var odfFile;
 function loadDataset(data)
 {
     dataset = gpLib.parseGCTFile(data);
+
+    if(dataset !== undefined)
+    {
+       // $(".disabled").removeClass("disabled");
+    }
 }
 function displayViewer(data)
 {
@@ -28,10 +34,10 @@ function displayViewer(data)
     scorePlot(w2ui['cmsTable'].records);
 }
 
-function plotHistogram(plotTitle, xDataName, data)
+function calculateHistogram(numBins, data)
 {
     //calculate the histogram
-    var histogram = d3.layout.histogram().bins(20)(data);
+    var histogram = d3.layout.histogram().bins(numBins)(data);
 
     var hist = [];
     for(var h=0;h<histogram.length;h++)
@@ -39,14 +45,25 @@ function plotHistogram(plotTitle, xDataName, data)
         hist.push(histogram[h].length);
     }
 
+    return hist;
+}
+
+function plotHistogram(plotTitle, xDataName, data, numBins)
+{
+    if(numBins == undefined)
+    {
+        numBins = 20;
+    }
+
+    var hist = calculateHistogram(numBins, data);
+
     //hide the main plot
     $("#cmsScorePlot").hide();
     $('#plot').show();
 
     $('#plot').highcharts({
         title: {
-            text: plotTitle,
-            x: -20 //center
+            text: plotTitle
         },
         navigation: {
             buttonOptions: {
@@ -74,7 +91,7 @@ function plotHistogram(plotTitle, xDataName, data)
         yAxis:
         {
             title: {
-                text: "Occurences"
+                text: "Occurrences"
             },
             plotLines: [{
                 value: 0,
@@ -92,15 +109,50 @@ function plotHistogram(plotTitle, xDataName, data)
         tooltip:
         {
             enabled: true
-
         },
         series: [
             {
                 name: "Features",
                 data: hist
             }
-         ]
+        ]
     });
+
+    var numBinsDiv = $("<div id='histogramBins'/>");
+    //var numBins = $("<input id='numBins' type='text' />");
+    var numBinsButton = $("<button id='updateNumBins'>Update</button>").click(function()
+    {
+        //get histogram plot
+        var histPlot = $("#plot").highcharts();
+
+        //there should only be one series so select the first
+        if(histPlot != undefined && histPlot.series.length < 1)
+        {
+            return;
+        }
+
+        var histogramSeries = histPlot.series[0];
+        var numBins = $("#numBins").val();
+        numBins = parseInt(numBins);
+        //Check if a value was specified for the number of bins
+        if(numBins == undefined || numBins.length == 0 || isNaN(numBins))
+        {
+            return;
+        }
+
+
+
+        var dataColName = $("#plot").data("dataColName");
+        var hist = calculateHistogram(numBins, cmsOdf[dataColName]);
+        histogramSeries.setData(hist);
+    });
+
+    numBinsDiv.append("<label>Number of bins: <input id='numBins' type='text' value='"+ numBins + "'/> </label>");
+
+    numBinsDiv.append(numBinsButton);
+    $("<div/>").append(numBinsDiv).appendTo("#plot");
+
+    $('#numBins').w2field('int', { autoFormat: false });
 }
 
 function plotHeatmap()
@@ -875,9 +927,14 @@ function initMenu()
             var text = $(item).contents()[0].textContent;
 
             if (highlightedParent === "Histogram") {
+                gpLib.logToAppLogger(APPLICATION_NAME, "histogram: " + text, "plot");
+
+                $("#plot").data("dataColName", text);
                 plotHistogram(text + " Histogram", text, cmsOdf[text]);
             }
             else if(text == "Upregulated Features") {
+                gpLib.logToAppLogger(APPLICATION_NAME, "upregulated features", "plot");
+
                 if ($("#cmsScorePlot").length == 0) {
                     scorePlot();
                 }
@@ -888,14 +945,18 @@ function initMenu()
             }
             else if(text == "Profile")
             {
+                gpLib.logToAppLogger(APPLICATION_NAME, "expression profile", "plot");
                 expressionProfile();
             }
             else if(text == "Filter Features")
             {
+                gpLib.logToAppLogger(APPLICATION_NAME, "filter features", "filter");
                 filterFeatures();
             }
             else if(text == "Save Table")
             {
+                gpLib.logToAppLogger(APPLICATION_NAME, "save table", "save");
+
                 var content = exportTable();
                 if(content != undefined && content.length > 0)
                 {
@@ -904,6 +965,8 @@ function initMenu()
             }
             else if(text == "Save Feature List")
             {
+                gpLib.logToAppLogger(APPLICATION_NAME, "save feature list", "save");
+
                 /*var selectedOnly = null;
                 //prompt the user whether to save all the features or a subset
                 w2popup.open({
@@ -942,6 +1005,8 @@ function initMenu()
             }
             else if(text == "Save Dataset")
             {
+                gpLib.logToAppLogger(APPLICATION_NAME, "save dataset", "save");
+
                 var selectedRecordsList = w2ui['cmsTable'].getSelection();
 
                 if(selectedRecordsList.length == 0)
@@ -959,6 +1024,8 @@ function initMenu()
             }
             else if(text == "PNG" || text == "JPEG" || text == "SVG" || text == "PDF")
             {
+                gpLib.logToAppLogger(APPLICATION_NAME, "save image: " + text.toLowerCase(), "save");
+
                 saveImage(text);
             }
         }

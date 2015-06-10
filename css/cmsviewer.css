@@ -69,3 +69,24 @@
 {
     margin: 0 auto;
 }
+
+#customPlotDialog
+{
+    height: 100px;
+    padding-left: 20px;
+}
+
+#customPlotDialog span
+{
+    margin-left: 11px;
+}
+
+.sm-clean ul .disabled, .sm-clean ul .disabled:hover, .sm-clean ul .disabled:focus, .sm-clean ul .disabled:active
+{
+    color: #ffffff;
+    background: #D1D1D1;
+}
+
+
+
+

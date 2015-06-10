@@ -4,18 +4,13 @@ var dataset;
 var cmsOdf;
 var datasetFile;
 var odfFile;
+var computedStatsColumnNames;
 
-function loadDataset(data)
-{
+function loadDataset(data) {
     dataset = gpLib.parseGCTFile(data);
-
-    if(dataset !== undefined)
-    {
-       // $(".disabled").removeClass("disabled");
-    }
 }
-function displayViewer(data)
-{
+
+function displayViewer(data) {
     cmsOdf = gpLib.parseODF(data, "Comparative Marker Selection");
     console.log("Finished parsing the odf file " + odfFile);
 
@@ -28,6 +23,15 @@ function displayViewer(data)
     var columnIndex = $.inArray("Score", cmsOdf.COLUMN_NAMES);
     cmsOdf.COLUMN_NAMES[columnIndex] = testStatisticLabel;
 
+    computedStatsColumnNames = [];
+    for (var i = 0; i < cmsOdf["COLUMN_NAMES"].length; i++)
+    {
+        var columnName = cmsOdf["COLUMN_NAMES"][i];
+        if(columnName !== "Description" && columnName !== "Feature")
+        {
+            computedStatsColumnNames.push(columnName);
+        }
+    }
     //initToolbar();
     initMenu();
     initTable();
@@ -182,32 +186,14 @@ function plotHeatmap()
             text: 'Heatmap',
             align: 'left'
         },
-
-        /*subtitle: {
-            text: 'Temperature variation by day and hour through April 2013',
-            align: 'left'
-        },*/
-        /*xAxis: {
-            tickPixelInterval: 50,
-            min: Date.UTC(2013, 3, 1),
-            max: Date.UTC(2013, 3, 30)
-        },*/
-
         yAxis: {
             title: {
                 text: null
             },
-            /*labels: {
-                format: '{value}:00'
-            },*/
             minPadding: 0,
             maxPadding: 0,
             startOnTick: false,
             endOnTick: false
-            //tickPositions: [0, 6, 12, 18, 24],
-            //tickWidth: 1,
-            //min: 0,
-            //max: 23
         },
 
         colorAxis: {
@@ -219,16 +205,8 @@ function plotHeatmap()
             min: -20000
         },
         series: [{
-            //data: dataset.matrix,
             data: dataset.matrix.slice(1, 1),
-            //data: heatmapData,
-            //data: [ [0,0,-0.7, 0.1, 0.-5], [1,0,-3.4, 0.2, 3.0], [2,0,-1.1, 1.4, 3.0], [2,7,-1.0, 1, -2.0] ],
-            borderWidth: 0,
-            /*colsize: 24 * 36e5, // one day */
-            tooltip: {
-                /*headerFormat: 'Temperature<br/>',
-                pointFormat: '{point.x:%e %b, %Y} {point.y}:00: <b>{point.value} ℃</b>'*/
-            }
+            borderWidth: 0
         }]
     });
 }
@@ -517,9 +495,9 @@ function applyFilter(filterObj)
     });
 }*/
 
-function updateLinePlot(plotTitle, xData, yData, series)
+function updateLinePlot(chartContainer, plotTitle, xDataName, yDataName, series)
 {
-    $('#cmsScorePlot').highcharts({
+    chartContainer.highcharts({
         chart:{
             borderWidth: 2
         },
@@ -529,8 +507,7 @@ function updateLinePlot(plotTitle, xData, yData, series)
             }
         },
         title: {
-            text: plotTitle,
-            x: -20 //center
+            text: plotTitle
         },
         plotOptions:
         {
@@ -552,13 +529,13 @@ function updateLinePlot(plotTitle, xData, yData, series)
         xAxis:
         {
             title: {
-                text: xData
+                text: xDataName
             }
         },
         yAxis:
         {
             title: {
-                text: yData
+                text: yDataName
             },
             plotLines: [{
                 value: 0,
@@ -576,12 +553,59 @@ function updateLinePlot(plotTitle, xData, yData, series)
         tooltip:
         {
             enabled: true
-            /*headerFormat: function()
+        },
+        series: series
+    });
+}
+
+function updateScatterPlot(chartContainer, plotTitle, xDataName, yDataName, series)
+{
+    chartContainer.highcharts({
+        chart: {
+            borderWidth: 2,
+            type: 'scatter'
+
+        },
+        plotOptions:
+        {
+            scatter:
             {
-                var index = '{point.key}';
-                console.log("index is: " + index);
-                return '<span style="font-size: 10px">'+ cmsOdf["Feature"][index] +' </span><br/>';
-            }*/
+                marker:
+                {
+                    radius: 3
+                }
+            }
+        },
+        navigation: {
+            buttonOptions: {
+                enabled: false
+            }
+        },
+        title: {
+            text: plotTitle
+        },
+        xAxis:
+        {
+            title: {
+                text: xDataName
+            }
+        },
+        yAxis:
+        {
+            title: {
+                text: yDataName
+            }
+        },
+        legend:
+        {
+            layout: 'vertical',
+            align: 'right',
+            verticalAlign: 'middle',
+            borderWidth: 0
+        },
+        tooltip:
+        {
+            enabled: true
         },
         series: series
     });
@@ -653,7 +677,7 @@ function scorePlot(records, subsetIds)
         color: "blue"
     }];
 
-    updateLinePlot("Upregulated Features", "Feature", cmsOdf["Test Statistic"], series);
+    updateLinePlot($("#cmsScorePlot"), "Upregulated Features", "Feature", cmsOdf["Test Statistic"], series);
 }
 
 function initTable()
@@ -897,6 +921,108 @@ function saveImage(type)
     });
 }
 
+function customPlot()
+{
+    //prompt the user for the x and y axes
+    w2popup.open({
+        title   : 'Custom Plot',
+        width   : 570,
+        opacity: 0,
+        height  : 220,
+        showMax : true,
+        body    : '<div id="customPlotDialog" style="padding-top: 20px;width: 100px"></div>',
+        buttons   : '<button class="btn" onclick="w2popup.close();">Cancel</button> '+
+            '<button class="btn" id="displayCustomPlot">OK</button>',
+        onOpen  : function (event) {
+            event.onComplete = function () {
+                 var div = $("<div/>");
+                 var xAxisList = '<span><label>X-axis:<input id="customXAxis" type="list"></label></span>';
+                 div.append(xAxisList);
+
+                 var yAxisList = '<span><label>Y-axis:<input id="customYAxis" type="list"></label></span>';
+                 div.append(yAxisList);
+
+                 $("#customPlotDialog").append(div);
+
+                 $("#customXAxis").w2field('list',
+                 {
+                    items: computedStatsColumnNames,
+                    selected: computedStatsColumnNames[0]
+                 });
+
+                 $("#customYAxis").w2field('list',
+                 {
+                    items: computedStatsColumnNames,
+                    selected: computedStatsColumnNames[1]
+                 });
+
+                 var typeOfPlot = '<span><label>Plot Type:<input id="customPlotType" type="list"></label></span>';
+
+                 $("#customPlotDialog").append(typeOfPlot);
+                 $("#customPlotType").w2field('list',
+                 {
+                    items: ["Line", "Scatter"],
+                    selected: "Line"
+                 });
+
+                $("#displayCustomPlot").click(function()
+                {
+                    var xAxisName = $("#customXAxis").val();
+                    var yAxisName = $("#customYAxis").val();
+
+                    var customData = [];
+
+                    var records = w2ui['cmsTable'].records;
+                    for(var x=0;x<records.length;x++)
+                    {
+                        var xValue = records[x][xAxisName];
+                        var yValue = records[x][yAxisName];
+                        customData.push([xValue, yValue]);
+                    }
+
+                    var seriesName = xAxisName + " vs. " + yAxisName;
+
+                    $("#cmsScorePlot").hide();
+                    $('#plot').show();
+
+                    var chartType = $("#customPlotType").val();
+                    var series = [];
+
+                    gpLib.logToAppLogger(APPLICATION_NAME, "custom plot: " + seriesName + " - " + chartType, "plot");
+
+                    if(chartType === "Scatter")
+                    {
+                        series = [
+                        {
+                            name: seriesName,
+                            data: customData,
+                            color: 'red'
+                        }];
+                        updateScatterPlot($("#plot"), xAxisName + " vs. " + yAxisName, xAxisName, yAxisName, series);
+                    }
+                    else
+                    {
+                        series = [
+                        {
+                            name: seriesName,
+                            data: customData,
+                            lineWidth: 3,
+                            color: 'red'
+                        }];
+                        updateLinePlot($("#plot"), xAxisName + " vs. " + yAxisName, xAxisName, yAxisName, series);
+                    }
+
+                    w2popup.close();
+                });
+            };
+        },
+        onToggle: function (event) {
+            event.onComplete = function () {
+                //w2ui.layout.resize();
+            }
+        }
+    });
+}
 function initMenu()
 {
     var columnNames = cmsOdf["COLUMN_NAMES"];
@@ -918,7 +1044,7 @@ function initMenu()
 
     $('#cmsMenu').smartmenus();
 
-    $('#cmsMenu').bind('click.smapi', function(e, item)
+    $('#cmsMenu').bind('select.smapi', function(e, item)
     {
         var highlightedParent = $(".highlighted").last().contents()[1].textContent;
 
@@ -947,6 +1073,11 @@ function initMenu()
             {
                 gpLib.logToAppLogger(APPLICATION_NAME, "expression profile", "plot");
                 expressionProfile();
+            }
+            else if(text == "Custom Plot")
+            {
+                //gpLib.logToAppLogger(APPLICATION_NAME, "custom plot", "plot");
+                customPlot();
             }
             else if(text == "Filter Features")
             {
@@ -1086,6 +1217,9 @@ $(function()
             successCallBack: loadDataset,
             failCallBack: function() {
                 alert("Failed to load the dataset at " + datasetFile);
+
+                $("#saveDataset").addClass("disabled");
+                $("#profile").addClass("disabled");
             }
         });
     }

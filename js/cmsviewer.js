@@ -1166,6 +1166,7 @@ function initMenu()
         }
     });
 }
+
 $(function()
 {
     var requestParams = gpUtil.parseQueryString();
@@ -1182,6 +1183,15 @@ $(function()
     }
     else
     {
+        //Set the loaded odf file
+        //set the name of the gct file
+        var parser = $('<a/>');
+        parser.attr("href", odfFile);
+
+        var odfFileName = parser[0].pathname.substring(parser[0].pathname.lastIndexOf('/')+1);
+        $("#fileLoaded").append("<span>Loaded: <a href='" + odfFile + "' target='_blank'>" + odfFileName + "</a></span>");
+
+
         var headers = {};
 
         if(gpLib.isGenomeSpaceFile(odfFile))

@@ -1,23 +1,83 @@
 <html>
 <head>
 
-    <link rel="stylesheet" type="text/css" href="css/w2ui-1.4.2.css"/>
+    <link href="css/sm-core-css.css" rel="stylesheet" type="text/css" />
+    <link href="css/sm-clean.css" rel="stylesheet" type="text/css" />
+
     <link rel="stylesheet" type="text/css" href="css/cmsviewer.css"/>
+    <link rel="stylesheet" type="text/css" href="css/w2ui-1.4.2.css"/>
+
 
     <!-- jQuery JS-->
-    <script src="//code.jquery.com/jquery-2.1.3.min.js"></script>
+    <script src="//code.jquery.com/jquery-2.1.4.min.js"></script>
     <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
-    <script src="js/w2ui-1.4.2.js"></script>
-    <!--<script src="js/jquery.canvasjs.min.js" charset="utf-8"></script>-->
     <script src="js/highcharts.js"></script>
+    <script src="js/map.js"></script>
+    <script src="js/exporting.js"></script>
     <script src="js/gp_lib.js"></script>
     <script src="js/gpUtil.js"></script>
+    <script src="js/d3.js"></script>
+    <script src="js/FileSaver.js"></script>
+    <script type="text/javascript" src="js/jquery.smartmenus.js"></script>
+    <script src="js/w2ui-1.4.2.js"></script>
     <script src="js/cmsviewer.js"></script>
+
 </head>
 <body>
+    <div id="fileLoaded"></div>
 
-    <div id="cmsPlot"></div>
-
+    <div id="cmsNavBar">
+        <ul id="cmsMenu" class="sm sm-clean">
+            <li>
+                <a href="#">File</a>
+                <ul>
+                    <li>
+                        <a href="#">Save Image</a>
+                        <ul>
+                            <li>
+                                <a href="#">PNG</a>
+                            </li>
+                            <li>
+                                <a href="#">JPEG</a>
+                            </li>
+                            <li>
+                                <a href="#">SVG</a>
+                            </li>
+                            <li>
+                                <a href="#">PDF</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="#">Save Table</a>
+                    </li>
+                    <li>
+                        <a href="#">Save Feature List</a>
+                    </li>
+                    <li>
+                        <a href="#" id="saveDataset">Save Dataset</a>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <a href="#">Edit</a>
+                <ul>
+                    <li><a href="#">Filter Features</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="#">View</a>
+                <ul>
+                    <li><a href="#">Upregulated Features</a></li>
+                    <li><a href="#" id="profile">Profile</a></li>
+                    <li id="histMenu"><a href="#">Histogram</a></li>
+                    <li><a href="#">Custom Plot</a></li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+    <div id="plot"></div>
+    <div id="cmsScorePlot"></div>
     <div id="cmsTable"></div>
 </body>
 </html>

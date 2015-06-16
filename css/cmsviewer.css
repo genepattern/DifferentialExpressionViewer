@@ -8,3 +8,90 @@
     height: 100%;
     width:100%
 }
+
+#cmsToolbar{
+    padding: 10px 3px 10px 20px;
+    border: 1px solid silver;
+    border-radius: 3px;
+    margin-bottom: 4px;
+    margin-top: 3px;
+}
+
+
+.sm-clean {
+    padding:0 3px;
+    background:#eee;
+    -moz-border-radius:1px;
+    -webkit-border-radius:1px;
+    border-radius:1px;
+}
+
+
+.sm-clean a {
+    padding:7px;
+    color:#555;
+    font-size:14px;
+    line-height:15px;
+    font-family:'Lucida Sans Unicode','Lucida Sans','Lucida Grande',Arial,sans-serif;
+    text-decoration:none;
+}
+
+.sm-clean ul a {
+    font-size:12px;
+}
+
+#filterDialog
+{
+    padding-top: 30px;
+    padding-left: 19px;
+}
+
+#filterOptions div
+{
+    margin-bottom: 8px;
+}
+
+#filterOptions
+{
+    margin-bottom: 7px;
+}
+
+#histogramBins
+{
+    border: 2px solid #4572A7;
+    border-top: 0;
+    padding-left: 33%;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+#numBins
+{
+    margin: 0 auto;
+}
+
+#customPlotDialog
+{
+    height: 100px;
+    padding-left: 20px;
+}
+
+#customPlotDialog span
+{
+    margin-left: 11px;
+}
+
+.sm-clean ul .disabled, .sm-clean ul .disabled:hover, .sm-clean ul .disabled:focus, .sm-clean ul .disabled:active
+{
+    color: #ffffff;
+    background: #D1D1D1;
+}
+
+#fileLoaded
+{
+    font-size: 13px;
+    margin-bottom: 3px;
+}
+
+
+

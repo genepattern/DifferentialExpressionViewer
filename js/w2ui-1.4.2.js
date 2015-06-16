@@ -1,3 +1,5 @@
+/*NOTE: Includes modification by Marc-Danie */
+
 /* w2ui 1.4.2 (c) http://w2ui.com, vitmalina@gmail.com */
 var w2ui  = w2ui  || {};
 var w2obj = w2obj || {}; // expose object to be able to overwrite default functions
@@ -5006,6 +5008,9 @@ w2utils.keyboard = (function (obj) {
                     '</td>'+
                     '</tr>';
             }
+            //Modified by Marc-Danie
+            //hide the save and restore grid state options
+            /*
             col_html += '<tr><td colspan="2"><div style="border-top: 1px solid #ddd;"></div></td></tr>';
             var url = (typeof this.url != 'object' ? this.url : this.url.get);
             if (url && obj.show.skipRecords) {
@@ -5020,13 +5025,14 @@ w2utils.keyboard = (function (obj) {
                         '    </div>'+
                         '</td></tr>';
             }
+
             col_html += '<tr><td colspan="2" onclick="w2ui[\''+ obj.name +'\'].stateSave(); $(\'#w2ui-overlay\')[0].hide();">'+
                         '    <div style="cursor: pointer; padding: 4px 8px; cursor: default">'+ w2utils.lang('Save Grid State') + '</div>'+
                         '</td></tr>'+
                         '<tr><td colspan="2" onclick="w2ui[\''+ obj.name +'\'].stateReset(); $(\'#w2ui-overlay\')[0].hide();">'+
                         '    <div style="cursor: pointer; padding: 4px 8px; cursor: default">'+ w2utils.lang('Restore Default State') + '</div>'+
                         '</td></tr>';
-            col_html += "</table></div>";
+            col_html += "</table></div>";*/
             this.toolbar.get('w2ui-column-on-off').html = col_html;
         },
 

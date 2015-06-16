@@ -29,11 +29,118 @@ var gpLib = function() {
         });
     }
 
+    function downloadFile(fileName, contents)
+    {
+        var blob = new Blob([ contents ], {
+            type : "text/plain;charset=utf-8"
+        });
+
+        saveAs(blob, fileName);
+    }
+
     /**
      * This function displays a dialog displaying the directories in the Files Tab for the current GP user
      * @param callBack - a callback function if a directory in the Files Tab was selected
      */
-    function saveToGPDialog(callBack) {
+    function saveFileDialog(contents, extension, callBack) {
+        //create dialog
+        w2popup.open({
+            title: 'Save File',
+            width: 450,
+            height: 380,
+            showMax: true,
+            modal: true,
+            body: '<div id="gpDialog" style="margin: 14px 15px 2px 15px;"><label>File name: <input type="text" id="fileName"/>' +
+                '</label><div style="margin: 8px 8px 8px 2px;"><input name="saveMethod" value="gp" type="radio" checked="checked" style="margin-right: 5px"/>Save To GenePattern' +
+                '<input name="saveMethod" type="radio" value="download"/>Download</div>' +
+                '<div id="gpSave">Select save location:<br/><div id="fileTree" style="height: 200px;border:2px solid white"/></div> </div>',
+            buttons: '<button class="btn" onclick="w2popup.close();">Cancel</button> ' +
+                '<button id="closePopup" class="btn" onclick="w2popup.close();" disabled="disabled">OK</button>',
+            onOpen: function (event) {
+                event.onComplete = function () {
+                    $("input[name='saveMethod']").click(function()
+                    {
+                        var checkedValue = $(this).filter(':checked').val();
+                        if(checkedValue == "gp")
+                        {
+                            $("#gpSave").show();
+                            $("#closePopup").prop( "disabled", true );
+                        }
+                        else
+                        {
+                            $("#closePopup").prop( "disabled", false );
+
+                            $("#gpSave").hide();
+                        }
+                    });
+
+                    $("#fileTree").gpUploadsTree(
+                    {
+                        name: "Uploads_Tab_Tree",
+                        onChange: function(directory)
+                        {
+                            //enable the OK button if a directory was selected
+                            if(directory != undefined && directory.url.length > 0)
+                            {
+                                $("#closePopup").prop( "disabled", false );
+                            }
+                        }
+                    });
+                };
+            },
+            onClose: function (event) {
+                var selectedGpDirObj = $("#fileTree").gpUploadsTree("selectedDir");
+                var saveMethod = $("input[name='saveMethod']:checked").val();
+                var fileName = $("#fileName").val();
+
+                if(extension != undefined && !gpUtil.endsWith(fileName, extension))
+                {
+                    fileName += extension;
+                }
+                event.onComplete = function () {
+                    var result = "success";
+                    $("#fileTree").gpUploadsTree("destroy");
+
+                    //save the file either to GenePattern or locally
+                    if(saveMethod == "gp")
+                    {
+                        var text = [];
+                        text.push(contents);
+
+                        var saveLocation = selectedGpDirObj.url + fileName;
+                        console.log("save location: " + saveLocation);
+                        uploadDataToFilesTab(saveLocation, text, function(result)
+                        {
+                            if(result !== "success")
+                            {
+                                w2alert("Error saving file. " + result, 'File Save Error');
+                            }
+                            else
+                            {
+                                w2alert("File " + fileName + " saved.", 'File Save' );
+                            }
+                        });
+                    }
+                    else
+                    {
+                        downloadFile(fileName, contents);
+                    }
+
+                    if($.isFunction(callBack))
+                    {
+                        callBack(result);
+                    }
+
+                }
+            }
+        });
+    }
+
+    /**
+     * This function displays a dialog displaying the directories in the Files Tab for the current GP user
+     * @param callBack - a callback function if a directory in the Files Tab was selected
+     */
+    function browseFilesTab(callBack) {
         //create dialog
         w2popup.open({
             title: 'Select Directory from Files Tab',
@@ -86,9 +193,9 @@ var gpLib = function() {
             //the data starts on line 4 for a gct file
             for(var r=3;r<lines.length;r++)
             {
-                var rowData = lines[3].split(/\t/);
+                var rowData = lines[r].split(/\t/);
                 data.rowNames.push(rowData[0]);
-                data.matrix[r-3] = rowData.slice(2);
+                data.matrix[r-3] = rowData.slice(2).map(Number);
             }
         }
         else
@@ -210,31 +317,137 @@ var gpLib = function() {
         return data;
     }
 
+    function isGenomeSpaceFile(fileUrl)
+    {
+        var parser = $('<a/>');
+        parser.attr("href", fileUrl);
+
+        if(parser[0].hostname.indexOf("genomespace.org") != -1)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
     /**
      * Retrieves the contents of a file from a URL
      * @param fileURL
      * @param callBack
      */
-    function getDataAtUrl(fileURL, callBack)
+    function getDataAtUrl(fileURL, options)
     {
+        if(options == undefined)
+        {
+            options = {
+                header: {}
+            };
+        }
+
+
         $.ajax({
-            contentType: 'text/plain',
-            url: fileURL
+            contentType: null,
+            url: fileURL,
+            xhrFields: {
+                withCredentials: true
+            },
+            crossDomain: true
         }).done(function (response, status, xhr) {
-            callBack(response);
+            if($.isFunction(options.successCallBack))
+            {
+                options.successCallBack(response);
+            }
         }).fail(function (response, status, xhr)
         {
             console.log(response.statusText);
+            if($.isFunction(options.failCallBack))
+            {
+                options.failCallBack(response);
+            }
+        });
+    }
+
+    /*
+     * Logs an action the Broad Institute AppLogger REST Service
+     */
+    function logToAppLogger(application, action, entity, user, successCallBack, failCallBack)
+    {
+        if(user == undefined || user.length == 0)
+        {
+            user = "anonymous";
+        }
+
+        if(application == undefined || application.length == 0)
+        {
+            w2alert("An application must be specified");
+            return;
+        }
+
+        if(entity == undefined || entity.length == 0)
+        {
+            w2alert("An entity must be specified");
+            return;
+        }
+
+        if(action == undefined || action.length == 0)
+        {
+            w2alert("An action must be specified");
+            return;
+        }
+
+        var usageObj = {
+            usage: {
+                application: application,
+                user: user,
+                entity: entity,
+                action: action
+            }
+        };
+
+        $.get("http://ipinfo.io", function (response)
+        {
+            if (response !== undefined && response.ip !== undefined)
+            {
+                usageObj.usage["ip_address"]  = response.ip;
+            }
+
+        }, "jsonp").always(function()
+        {
+            var url = "http://vcapplog:3000/usages";
+            $.ajax({
+                method: "POST",
+                url: "http://vcapplog:3000/usages",
+                contentType: "application/json",
+                data: JSON.stringify(usageObj),
+                dataType: "json",
+                crossDomain: true
+                //accepts: "application/json"
+            }).done(function (response, status, xhr) {
+                if($.isFunction(successCallBack))
+                {
+                    successCallBack(response);
+                }
+            }).fail(function (response, status, xhr)
+            {
+                console.log(response.statusText);
+                if($.isFunction(failCallBack))
+                {
+                    failCallBack(response);
+                }
+            });
         });
     }
 
     // declare 'public' functions
     return {
         uploadDataToFilesTab:uploadDataToFilesTab,
-        saveToGPDialog: saveToGPDialog,
+        browseFilesTab: browseFilesTab,
+        saveFileDialog: saveFileDialog,
         getDataAtUrl: getDataAtUrl,
         parseGCTFile: parseGCTFile,
-        parseODF: parseODF
+        parseODF: parseODF,
+        isGenomeSpaceFile: isGenomeSpaceFile,
+        logToAppLogger: logToAppLogger
     };
 }
 
@@ -244,7 +457,8 @@ var gpLib = function() {
         options: {
             name: "",
             onSuccess: null,
-            nodes: []
+            nodes: [],
+            onChange: null
         },
         topLevelNodeCounter: 0,
         _create: function() {
@@ -331,6 +545,12 @@ var gpLib = function() {
                         name: w2ui[this.name].get(nodeId).text,
                         url : dirUrl
                     };
+
+                    //call on change function if specified
+                    if(self.options.onChange != undefined && $.isFunction(self.options.onChange))
+                    {
+                        self.options.onChange(self.directory);
+                    }
                 },
                 onExpand: function(event) {
                     console.log(event);

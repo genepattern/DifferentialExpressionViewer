@@ -287,11 +287,11 @@ function filterFeatures()
     w2popup.open({
         title   : 'Filter Features',
         width   : 620,
-        opacity: 0,
+        opacity : 0,
         height  : 300,
         showMax : true,
         body    : '<div id="filterDialog"></div>',
-        buttons   : '<button class="btn" onclick="w2popup.close();">Cancel</button> '+
+        buttons : '<button class="btn" onclick="w2popup.close();">Cancel</button> '+
             '<button class="btn" id="applyFilter">OK</button>',
         onOpen  : function (event) {
             event.onComplete = function () {
@@ -309,10 +309,10 @@ function filterFeatures()
 
                     $("#filterOptions").append(div);
                     $(".filterScore").last().w2field('list',
-                        {
-                            items: cmsOdf["COLUMN_NAMES"],
-                            selected: cmsOdf["COLUMN_NAMES"][0]
-                        });
+                    {
+                        items: cmsOdf["COLUMN_NAMES"],
+                        selected: cmsOdf["COLUMN_NAMES"][0]
+                    });
                 });
 
                 $("<div/>").append(addFilterBtn).appendTo("#filterDialog");

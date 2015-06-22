@@ -10,7 +10,7 @@ requiredPatchLSIDs=urn\:lsid\:broadinstitute.org\:plugin\:GenePattern_3_9_3\:1,
 requiredPatchURLs=http\://www.broadinstitute.org/webservices/gpModuleRepository/download/prod/patch/?file\=/GenePattern_3_9_3/broadinstitute.org\:plugin/GenePattern_3_9_3/1/GenePattern_3_9_3.zip
 taskType=javascript
 userid=GenePattern
-version=Modified to be a javascript visualizer
+version=Added zoom to plots and logging of when columns are hidden or shown
 taskDoc=doc.html
 
 p1_default_value=

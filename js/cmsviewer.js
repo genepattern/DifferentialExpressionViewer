@@ -76,6 +76,7 @@ function plotHistogram(plotTitle, xDataName, data, numBins)
         },
         chart: {
             type: 'column',
+            zoomType: 'xy',
             borderWidth: 2
         },
         plotOptions: {
@@ -143,8 +144,6 @@ function plotHistogram(plotTitle, xDataName, data, numBins)
         {
             return;
         }
-
-
 
         var dataColName = $("#plot").data("dataColName");
         var hist = calculateHistogram(numBins, cmsOdf[dataColName]);
@@ -499,12 +498,16 @@ function updateLinePlot(chartContainer, plotTitle, xDataName, yDataName, series)
 {
     chartContainer.highcharts({
         chart:{
-            borderWidth: 2
+            borderWidth: 2,
+            zoomType: 'xy'
         },
         navigation: {
             buttonOptions: {
                 enabled: false
             }
+        },
+        credits: {
+            enabled: false
         },
         title: {
             text: plotTitle
@@ -554,6 +557,22 @@ function updateLinePlot(chartContainer, plotTitle, xDataName, yDataName, series)
         {
             enabled: true
         },
+        exporting: {
+            buttons: {
+                customButton: {
+                    text: 'Custom Button',
+                    onclick: function () {
+                        alert('You pressed custom the button!');
+                    }
+                },
+                anotherButton: {
+                    text: 'Another Button',
+                    onclick: function () {
+                        alert('You pressed new another button!');
+                    }
+                }
+            }
+        },
         series: series
     });
 }
@@ -563,8 +582,8 @@ function updateScatterPlot(chartContainer, plotTitle, xDataName, yDataName, seri
     chartContainer.highcharts({
         chart: {
             borderWidth: 2,
-            type: 'scatter'
-
+            type: 'scatter',
+            zoomType: 'xy'
         },
         plotOptions:
         {
@@ -699,6 +718,12 @@ function initTable()
             lineNumbers: true
         },
         multiSearch: true,
+        onColumnOnOff: function(event) {
+            console.log(event);
+
+           var state = event.checkbox.checked ? "Showing" : "Hiding";
+           gpLib.logToAppLogger(APPLICATION_NAME, state + " column: " + event.field , "table");
+        },
         "sortData": [
             { "field": cmsOdf["Test Statistic"], "direction": "DESC" }
         ]

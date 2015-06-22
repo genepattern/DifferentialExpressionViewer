@@ -307,10 +307,20 @@ function filterFeatures()
                         "<input type='text' class='greaterThanFilter'> and <= <input type='text' class='lessThanFilter'></span>");
 
                     $("#filterOptions").append(div);
+
+                    var statColumns = [];
+                    for(var c=0;c<cmsOdf["COLUMN_NAMES"].length;c++)
+                    {
+                        if(cmsOdf["COLUMN_NAMES"][c] != "Feature" && cmsOdf["COLUMN_NAMES"][c] != "Description")
+                        {
+                            statColumns.push(cmsOdf["COLUMN_NAMES"][c]);
+                        }
+                    }
+
                     $(".filterScore").last().w2field('list',
                     {
-                        items: cmsOdf["COLUMN_NAMES"],
-                        selected: cmsOdf["COLUMN_NAMES"][0]
+                        items: statColumns,
+                        selected: statColumns[0]
                     });
                 });
 
@@ -395,7 +405,7 @@ function applyFilter(filterObj)
         scorePlot(w2ui['cmsTable'].records, w2ui['cmsTable'].last.searchIds);
     }
 }
-
+issi
 /*
  function applyFilter(columnName, greater, less)
  {

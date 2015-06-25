@@ -405,7 +405,7 @@ function applyFilter(filterObj)
         scorePlot(w2ui['cmsTable'].records, w2ui['cmsTable'].last.searchIds);
     }
 }
-issi
+
 /*
  function applyFilter(columnName, greater, less)
  {

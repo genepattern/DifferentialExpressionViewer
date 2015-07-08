@@ -625,6 +625,9 @@ function updateLinePlot(chartContainer, plotTitle, xDataName, yDataName, series)
                         }
                     }
                 }
+            },
+            series: {
+                enableMouseTracking: false
             }
         },
         xAxis:

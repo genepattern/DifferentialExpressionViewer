@@ -357,6 +357,94 @@ function filterFeatures()
     });
 }
 
+function editPlotOptions()
+{
+    w2popup.open({
+        title   : 'Display Options',
+        width   : 480,
+        opacity : 0,
+        height  : 240,
+        showMax : true,
+        body    : '<div id="displayOptionsDialog"></div>',
+        buttons : '<button class="btn" onclick="w2popup.close();">Cancel</button> '+
+            '<button class="btn" id="updateDisplayOptions">OK</button>',
+        onOpen  : function (event) {
+            event.onComplete = function () {
+
+                $("#displayOptionsDialog").append("<div id='displayOptions'/>");
+                $("#updateDisplayOptions").prop('disabled', true);
+
+
+                var titleField = $("<input id='plotTitle' type='text'/>");
+                titleField.keyup(function()
+                {
+                    if($(this).val().length < 1 && $("#plotSubTitle").val() < 1)
+                    {
+                        $("#updateDisplayOptions").prop('disabled', true);
+                    }
+                    else
+                    {
+                        $("#updateDisplayOptions").prop('disabled', false);
+
+                    }
+                });
+
+                var subTitleField = $("<input id='plotSubTitle' type='text'/>");
+                subTitleField.keyup(function()
+                {
+                    if($(this).val().length < 1 & $("#plotTitle").val() < 1)
+                    {
+                        $("#updateDisplayOptions").prop('disabled', true);
+                    }
+                    else
+                    {
+                        $("#updateDisplayOptions").prop('disabled', false);
+
+                    }
+                });
+
+                var table = $("<table>");
+                $("#displayOptionsDialog").append(table);
+                $("<tr/>").append($("<td/>").append("Plot title:")).append($("<td/>").append(titleField)).appendTo(table);
+                $("<tr/>").append($("<td/>").append("Plot subtitle:")).append($("<td/>")
+                    .append(subTitleField)).appendTo(table);
+
+                $("#updateDisplayOptions").click(function()
+                {
+                    var chart;
+                    if($("#cmsScorePlot").is(":visible"))
+                    {
+                        chart = $("#cmsScorePlot").highcharts();
+                    }
+                    else
+                    {
+                        chart = $("#plot").highcharts();
+                    }
+
+                    var plotTitle = $("#plotTitle").val();
+                    if(plotTitle && plotTitle.length > 0)
+                    {
+                        chart.setTitle({text: plotTitle});
+                    }
+
+                    var plotSubTitle = $("#plotSubTitle").val();
+                    if(plotSubTitle && plotSubTitle.length > 0)
+                    {
+                        chart.setTitle({}, {text: plotSubTitle});
+                    }
+
+                    w2popup.close();
+                });
+            };
+        },
+        onToggle: function (event) {
+            event.onComplete = function () {
+                //w2ui.layout.resize();
+            }
+        }
+    });
+}
+
 /*
 filterObj: an object containing the fields columnName, greater, and less
  */
@@ -658,7 +746,6 @@ function scorePlot(records, subsetIds)
 
     var xData= "Feature";
     var yData= cmsOdf["Test Statistic"];
-    //var numPoints = cmsOdf[xData].length;
 
     var recordCount = 0;
     for(var x=0;x<records.length;x++)
@@ -666,7 +753,6 @@ function scorePlot(records, subsetIds)
         if(subsetIds == undefined || subsetIds.length == 0
             || $.inArray(records[x].recid, subsetIds) !== -1)
         {
-            ///var xValue = records[x][xData];
             var yValue = records[x][yData];
             if (yValue > 0)
             {
@@ -1119,6 +1205,11 @@ function initMenu()
                 gpLib.logToAppLogger(APPLICATION_NAME, "filter features", "filter");
                 filterFeatures();
             }
+            else if(text == "Display Options")
+            {
+                gpLib.logToAppLogger(APPLICATION_NAME, "display options", "display");
+                editPlotOptions();
+            }
             else if(text == "Save Table")
             {
                 gpLib.logToAppLogger(APPLICATION_NAME, "save table", "save");
@@ -1204,6 +1295,32 @@ function initMenu()
 
 $(function()
 {
+    /*mainLayout = $("body").layout({
+         center__minHeight:	'40%'
+       , center__minWidth:	'100%'
+       /* //,	resizerClass:			"resizer"
+        ,	togglerClass:			"toggler"
+        ,   west__size:					352
+        ,	west__spacing_open:		0
+        ,	west__spacing_closed:		23
+        ,	west__togglerLength_closed:	20 //"100%"
+        ,	west__togglerAlign_closed:	"top"
+        //,	west__togglerContent_closed:"<BR>L<BR>E<BR>F<BR>T<BR><BR>P<BR>A<BR>N<BR>E<BR>L<BR>"
+        ,	west__togglerTip_open:	    "Close Left Panel"
+        ,	west__togglerTip_closed:	"Open Left Panel"
+        //,	west__sliderTip:			"Slide Open Menu"
+        //,	west__slideTrigger_open:	"mouseover"
+        ,	west__slidable:		        false
+        ,	west__resizable:		    false */
+       /* , north__minHeight: '20%'
+        , north__resizable: false
+        , south__minHeight: '200px'
+        , south__minWidth: '100%'
+        , south__resizable: true
+        , center__spacing_open:		10
+        , south__spacing_open:		10
+    });*/
+
     var requestParams = gpUtil.parseQueryString();
 
     jobResultNumber = requestParams["job.number"];

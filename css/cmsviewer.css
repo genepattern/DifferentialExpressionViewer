@@ -93,5 +93,12 @@
     margin-bottom: 3px;
 }
 
+#displayOptionsDialog table
+{
+    min-width: 350px;
+    width: 50%;
+    margin: 30px auto 5px auto;
+}
+
 
 

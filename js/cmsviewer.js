@@ -215,7 +215,8 @@ function displayExpressionProfile(plotTitle, xDataName, yDataName, samples, seri
 
     $("#plot").highcharts({
         chart: {
-            zoomType: 'xy'
+            zoomType: 'xy',
+            borderWidth: 2
         },
         credits: {
             enabled: false
@@ -678,22 +679,6 @@ function updateLinePlot(chartContainer, plotTitle, xDataName, yDataName, series)
         tooltip:
         {
             enabled: false
-        },
-        exporting: {
-            buttons: {
-                customButton: {
-                    text: 'Custom Button',
-                    onclick: function () {
-                        alert('You pressed custom the button!');
-                    }
-                },
-                anotherButton: {
-                    text: 'Another Button',
-                    onclick: function () {
-                        alert('You pressed new another button!');
-                    }
-                }
-            }
         },
         series: series
     }, zoomAnnotation);

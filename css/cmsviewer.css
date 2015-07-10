@@ -1,6 +1,11 @@
-#cmsPlot
+#cmsScorePlot
 {
-    height: 450px;
+ height: 55%;
+}
+
+#plot
+{
+    height: 55%;
 }
 
 #cmsTable

@@ -74,6 +74,9 @@ function plotHistogram(plotTitle, xDataName, data, numBins)
                 enabled: false
             }
         },
+        credits: {
+            enabled: false
+        },
         chart: {
             type: 'column',
             zoomType: 'xy',
@@ -121,7 +124,7 @@ function plotHistogram(plotTitle, xDataName, data, numBins)
                 data: hist
             }
         ]
-    });
+    }, zoomAnnotation);
 
     var numBinsDiv = $("<div id='histogramBins'/>");
     //var numBins = $("<input id='numBins' type='text' />");
@@ -161,11 +164,6 @@ function plotHistogram(plotTitle, xDataName, data, numBins)
 function plotHeatmap()
 {
     $("#cmsScorePlot").hide();
-
-    /*for(var r=0;r<dataset.matrix.length;r++)
-    {
-
-    }*/
 
     $('#plot').highcharts({
         /*data: {
@@ -207,7 +205,7 @@ function plotHeatmap()
             data: dataset.matrix.slice(1, 1),
             borderWidth: 0
         }]
-    });
+    }, zoomAnnotation);
 }
 
 function displayExpressionProfile(plotTitle, xDataName, yDataName, samples, series)
@@ -216,6 +214,12 @@ function displayExpressionProfile(plotTitle, xDataName, yDataName, samples, seri
     $('#plot').show();
 
     $("#plot").highcharts({
+        chart: {
+            zoomType: 'xy'
+        },
+        credits: {
+            enabled: false
+        },
         navigation: {
             buttonOptions: {
                 enabled: false
@@ -242,10 +246,13 @@ function displayExpressionProfile(plotTitle, xDataName, yDataName, samples, seri
             layout: 'vertical',
             align: 'right',
             verticalAlign: 'middle',
-            borderWidth: 0
+            borderWidth: 0,
+
+            labelFormat: "{name}"
+
         },
         series: series
-    });
+    }, zoomAnnotation);
 }
 
 function expressionProfile()
@@ -592,6 +599,20 @@ function applyFilter(filterObj)
     });
 }*/
 
+/**
+ ** Display message about how to zoom on the chart
+ */
+function zoomAnnotation(chart)
+{
+    chart.renderer.text('Click and drag in the plot area to zoom',  chart.plotLeft+10, chart.plotTop - 10)
+        .css({
+            color: '#B0B0B0',
+            fontSize: '11px',
+            fontStyle: 'italic'
+        })
+        .add();
+}
+
 function updateLinePlot(chartContainer, plotTitle, xDataName, yDataName, series)
 {
     chartContainer.highcharts({
@@ -656,7 +677,7 @@ function updateLinePlot(chartContainer, plotTitle, xDataName, yDataName, series)
         },
         tooltip:
         {
-            enabled: true
+            enabled: false
         },
         exporting: {
             buttons: {
@@ -675,7 +696,7 @@ function updateLinePlot(chartContainer, plotTitle, xDataName, yDataName, series)
             }
         },
         series: series
-    });
+    }, zoomAnnotation);
 }
 
 function updateScatterPlot(chartContainer, plotTitle, xDataName, yDataName, series)
@@ -685,6 +706,9 @@ function updateScatterPlot(chartContainer, plotTitle, xDataName, yDataName, seri
             borderWidth: 2,
             type: 'scatter',
             zoomType: 'xy'
+        },
+        credits: {
+            enabled: false
         },
         plotOptions:
         {
@@ -728,7 +752,7 @@ function updateScatterPlot(chartContainer, plotTitle, xDataName, yDataName, seri
             enabled: true
         },
         series: series
-    });
+    }, zoomAnnotation);
 }
 
 function scorePlot(records, subsetIds)
@@ -1298,32 +1322,6 @@ function initMenu()
 
 $(function()
 {
-    /*mainLayout = $("body").layout({
-         center__minHeight:	'40%'
-       , center__minWidth:	'100%'
-       /* //,	resizerClass:			"resizer"
-        ,	togglerClass:			"toggler"
-        ,   west__size:					352
-        ,	west__spacing_open:		0
-        ,	west__spacing_closed:		23
-        ,	west__togglerLength_closed:	20 //"100%"
-        ,	west__togglerAlign_closed:	"top"
-        //,	west__togglerContent_closed:"<BR>L<BR>E<BR>F<BR>T<BR><BR>P<BR>A<BR>N<BR>E<BR>L<BR>"
-        ,	west__togglerTip_open:	    "Close Left Panel"
-        ,	west__togglerTip_closed:	"Open Left Panel"
-        //,	west__sliderTip:			"Slide Open Menu"
-        //,	west__slideTrigger_open:	"mouseover"
-        ,	west__slidable:		        false
-        ,	west__resizable:		    false */
-       /* , north__minHeight: '20%'
-        , north__resizable: false
-        , south__minHeight: '200px'
-        , south__minWidth: '100%'
-        , south__resizable: true
-        , center__spacing_open:		10
-        , south__spacing_open:		10
-    });*/
-
     var requestParams = gpUtil.parseQueryString();
 
     jobResultNumber = requestParams["job.number"];

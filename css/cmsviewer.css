@@ -98,12 +98,23 @@
     margin-bottom: 3px;
 }
 
-#displayOptionsDialog table
+#displayOptionsTable
 {
     min-width: 350px;
     width: 50%;
     margin: 30px auto 5px auto;
 }
 
+#plotColorTable
+{
+    min-width: 350px;
+    width: 50%;
+    margin: 30px auto 5px auto;
+}
 
+#displayOptionsDialog input
+{
+    height: 25px;
+    width: 180px;
+}
 

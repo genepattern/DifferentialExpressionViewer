@@ -371,31 +371,18 @@ function editPlotOptions()
         title   : 'Display Options',
         width   : 480,
         opacity : 0,
-        height  : 240,
+        height  : 370,
         showMax : true,
-        body    : '<div id="displayOptionsDialog"></div>',
+        body    : '<div id="displayOptionsDialog"><div id="displayTabs" style="width: 100%; height: 29px;"></div>' +
+            '<div id="displayTab1" class="tab"></div><div id="displayTab2" class="tab"></div>',
         buttons : '<button class="btn" onclick="w2popup.close();">Cancel</button> '+
             '<button class="btn" id="updateDisplayOptions">OK</button>',
         onOpen  : function (event) {
             event.onComplete = function () {
 
                 $("#displayOptionsDialog").append("<div id='displayOptions'/>");
-                $("#updateDisplayOptions").prop('disabled', true);
-
 
                 var titleField = $("<input id='plotTitle' type='text'/>");
-                titleField.keyup(function()
-                {
-                    if($(this).val().length < 1 && $("#plotSubTitle").val() < 1)
-                    {
-                        $("#updateDisplayOptions").prop('disabled', true);
-                    }
-                    else
-                    {
-                        $("#updateDisplayOptions").prop('disabled', false);
-
-                    }
-                });
 
                 var subTitleField = $("<input id='plotSubTitle' type='text'/>");
                 subTitleField.keyup(function()
@@ -411,11 +398,81 @@ function editPlotOptions()
                     }
                 });
 
-                var table = $("<table>");
-                $("#displayOptionsDialog").append(table);
+                var table = $("<table id='displayOptionsTable'>");
+                $("#displayTab1").append(table);
                 $("<tr/>").append($("<td/>").append("Plot title:")).append($("<td/>").append(titleField)).appendTo(table);
                 $("<tr/>").append($("<td/>").append("Plot subtitle:")).append($("<td/>")
                     .append(subTitleField)).appendTo(table);
+
+
+                //add fields to change the series color
+                var currentChart;
+                if($("#cmsScorePlot").is(":visible"))
+                {
+                    currentChart = $("#cmsScorePlot").highcharts();
+                }
+                else
+                {
+                    currentChart = $("#plot").highcharts();
+                }
+
+                var series = currentChart.series;
+
+                var plotColorTable = $("<table id='plotColorTable'>");
+                $("#displayTab2").append(plotColorTable);
+                for(var s=0;s<series.length;s++)
+                {
+                    var colorField =
+                        $('<input type="text" title="' + series[s].name +'" class="colorPicker" data-control="hue" value="' + series[s].color + '"/>');
+                    colorField.data('seriesIndex', s);
+
+
+                    $("<tr/>").append($("<td/>").append("Series " + (s+1) + ": ")).append($("<td/>")
+                     .append(colorField)).appendTo(plotColorTable);
+                }
+
+                $(".colorPicker").minicolors({
+                    control: $(this).attr('data-control') || 'hue',
+                    defaultValue: $(this).attr('data-defaultValue') || '',
+                    inline: $(this).attr('data-inline') === 'true',
+                    letterCase: $(this).attr('data-letterCase') || 'lowercase',
+                    opacity: $(this).attr('data-opacity'),
+                    position: $(this).attr('data-position') || 'bottom left',
+                    change: function(hex, opacity) {
+                        var log;
+                        try {
+                            log = hex ? hex : 'transparent';
+                            if( opacity ) log += ', ' + opacity;
+                            console.log(log);
+                        } catch(e) {}
+
+                        var colors = $("#displayOptionsDialog").data("seriesColor");
+                        if(colors === undefined)
+                        {
+                            colors = [];
+                        }
+
+                        var index = $(this).data("seriesIndex");
+                        colors[index] = $(this).val();
+                        $("#displayOptionsDialog").data("seriesColor", colors);
+                    },
+                    theme: 'default'
+                });
+
+                $('#displayTabs').w2tabs({
+                    name: 'tabs',
+                    active: 'displayTab1',
+                    tabs: [
+                        { id: 'displayTab1', caption: 'Title' },
+                        { id: 'displayTab2', caption: 'Plot Colors' }
+                    ],
+                    onClick: function (event) {
+                        $('#displayOptionsDialog .tab').hide();
+                        $('#displayOptionsDialog #' + event.target).show();
+                    }
+                });
+
+                $('#displayTab2').hide();
 
                 $("#updateDisplayOptions").click(function()
                 {
@@ -441,6 +498,23 @@ function editPlotOptions()
                         chart.setTitle({}, {text: plotSubTitle});
                     }
 
+                    var seriesColors = $("#displayOptionsDialog").data("seriesColor");
+                    if(seriesColors !== undefined)
+                    {
+                        var seriesChart = chart.series;
+
+                        for(var c=0;c<seriesColors.length;c++)
+                        {
+                            if(seriesColors[c] !== undefined)
+                            {
+                                seriesChart[c].color = seriesColors[c];
+                                seriesChart[c].options.color = seriesColors[c];
+                                seriesChart[c].update(seriesChart[c].options);
+                            }
+                        }
+                    }
+
+                    w2ui['tabs'].destroy();
                     w2popup.close();
                 });
             };
@@ -605,7 +679,7 @@ function applyFilter(filterObj)
  */
 function zoomAnnotation(chart)
 {
-    chart.renderer.text('Click and drag in the plot area to zoom',  chart.plotLeft+10, chart.plotTop - 10)
+    chart.renderer.text('Click and drag in the plot area to zoom',  chart.plotLeft + 8, chart.plotTop - 10)
         .css({
             color: '#B0B0B0',
             fontSize: '11px',
@@ -794,14 +868,14 @@ function scorePlot(records, subsetIds)
         data: upRegulatedClassZero,
         type: "spline",
         lineWidth: 6,
-        color: "red"
+        color: "#FF0000"
     },
     {
         name: "Upregulated in " + cmsOdf["Class 1"] + " (" + upRegulatedClassOne.length + ")",
         data:  upRegulatedClassOne,
         type: "spline",
         lineWidth: 6,
-        color: "blue"
+        color: "#0000ff"
     }];
 
     updateLinePlot($("#cmsScorePlot"), "Upregulated Features", "Feature", cmsOdf["Test Statistic"], series);
@@ -1129,7 +1203,7 @@ function customPlot()
                         {
                             name: seriesName,
                             data: customData,
-                            color: 'red'
+                            color: '#FF0000'
                         }];
                         updateScatterPlot($("#plot"), xAxisName + " vs. " + yAxisName, xAxisName, yAxisName, series);
                     }
@@ -1140,7 +1214,7 @@ function customPlot()
                             name: seriesName,
                             data: customData,
                             lineWidth: 3,
-                            color: 'red'
+                            color: '#FF0000'
                         }];
                         updateLinePlot($("#plot"), xAxisName + " vs. " + yAxisName, xAxisName, yAxisName, series);
                     }

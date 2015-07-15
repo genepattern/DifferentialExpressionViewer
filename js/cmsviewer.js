@@ -260,24 +260,31 @@ function expressionProfile()
 {
     var selectedRecordsList = w2ui['cmsTable'].getSelection();
 
-    if(selectedRecordsList.length == 1) {
-        var selectedFeature = w2ui['cmsTable'].get(selectedRecordsList[0])["Feature"];
-        var rowIndex = $.inArray(selectedFeature, dataset.rowNames);
-        if (rowIndex != -1) {
-            var rowData = dataset.matrix[rowIndex];
+    if(selectedRecordsList.length <= 10) {
 
-            var series = [
-                {
-                    name: selectedFeature,
-                    data: rowData,
-                    type: "line",
-                    lineWidth: 1,
-                    color: "red"
-                }
-            ];
+        var series = [];
+        for(var s = 0; s < selectedRecordsList.length; s++)
+        {
+            var selectedFeature = w2ui['cmsTable'].get(selectedRecordsList[s])["Feature"];
+            var rowIndex = $.inArray(selectedFeature, dataset.rowNames);
+            if (rowIndex != -1) {
+                var rowData = dataset.matrix[rowIndex];
 
-            displayExpressionProfile("Expression Profile", "Sample", "Value", dataset.sampleNames, series);
+                series.push(
+                    {
+                        name: selectedFeature,
+                        data: rowData,
+                        type: "line",
+                        lineWidth: 1
+                        /*color: "red"*/
+                    }
+                );
+            }
+
         }
+
+        displayExpressionProfile("Expression Profile", "Sample", "Value", dataset.sampleNames, series);
+
     }
     else if(selectedRecordsList.length == 0)
     {
@@ -285,7 +292,7 @@ function expressionProfile()
     }
     else
     {
-        w2alert("Only one row can be selected from the table!", "Expression Profile Error");
+        w2alert("Only 10 rows can be selected from the table!", "Expression Profile Error");
     }
 }
 
@@ -1385,16 +1392,15 @@ $(function()
 
     jobResultNumber = requestParams["job.number"];
 
-    odfFile = requestParams["comparative.marker.selection.file"];
-    datasetFile = requestParams["dataset.file"];
-
-    if(odfFile == null)
+    if(requestParams["comparative.marker.selection.file"] === null
+        || requestParams["comparative.marker.selection.file"].length < 1)
     {
         alert("Comparative marker selection file was not found");
         console.log("Comparative marker selection file was not found");
     }
     else
     {
+        odfFile = requestParams["comparative.marker.selection.file"][0];
         //Set the loaded odf file
         //set the name of the gct file
         var parser = $('<a/>');
@@ -1402,7 +1408,6 @@ $(function()
 
         var odfFileName = parser[0].pathname.substring(parser[0].pathname.lastIndexOf('/')+1);
         $("#fileLoaded").append("<span>Loaded: <a href='" + odfFile + "' target='_blank'>" + odfFileName + "</a></span>");
-
 
         var headers = {};
 
@@ -1421,9 +1426,8 @@ $(function()
             successCallBack: displayViewer
         });
 
-
-        headers = {};
-        /*if(gpLib.isGenomeSpaceFile(datasetFile))
+        /*headers = {};
+        if(gpLib.isGenomeSpaceFile(datasetFile))
         {
             if(requestParams["|gst"] !== undefined && requestParams["|gsu"] !== undefined) {
                 headers = {
@@ -1433,16 +1437,28 @@ $(function()
             }
         }*/
         //load the expression dataset
-        gpLib.getDataAtUrl(datasetFile,
-        {
-            headers: headers,
-            successCallBack: loadDataset,
-            failCallBack: function() {
-                alert("Failed to load the dataset at " + datasetFile);
 
-                $("#saveDataset").addClass("disabled");
-                $("#profile").addClass("disabled");
-            }
-        });
+        if(requestParams["dataset.file"] === null
+            || requestParams["dataset.file"].length < 1)
+        {
+            console.log("The dataset file was not found");
+        }
+        else
+        {
+            datasetFile = requestParams["dataset.file"][0];
+
+            gpLib.getDataAtUrl(datasetFile,
+            {
+                headers: headers,
+                successCallBack: loadDataset,
+                failCallBack: function() {
+                    alert("Failed to load the dataset at " + datasetFile);
+
+                    $("#saveDataset").addClass("disabled");
+                    $("#profile").addClass("disabled");
+                }
+            });
+        }
+
     }
 });

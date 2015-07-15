@@ -10,7 +10,7 @@ requiredPatchLSIDs=urn\:lsid\:broadinstitute.org\:plugin\:GenePattern_3_9_3\:1,
 requiredPatchURLs=http\://www.broadinstitute.org/webservices/gpModuleRepository/download/prod/patch/?file\=/GenePattern_3_9_3/broadinstitute.org\:plugin/GenePattern_3_9_3/1/GenePattern_3_9_3.zip
 taskType=javascript
 userid=GenePattern
-version=Changed the d3 library to the minified version to resolve errors when parsing special characters and increased the number of features that can be displayed in an expression profile plot
+version=Added menu item to show all features
 taskDoc=doc.html
 
 p1_default_value=

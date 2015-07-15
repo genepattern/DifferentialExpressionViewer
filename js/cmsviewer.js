@@ -276,7 +276,6 @@ function expressionProfile()
                         data: rowData,
                         type: "line",
                         lineWidth: 1
-                        /*color: "red"*/
                     }
                 );
             }
@@ -1297,6 +1296,13 @@ function initMenu()
             {
                 gpLib.logToAppLogger(APPLICATION_NAME, "filter features", "filter");
                 filterFeatures();
+            }
+            else if(text == "Show All Features")
+            {
+                gpLib.logToAppLogger(APPLICATION_NAME, "show all features", "filter");
+
+                //reset the grid in order to show all the features
+                w2ui['cmsTable'].reset();
             }
             else if(text == "Display Options")
             {

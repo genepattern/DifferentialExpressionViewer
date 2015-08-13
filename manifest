@@ -1,5 +1,5 @@
 author=Marc-Danie Nazaire
-commandLine=cmsviewer.html ? <comparative.marker.selection.file> <dataset.file>
+commandLine=cmsviewer.html ? <comparative.marker.selection.filename> <dataset.file>
 cpuType=any
 description=Views the results from ComparativeMarkerSelection
 language=HTML, JQuery

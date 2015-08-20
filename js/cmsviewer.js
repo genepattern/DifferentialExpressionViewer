@@ -1398,15 +1398,16 @@ $(function()
 
     jobResultNumber = requestParams["job.number"];
 
-    if(requestParams["comparative.marker.selection.file"] === null
-        || requestParams["comparative.marker.selection.file"].length < 1)
+    if(requestParams["comparative.marker.selection.filename"] === undefined
+        ||requestParams["comparative.marker.selection.filename"] === null
+        || requestParams["comparative.marker.selection.filename"].length < 1)
     {
         alert("Comparative marker selection file was not found");
         console.log("Comparative marker selection file was not found");
     }
     else
     {
-        odfFile = requestParams["comparative.marker.selection.file"][0];
+        odfFile = requestParams["comparative.marker.selection.filename"][0];
         //Set the loaded odf file
         //set the name of the gct file
         var parser = $('<a/>');
@@ -1444,14 +1445,15 @@ $(function()
         }*/
         //load the expression dataset
 
-        if(requestParams["dataset.file"] === null
-            || requestParams["dataset.file"].length < 1)
+        if(requestParams["dataset.filename"] === undefined
+            || requestParams["dataset.filename"] === null
+            || requestParams["dataset.filename"].length < 1)
         {
             console.log("The dataset file was not found");
         }
         else
         {
-            datasetFile = requestParams["dataset.file"][0];
+            datasetFile = requestParams["dataset.filename"][0];
 
             gpLib.getDataAtUrl(datasetFile,
             {

@@ -1,5 +1,5 @@
 author=Marc-Danie Nazaire
-commandLine=cmsviewer.html ? <comparative.marker.selection.filename> <dataset.file>
+commandLine=cmsviewer.html ? <comparative.marker.selection.filename> <dataset.filename>
 cpuType=any
 description=Views the results from ComparativeMarkerSelection
 language=HTML, JQuery
@@ -10,7 +10,7 @@ requiredPatchLSIDs=urn\:lsid\:broadinstitute.org\:plugin\:GenePattern_3_9_3\:1,
 requiredPatchURLs=http\://www.broadinstitute.org/webservices/gpModuleRepository/download/prod/patch/?file\=/GenePattern_3_9_3/broadinstitute.org\:plugin/GenePattern_3_9_3/1/GenePattern_3_9_3.zip
 taskType=javascript
 userid=GenePattern
-version=Renamed comparative marker selection file to comparative marker selection file name
+version=Renamed dataset file to dataset file name
 taskDoc=doc.html
 
 p1_default_value=
@@ -28,7 +28,7 @@ p2_default_value=
 p2_description=The dataset file used as input to ComparativeMarkerSelection
 p2_fileFormat=res;gct
 p2_MODE=IN
-p2_name=dataset.file
+p2_name=dataset.filename
 p2_optional=on
 p2_prefix_when_specified=
 p2_TYPE=FILE

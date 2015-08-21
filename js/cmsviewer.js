@@ -357,9 +357,12 @@ function filterFeatures()
                         })
                     });
 
-                    applyFilter(filterObj);
+                    var filterApplied = applyFilter(filterObj);
 
-                    w2popup.close()
+                    if(filterApplied)
+                    {
+                        w2popup.close()
+                    }
                 })
             };
         },
@@ -541,6 +544,7 @@ function applyFilter(filterObj)
     var records = w2ui['cmsTable'].records;
 
     var visibleRecords = [];
+    var subsetIds = [];
     for(var r=0;r<records.length;r++)
     {
         var record = records[r];
@@ -559,7 +563,7 @@ function applyFilter(filterObj)
                     stop = true;
                 }
             }
-            if (less !== undefined && $.isNumeric(less)) {
+            if (!stop && less !== undefined && $.isNumeric(less)) {
                 if (value > less) {
                     stop = true;
                 }
@@ -570,15 +574,22 @@ function applyFilter(filterObj)
 
         //if we made it to the end of the filter object then the row passes all the filters
         if (!stop && f == filterObj.length) {
-            visibleRecords.push({ field: 'recid', value: record.recid, operator: 'is'});
+            visibleRecords.push(record);
+            subsetIds.push(record.recid);
         }
     }
 
     if(visibleRecords.length > 0)
     {
-        w2ui['cmsTable'].search(visibleRecords, 'OR');
-
-        scorePlot(w2ui['cmsTable'].records, w2ui['cmsTable'].last.searchIds);
+        w2ui['cmsTable'].records = visibleRecords;
+        w2ui['cmsTable'].refresh();
+        scorePlot(w2ui['cmsTable'].records);
+        return true;
+    }
+    else
+    {
+        alert("No records match the filter.");
+        return false;
     }
 }
 
@@ -900,6 +911,7 @@ function initTable()
 
     $('#cmsTable').w2grid({
         name   : 'cmsTable',
+        selectType : 'cell',
         show: {
             selectColumn: true,
             toolbar: true,
@@ -962,9 +974,13 @@ function initTable()
             type: 'text' });
     }
 
-    var numRows = cmsOdf[cmsOdf.COLUMN_NAMES[0]].length;
+    resetRecords();
+}
 
+function resetRecords()
+{
     var records = [];
+    var numRows = cmsOdf[cmsOdf.COLUMN_NAMES[0]].length;
     for(var r=0;r<numRows;r++)
     {
         var record = {};
@@ -981,12 +997,10 @@ function initTable()
         records.push(record);
     }
 
-    //add the record
-    var result = w2ui['cmsTable'].add(records);
+    w2ui['cmsTable'].records = records;
+    w2ui['cmsTable'].refresh();
 
-    if (!result) {
-        console.log("Failed to add records table");
-    }
+    scorePlot(w2ui['cmsTable'].records);
 }
 
 function createDataset()
@@ -1029,8 +1043,7 @@ function createFeatureList(selectedOnly)
         var selectedRecidsArr = w2ui['cmsTable'].getSelection();
         for(var s=0;s<selectedRecidsArr.length;s++)
         {
-            var feature = w2ui['cmsTable'].get(selectedRecidsArr[s]).Feature;
-            content += feature;
+            content += w2ui['cmsTable'].get(selectedRecidsArr[s]).Feature;
             content += "\n";
         }
     }
@@ -1302,7 +1315,9 @@ function initMenu()
                 gpLib.logToAppLogger(APPLICATION_NAME, "show all features", "filter");
 
                 //reset the grid in order to show all the features
-                w2ui['cmsTable'].reset();
+                //w2ui['cmsTable'].reset();
+                resetRecords();
+                scorePlot()
             }
             else if(text == "Display Options")
             {

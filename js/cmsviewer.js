@@ -260,7 +260,11 @@ function expressionProfile()
 {
     var selectedRecordsList = w2ui['cmsTable'].getSelection();
 
-    if(selectedRecordsList.length <= 10) {
+    if(selectedRecordsList.length == 0)
+    {
+        w2alert("Please select a row from the table!", "Expression Profile Error");
+    }
+    else if(selectedRecordsList.length <= 10) {
 
         var series = [];
         for(var s = 0; s < selectedRecordsList.length; s++)
@@ -281,13 +285,8 @@ function expressionProfile()
             }
 
         }
-
         displayExpressionProfile("Expression Profile", "Sample", "Value", dataset.sampleNames, series);
 
-    }
-    else if(selectedRecordsList.length == 0)
-    {
-        w2alert("Please select a row from the table!", "Expression Profile Error");
     }
     else
     {
@@ -911,7 +910,6 @@ function initTable()
 
     $('#cmsTable').w2grid({
         name   : 'cmsTable',
-        selectType : 'cell',
         show: {
             selectColumn: true,
             toolbar: true,
@@ -1315,9 +1313,8 @@ function initMenu()
                 gpLib.logToAppLogger(APPLICATION_NAME, "show all features", "filter");
 
                 //reset the grid in order to show all the features
-                //w2ui['cmsTable'].reset();
                 resetRecords();
-                scorePlot()
+                scorePlot(w2ui['cmsTable'].records);
             }
             else if(text == "Display Options")
             {

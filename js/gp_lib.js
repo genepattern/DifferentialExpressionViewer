@@ -1,4 +1,43 @@
+/*
+ * Depends on the jQuery, jQuery UI, and the Javascript Cookie plugins
+ */
+$(function()
+{
+    //setup the global Authorization token
+    var token = window.location.hash;
+    if(token !== undefined && token !== null && token.length > 0)
+    {
+        $.ajaxSetup({
+            headers: {"Authorization": "Bearer " + token}
+        });
+    }
+});
+
 var gpLib = function() {
+
+    /**
+     * Uploads a file to the GP Files Tab
+     * @param url - the url of the file on the GP server
+     * @param data - the contents of the file
+     * @param callBack - a callback function if the upload was successful
+     */
+    function getGPFile(fileURL, successCallBack, failCallBack)
+    {
+        $.ajax({
+            contentType: 'text/plain',
+            url: fileURL
+        }).done(function (response, status, xhr) {
+            if(successCallBack != undefined && $.isFunction(successCallBack))
+            {
+                successCallBack(response);
+            }
+        }).fail(function (response, status, xhr)
+        {
+            if(failCallBack != undefined && $.isFunction(failCallBack)) {
+                failCallBack(response);
+            }
+        });
+    }
 
     /**
      * Uploads a file to the GP Files Tab
@@ -370,27 +409,22 @@ var gpLib = function() {
     /*
      * Logs an action the Broad Institute AppLogger REST Service
      */
-    function logToAppLogger(application, action, entity, user, successCallBack, failCallBack)
-    {
-        if(user == undefined || user.length == 0)
-        {
+    function logToAppLogger(application, action, entity, user, successCallBack, failCallBack) {
+        if (user == undefined || user.length == 0) {
             user = "anonymous";
         }
 
-        if(application == undefined || application.length == 0)
-        {
+        if (application == undefined || application.length == 0) {
             w2alert("An application must be specified");
             return;
         }
 
-        if(entity == undefined || entity.length == 0)
-        {
+        if (entity == undefined || entity.length == 0) {
             w2alert("An entity must be specified");
             return;
         }
 
-        if(action == undefined || action.length == 0)
-        {
+        if (action == undefined || action.length == 0) {
             w2alert("An action must be specified");
             return;
         }
@@ -404,15 +438,7 @@ var gpLib = function() {
             }
         };
 
-        $.get("http://ipinfo.io", function (response)
-        {
-            if (response !== undefined && response.ip !== undefined)
-            {
-                usageObj.usage["ip_address"]  = response.ip;
-            }
-
-        }, "jsonp").always(function()
-        {
+        var logActivity = function (){
             var url = "http://vcapplog:3000/usages";
             $.ajax({
                 method: "POST",
@@ -421,21 +447,40 @@ var gpLib = function() {
                 data: JSON.stringify(usageObj),
                 dataType: "json",
                 crossDomain: true
-                //accepts: "application/json"
             }).done(function (response, status, xhr) {
-                if($.isFunction(successCallBack))
-                {
+                if ($.isFunction(successCallBack)) {
                     successCallBack(response);
                 }
-            }).fail(function (response, status, xhr)
-            {
+            }).fail(function (response, status, xhr) {
                 console.log(response.statusText);
-                if($.isFunction(failCallBack))
-                {
+                if ($.isFunction(failCallBack)) {
                     failCallBack(response);
                 }
             });
-        });
+        };
+
+        var ipAddress = Cookies.get('ipAddress');
+        if(ipAddress === undefined || ipAddress !== null && ipAddress.length == 0)
+        {
+            $.get("http://ipinfo.io", function (response)
+            {
+                var ipAddress = "";
+                if (response !== undefined && response.ip !== undefined)
+                {
+                    usageObj.usage["ip_address"]  = response.ip;
+                    ipAddress = response.ip;
+                }
+
+                $.cookie("clientIpAddress", ipAddress);
+            }, "jsonp").always(function()
+            {
+                logActivity();
+            });
+        }
+        else
+        {
+            logActivity();
+        }
     }
 
     // declare 'public' functions

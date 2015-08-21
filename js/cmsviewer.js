@@ -52,13 +52,26 @@ function calculateHistogram(numBins, data)
     return hist;
 }
 
-function plotHistogram(plotTitle, xDataName, data, numBins)
+function getDataInColumn(columnName)
+{
+    var data = [];
+    var records = w2ui['cmsTable'].records;
+    for(var r=0;r<records.length;r++)
+    {
+        data.push(records[r][columnName]);
+    }
+
+    return data;
+}
+
+function plotHistogram(plotTitle, dataColumnName, numBins)
 {
     if(numBins == undefined)
     {
         numBins = 20;
     }
 
+    var data = getDataInColumn(dataColumnName);
     var hist = calculateHistogram(numBins, data);
 
     //hide the main plot
@@ -93,7 +106,7 @@ function plotHistogram(plotTitle, xDataName, data, numBins)
         xAxis:
         {
             title: {
-                text: xDataName
+                text: dataColumnName
             }
         },
         yAxis:
@@ -1280,7 +1293,7 @@ function initMenu()
                 gpLib.logToAppLogger(APPLICATION_NAME, "histogram: " + text, "plot");
 
                 $("#plot").data("dataColName", text);
-                plotHistogram(text + " Histogram", text, cmsOdf[text]);
+                plotHistogram(text + " Histogram", text);
             }
             else if(text == "Upregulated Features") {
                 gpLib.logToAppLogger(APPLICATION_NAME, "upregulated features", "plot");
@@ -1300,7 +1313,6 @@ function initMenu()
             }
             else if(text == "Custom Plot")
             {
-                //gpLib.logToAppLogger(APPLICATION_NAME, "custom plot", "plot");
                 customPlot();
             }
             else if(text == "Filter Features")

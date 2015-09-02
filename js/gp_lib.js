@@ -1,44 +1,22 @@
 /*
  * Depends on the jQuery, jQuery UI, and the Javascript Cookie plugins
  */
+var gpAuthorizationHeaders = {};
+
 $(function()
 {
     //setup the global Authorization token
     var token = window.location.hash;
     if(token !== undefined && token !== null && token.length > 0)
     {
+        gpAuthorizationHeaders = {"Authorization": "Bearer " + token};
         $.ajaxSetup({
-            headers: {"Authorization": "Bearer " + token}
+            headers: gpAuthorizationHeaders
         });
     }
 });
 
 var gpLib = function() {
-
-    /**
-     * Uploads a file to the GP Files Tab
-     * @param url - the url of the file on the GP server
-     * @param data - the contents of the file
-     * @param callBack - a callback function if the upload was successful
-     */
-    function getGPFile(fileURL, successCallBack, failCallBack)
-    {
-        $.ajax({
-            contentType: 'text/plain',
-            url: fileURL
-        }).done(function (response, status, xhr) {
-            if(successCallBack != undefined && $.isFunction(successCallBack))
-            {
-                successCallBack(response);
-            }
-        }).fail(function (response, status, xhr)
-        {
-            if(failCallBack != undefined && $.isFunction(failCallBack)) {
-                failCallBack(response);
-            }
-        });
-    }
-
     /**
      * Uploads a file to the GP Files Tab
      * @param url - the url of the file on the GP server
@@ -372,23 +350,32 @@ var gpLib = function() {
     /**
      * Retrieves the contents of a file from a URL
      * @param fileURL
-     * @param callBack
+     * @param options - contains the a success callback function
+     *                  and a failure callback function
      */
     function getDataAtUrl(fileURL, options)
     {
+        var credentials = false;
+        if(fileURL.indexOf("https://") === 0)
+        {
+            credentials = true;
+        }
+
         if(options == undefined)
         {
             options = {
-                header: {}
+                headers: {}
             };
         }
 
+        $.extend(options.headers, gpAuthorizationHeaders);
 
         $.ajax({
             contentType: null,
             url: fileURL,
+            headers: options.headers,
             xhrFields: {
-                withCredentials: true
+                withCredentials: credentials
             },
             crossDomain: true
         }).done(function (response, status, xhr) {

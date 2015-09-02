@@ -1451,7 +1451,14 @@ $(function()
                 };
             }
         }
-        //load the odf file and display plot and table
+
+        //HACK for the GenePattern protocols
+        if(odfFile == "ftp://ftp.broadinstitute.org/pub/genepattern/datasets/protocols/all_aml_test.preprocessed.comp.marker.odf")
+        {
+            odfFile = "http://www.broadinstitute.org/cancer/software/genepattern/data/protocols/all_aml_test.preprocessed.comp.marker.odf";
+        }
+
+            //load the odf file and display plot and table
         gpLib.getDataAtUrl(odfFile,
         {   headers: headers,
             successCallBack: displayViewer
@@ -1478,6 +1485,12 @@ $(function()
         else
         {
             datasetFile = requestParams["dataset.filename"][0];
+
+            //HACK so that the GenePattern protocols work
+            if(datasetFile == "ftp://ftp.broadinstitute.org/pub/genepattern/datasets/protocols/all_aml_test.preprocessed.gct")
+            {
+                datasetFile = "http://www.broadinstitute.org/cancer/software/genepattern/data/protocols/all_aml_test.preprocessed.gct";
+            }
 
             gpLib.getDataAtUrl(datasetFile,
             {

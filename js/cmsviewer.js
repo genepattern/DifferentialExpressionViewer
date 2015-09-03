@@ -1461,7 +1461,13 @@ $(function()
             //load the odf file and display plot and table
         gpLib.getDataAtUrl(odfFile,
         {   headers: headers,
-            successCallBack: displayViewer
+            successCallBack: displayViewer,
+            failCallBack: function() {
+                alert("Failed to load the dataset at " + datasetFile);
+
+                $("#saveDataset").addClass("disabled");
+                $("#profile").addClass("disabled");
+            }
         });
 
         /*headers = {};

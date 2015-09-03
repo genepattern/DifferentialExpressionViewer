@@ -1463,7 +1463,7 @@ $(function()
         {   headers: headers,
             successCallBack: displayViewer,
             failCallBack: function() {
-                alert("Failed to load the dataset at " + datasetFile);
+                alert("Failed to load the odf at " + odfFile);
 
                 $("#saveDataset").addClass("disabled");
                 $("#profile").addClass("disabled");

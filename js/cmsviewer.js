@@ -169,7 +169,7 @@ function plotHistogram(plotTitle, dataColumnName, numBins)
     numBinsDiv.append("<label>Number of bins: <input id='numBins' type='text' value='"+ numBins + "'/> </label>");
 
     numBinsDiv.append(numBinsButton);
-    $("<div/>").append(numBinsDiv).appendTo("#plot");
+    $("<div/>").append(numBinsDiv).insertAfter("#plot");
 
     $('#numBins').w2field('int', { autoFormat: false });
 }

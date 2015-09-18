@@ -1416,7 +1416,7 @@ function initMenu()
     });
 }
 
-$(function()
+function loadCMSViewer()
 {
     var requestParams = gpUtil.parseQueryString();
 
@@ -1458,28 +1458,28 @@ $(function()
             odfFile = "http://www.broadinstitute.org/cancer/software/genepattern/data/protocols/all_aml_test.preprocessed.comp.marker.odf";
         }
 
-            //load the odf file and display plot and table
+        //load the odf file and display plot and table
         gpLib.getDataAtUrl(odfFile,
-        {   headers: headers,
-            successCallBack: displayViewer,
-            failCallBack: function() {
-                alert("Failed to load the odf at " + odfFile);
+            {   headers: headers,
+                successCallBack: displayViewer,
+                failCallBack: function() {
+                    alert("Failed to load the odf at " + odfFile);
 
-                $("#saveDataset").addClass("disabled");
-                $("#profile").addClass("disabled");
-            }
-        });
+                    $("#saveDataset").addClass("disabled");
+                    $("#profile").addClass("disabled");
+                }
+            });
 
         /*headers = {};
-        if(gpLib.isGenomeSpaceFile(datasetFile))
-        {
-            if(requestParams["|gst"] !== undefined && requestParams["|gsu"] !== undefined) {
-                headers = {
-                    "gs-token": requestParams["|gst"].join(),
-                    "gs-username": requestParams["|gsu"].join()
-                };
-            }
-        }*/
+         if(gpLib.isGenomeSpaceFile(datasetFile))
+         {
+         if(requestParams["|gst"] !== undefined && requestParams["|gsu"] !== undefined) {
+         headers = {
+         "gs-token": requestParams["|gst"].join(),
+         "gs-username": requestParams["|gsu"].join()
+         };
+         }
+         }*/
         //load the expression dataset
 
         if(requestParams["dataset.filename"] === undefined
@@ -1499,17 +1499,22 @@ $(function()
             }
 
             gpLib.getDataAtUrl(datasetFile,
-            {
-                headers: headers,
-                successCallBack: loadDataset,
-                failCallBack: function() {
-                    alert("Failed to load the dataset at " + datasetFile);
+                {
+                    headers: headers,
+                    successCallBack: loadDataset,
+                    failCallBack: function() {
+                        alert("Failed to load the dataset at " + datasetFile);
 
-                    $("#saveDataset").addClass("disabled");
-                    $("#profile").addClass("disabled");
-                }
-            });
+                        $("#saveDataset").addClass("disabled");
+                        $("#profile").addClass("disabled");
+                    }
+                });
         }
 
     }
+}
+
+$(function()
+{
+    loadCMSViewer();
 });

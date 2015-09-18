@@ -46,7 +46,7 @@ function calculateHistogram(numBins, data)
     var hist = [];
     for(var h=0;h<histogram.length;h++)
     {
-        hist.push(histogram[h].length);
+        hist.push([histogram[h].x, histogram[h].y]);
     }
 
     return hist;

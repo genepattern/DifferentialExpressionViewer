@@ -1426,8 +1426,8 @@ function loadCMSViewer()
         ||requestParams["comparative.marker.selection.filename"] === null
         || requestParams["comparative.marker.selection.filename"].length < 1)
     {
-        alert("Comparative marker selection file was not found");
-        console.log("Comparative marker selection file was not found");
+        alert("Comparative marker selection filename was not found");
+        console.log("Comparative marker selection filename was not found");
     }
     else
     {

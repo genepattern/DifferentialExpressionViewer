@@ -180,6 +180,7 @@ function plotHistogram(plotTitle, dataColumnName, numBins)
 function plotHeatmap()
 {
     $("#cmsScorePlot").hide();
+    $("#histogramBins").remove();
 
     $('#plot').highcharts({
         /*data: {
@@ -227,6 +228,8 @@ function plotHeatmap()
 function displayExpressionProfile(plotTitle, xDataName, yDataName, samples, series)
 {
     $("#cmsScorePlot").hide();
+    $("#histogramBins").remove();
+
     $('#plot').show();
 
     $("#plot").highcharts({
@@ -274,6 +277,8 @@ function displayExpressionProfile(plotTitle, xDataName, yDataName, samples, seri
 
 function expressionProfile()
 {
+    $("#histogramBins").remove();
+
     var selectedRecordsList = w2ui['cmsTable'].getSelection();
 
     if(selectedRecordsList.length == 0)
@@ -722,6 +727,8 @@ function zoomAnnotation(chart)
 
 function updateLinePlot(chartContainer, plotTitle, xDataName, yDataName, series)
 {
+    $("#histogramBins").remove();
+
     chartContainer.highcharts({
         chart:{
             borderWidth: 2,
@@ -792,6 +799,8 @@ function updateLinePlot(chartContainer, plotTitle, xDataName, yDataName, series)
 
 function updateScatterPlot(chartContainer, plotTitle, xDataName, yDataName, series)
 {
+    $("#histogramBins").remove();
+
     chartContainer.highcharts({
         chart: {
             borderWidth: 2,

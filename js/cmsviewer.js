@@ -139,6 +139,9 @@ function plotHistogram(plotTitle, dataColumnName, numBins)
         ]
     }, zoomAnnotation);
 
+    //remove any existing histogram divs
+    $("#histogramBins").remove();
+
     var numBinsDiv = $("<div id='histogramBins'/>");
     //var numBins = $("<input id='numBins' type='text' />");
     var numBinsButton = $("<button id='updateNumBins'>Update</button>").click(function()

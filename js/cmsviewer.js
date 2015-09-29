@@ -1428,6 +1428,13 @@ function initMenu()
     });
 }
 
+function displayLoadError(errorMessage)
+{
+    var errorMsg = errorMessage;
+    $("#cmsMain").empty();
+    $("#cmsMain").append("<h3 style='color:red'>There was an error loading the ComparativeMarkerSelectionViewer: <p>Error: " + errorMsg +"</p></h3>");
+}
+
 function loadCMSViewer()
 {
     var requestParams = gpUtil.parseQueryString();
@@ -1438,7 +1445,7 @@ function loadCMSViewer()
         ||requestParams["comparative.marker.selection.filename"] === null
         || requestParams["comparative.marker.selection.filename"].length < 1)
     {
-        alert("Comparative marker selection filename was not found");
+        displayLoadError("Comparative marker selection filename was not found");
         console.log("Comparative marker selection filename was not found");
     }
     else
@@ -1474,12 +1481,7 @@ function loadCMSViewer()
         gpLib.getDataAtUrl(odfFile,
             {   headers: headers,
                 successCallBack: displayViewer,
-                failCallBack: function() {
-                    alert("Failed to load the odf at " + odfFile);
-
-                    $("#saveDataset").addClass("disabled");
-                    $("#profile").addClass("disabled");
-                }
+                failCallBack: displayLoadError
             });
 
         /*headers = {};
@@ -1514,9 +1516,10 @@ function loadCMSViewer()
                 {
                     headers: headers,
                     successCallBack: loadDataset,
-                    failCallBack: function() {
-                        alert("Failed to load the dataset at " + datasetFile);
+                    failCallBack: function(errorMsg, response) {
+                        alert("Failed to load the dataset at " + datasetFile + ": \n" + errorMsg);
 
+                        console.log("Failed to load the dataset at " + datasetFile + ": \n" + errorMsg);
                         $("#saveDataset").addClass("disabled");
                         $("#profile").addClass("disabled");
                     }

@@ -350,11 +350,21 @@ var gpLib = function() {
     /**
      * Retrieves the contents of a file from a URL
      * @param fileURL
-     * @param options - contains the a success callback function
+     * @param options - can contain request headers, a success callback function
      *                  and a failure callback function
      */
     function getDataAtUrl(fileURL, options)
     {
+        //if the URL is an ftp url then fail
+        if(fileURL.indexOf("ftp://") ===0)
+        {
+            var errorMsg = "FTP files are not supported.";
+            if($.isFunction(options.failCallBack)) {
+                options.failCallBack(errorMsg);
+            }
+            throw new Error(errorMsg);
+        }
+
         var credentials = false;
         if(fileURL.indexOf("https://") === 0)
         {
@@ -388,7 +398,7 @@ var gpLib = function() {
             console.log(response.statusText);
             if($.isFunction(options.failCallBack))
             {
-                options.failCallBack(response);
+                options.failCallBack(response.statusText, response);
             }
         });
     }

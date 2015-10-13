@@ -5,7 +5,7 @@ description=Views the results from ComparativeMarkerSelection
 language=HTML, JQuery
 name=ComparativeMarkerSelectionViewer
 privacy=public
-quality=production
+quality=preproduction
 requiredPatchLSIDs=urn\:lsid\:broadinstitute.org\:plugin\:GenePattern_3_9_3\:1,
 requiredPatchURLs=http\://www.broadinstitute.org/webservices/gpModuleRepository/download/prod/patch/?file\=/GenePattern_3_9_3/broadinstitute.org\:plugin/GenePattern_3_9_3/1/GenePattern_3_9_3.zip
 taskType=javascript

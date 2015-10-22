@@ -468,7 +468,7 @@ var gpLib = function() {
                     ipAddress = response.ip;
                 }
 
-                Cookie.set("clientIpAddress", ipAddress);
+                Cookies.set("clientIpAddress", ipAddress);
             }, "jsonp").always(function()
             {
                 logActivity();

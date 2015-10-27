@@ -1,4 +1,5 @@
-var APPLICATION_NAME= "ComparativeMarkerSelectionViewer version 1";
+var APPLICATION_NAME= "ComparativeMarkerSelectionViewer version 8";
+var requestParams;
 var jobResultNumber;
 var dataset;
 var cmsOdf;
@@ -6,13 +7,28 @@ var datasetFile;
 var odfFile;
 var computedStatsColumnNames;
 var cmsOdfContents = "";
+var datasetContents = "";
 
 function loadDataset(data) {
     dataset = gpLib.parseGCTFile(data);
+
+    data = null;
 }
 
 function loadOdfFile(odfURL)
 {
+    var headers = {};
+
+    if(gpLib.isGenomeSpaceFile(odfFile))
+    {
+        if(requestParams["|gst"] !== undefined && requestParams["|gsu"] !== undefined) {
+            headers = {
+                "gs-token": requestParams["|gst"].join(),  //should only be one item
+                "gs-username": requestParams["|gsu"].join()
+            };
+        }
+    }
+
     gpLib.rangeRequestsAllowed(odfURL,
     {
         successCallBack: function(acceptRanges)
@@ -22,14 +38,59 @@ function loadOdfFile(odfURL)
                 blockElement($("body"), "Loading and parsing ODF file");
 
                 //get the third data row in order to get the sample names
-                getFileContentsUsingByteRequests(odfURL, -1, 0, 1000000);
+                getOdfFileContentsUsingByteRequests(odfURL, -1, 0, 1000000, headers);
             }
             else
             {
                 gpLib.getDataAtUrl(odfURL,
                 {
+                    headers: headers,
                     successCallBack: displayViewer,
                     failCallBack: displayLoadError
+                });
+            }
+        },
+        failCallBack: displayLoadError
+    });
+}
+
+function loadDatasetFile(datasetURL)
+{
+     var headers = {};
+     if(gpLib.isGenomeSpaceFile(datasetFile))
+     {
+         if(requestParams["|gst"] !== undefined && requestParams["|gsu"] !== undefined) {
+         headers = {
+             "gs-token": requestParams["|gst"].join(),
+             "gs-username": requestParams["|gsu"].join()
+             };
+         }
+     }
+
+    gpLib.rangeRequestsAllowed(datasetURL,
+    {
+        successCallBack: function(acceptRanges)
+        {
+            if(acceptRanges)
+            {
+                blockElement($("body"), "Loading and parsing dataset file");
+
+                //get the third data row in order to get the sample names
+                getDatasetFileContentsUsingByteRequests(datasetURL, -1, 0, 1000000, headers);
+            }
+            else
+            {
+                gpLib.getDataAtUrl(datasetFile,
+                {
+                    headers: headers,
+                    successCallBack: loadDataset,
+                    failCallBack: function(errorMsg, response) {
+                        alert("Failed to load the dataset at " + datasetFile + ": \n" + errorMsg);
+
+                        console.log("Failed to load the dataset at " + datasetFile + ": \n" + errorMsg);
+                        $("#saveDataset").addClass("disabled");
+                        $("#profile").addClass("disabled");
+                    }
                 });
             }
         },
@@ -65,18 +126,20 @@ function blockElement(element, message)
         }
     });
 }
-function getFileContentsUsingByteRequests(fileURL, maxNumLines, startBytes, byteIncrement, fileContents)
+
+function getOdfFileContentsUsingByteRequests(fileURL, maxNumLines, startBytes, byteIncrement, fileContents, headers)
 {
     if(fileContents != undefined)
     {
-        cmsOdfContents += fileContents;
+        cmsOdfContents = cmsOdfContents.concat(fileContents);
     }
 
     if(startBytes != undefined && startBytes != null && startBytes >= 0 && fileContents != "")
     {
         gpLib.readBytesFromURL(fileURL, maxNumLines, startBytes, byteIncrement,
         {
-            successCallBack: getFileContentsUsingByteRequests,
+            headers: headers,
+            successCallBack: getOdfFileContentsUsingByteRequests,
             failCallBack: displayLoadError
         });
 
@@ -86,6 +149,7 @@ function getFileContentsUsingByteRequests(fileURL, maxNumLines, startBytes, byte
         if(cmsOdfContents != undefined && cmsOdfContents != null && cmsOdfContents.length > 0)
         {
             displayViewer(cmsOdfContents);
+            cmsOdfContents = null;
         }
         else
         {
@@ -94,6 +158,44 @@ function getFileContentsUsingByteRequests(fileURL, maxNumLines, startBytes, byte
     }
 }
 
+function getDatasetFileContentsUsingByteRequests(fileURL, maxNumLines, startBytes, byteIncrement, fileContents, headers)
+{
+    if(fileContents != undefined)
+    {
+        datasetContents = datasetContents.concat(fileContents);
+    }
+
+    var processFailure = function(errorMsg, response) {
+        alert("Failed to load the dataset at " + fileURL + ": \n" + errorMsg);
+
+        console.log("Failed to load the dataset at " + fileURL + ": \n" + errorMsg);
+        $("#saveDataset").addClass("disabled");
+        $("#profile").addClass("disabled");
+    };
+
+    if(startBytes != undefined && startBytes != null && startBytes >= 0 && fileContents != "")
+    {
+
+        gpLib.readBytesFromURL(fileURL, maxNumLines, startBytes, byteIncrement,
+        {
+            headers: headers,
+            successCallBack: getDatasetFileContentsUsingByteRequests,
+            failCallBack: processFailure
+        });
+    }
+    else
+    {
+        if(datasetContents != undefined && datasetContents != null && datasetContents.length > 0)
+        {
+            loadDataset(datasetContents);
+            datasetContents = null;
+        }
+        else
+        {
+            processFailure("Dataset at " + datasetFile+ " is empty");
+        }
+    }
+}
 
 function displayViewer(data) {
 
@@ -1531,7 +1633,7 @@ function displayLoadError(errorMessage)
 
 function loadCMSViewer()
 {
-    var requestParams = gpUtil.parseQueryString();
+    requestParams = gpUtil.parseQueryString();
 
     jobResultNumber = requestParams["job.number"];
 
@@ -1553,18 +1655,6 @@ function loadCMSViewer()
         var odfFileName = parser[0].pathname.substring(parser[0].pathname.lastIndexOf('/')+1);
         $("#fileLoaded").append("<span>Loaded: <a href='" + odfFile + "' target='_blank'>" + odfFileName + "</a></span>");
 
-        var headers = {};
-
-        if(gpLib.isGenomeSpaceFile(odfFile))
-        {
-            if(requestParams["|gst"] !== undefined && requestParams["|gsu"] !== undefined) {
-                headers = {
-                    "gs-token": requestParams["|gst"].join(),  //should only be one item
-                    "gs-username": requestParams["|gsu"].join()
-                };
-            }
-        }
-
         //HACK for the GenePattern protocols
         if(odfFile == "ftp://ftp.broadinstitute.org/pub/genepattern/datasets/protocols/all_aml_test.preprocessed.comp.marker.odf")
         {
@@ -1579,18 +1669,7 @@ function loadCMSViewer()
             });*/
         loadOdfFile(odfFile);
 
-        /*headers = {};
-         if(gpLib.isGenomeSpaceFile(datasetFile))
-         {
-         if(requestParams["|gst"] !== undefined && requestParams["|gsu"] !== undefined) {
-         headers = {
-         "gs-token": requestParams["|gst"].join(),
-         "gs-username": requestParams["|gsu"].join()
-         };
-         }
-         }*/
         //load the expression dataset
-
         if(requestParams["dataset.filename"] === undefined
             || requestParams["dataset.filename"] === null
             || requestParams["dataset.filename"].length < 1)
@@ -1607,20 +1686,8 @@ function loadCMSViewer()
                 datasetFile = "http://www.broadinstitute.org/cancer/software/genepattern/data/protocols/all_aml_test.preprocessed.gct";
             }
 
-            gpLib.getDataAtUrl(datasetFile,
-                {
-                    headers: headers,
-                    successCallBack: loadDataset,
-                    failCallBack: function(errorMsg, response) {
-                        alert("Failed to load the dataset at " + datasetFile + ": \n" + errorMsg);
-
-                        console.log("Failed to load the dataset at " + datasetFile + ": \n" + errorMsg);
-                        $("#saveDataset").addClass("disabled");
-                        $("#profile").addClass("disabled");
-                    }
-                });
+            loadDatasetFile(datasetFile);
         }
-
     }
 }
 

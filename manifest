@@ -10,7 +10,7 @@ requiredPatchLSIDs=urn\:lsid\:broadinstitute.org\:plugin\:GenePattern_3_9_3\:1,
 requiredPatchURLs=http\://www.broadinstitute.org/webservices/gpModuleRepository/download/prod/patch/?file\=/GenePattern_3_9_3/broadinstitute.org\:plugin/GenePattern_3_9_3/1/GenePattern_3_9_3.zip
 taskType=javascript
 userid=GenePattern
-version=Improved error message for when an ftp file is provided as input
+version=Added support for parsing files using byte range requests and improved error handling
 taskDoc=doc.html
 
 p1_default_value=

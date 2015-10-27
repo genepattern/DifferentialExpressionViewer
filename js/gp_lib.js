@@ -217,7 +217,7 @@ var gpLib = function() {
         }
         else
         {
-            console.log("Error parsing data: Unexpected number of lines " + lines.length);
+            throw new Error("Error parsing data: Unexpected number of lines " + lines.length + ".");
         }
 
         return data;
@@ -231,9 +231,8 @@ var gpLib = function() {
 
         if(lines.length < 2)
         {
-            console.log("Error parsing ODF file. Unexpected number " +
+            throw new Error("Error parsing ODF file. Unexpected number " +
                 "of lines: " + lines.length);
-            return;
         }
 
         //get the number of header lines
@@ -241,8 +240,7 @@ var gpLib = function() {
 
         if(headerLine.length < 2)
         {
-            console.log("Error parsing header line : " + lines[1]);
-            return;
+            throw new Error("Error parsing header line : " + lines[1]);
         }
 
         var numHeaderLines = parseInt(headerLine[1]);
@@ -267,14 +265,12 @@ var gpLib = function() {
                     data[headerRow[0]] = list;
                 }
             }
-
         }
 
         //Now check that this is a CMS ODF file
         if(data["Model"].length === 0 || data["Model"] !== modelType)
         {
-            alert("Invalid ODF model. Found " + data["Model"] + " but expected " + modelType);
-            return;
+            throw new Error("Invalid ODF model. Found " + data["Model"] + " but expected " + modelType);
         }
 
         //Now parse the data lines
@@ -291,16 +287,14 @@ var gpLib = function() {
 
                 if(numColumns !== data["COLUMN_NAMES"].length)
                 {
-                    alert("Unexpected number of data columns found. Expected "
-                    +   dataRow.length + " but found " +data["COLUMN_NAMES"].length);
-                    return;
+                    throw new Error("Unexpected number of data columns found on line " + n+". Expected "
+                    +   data["COLUMN_NAMES"].length + " but found " +  + dataRow.length  + ".");
                 }
 
                 if(numColumns !== data["COLUMN_TYPES"].length)
                 {
-                    alert("Unexpected number of data column types found. Expected "
-                        +  numColumns + " but found " + data["COLUMN_TYPES"].length);
-                    return;
+                    throw new Error("Unexpected number of data column types found. Expected "
+                     + data["COLUMN_TYPES"].length +  " but found " + numColumns + ".");
                 }
 
                 for(var c=0;c < numColumns; c++)
@@ -480,6 +474,174 @@ var gpLib = function() {
         }
     }
 
+    function rangeRequestsAllowed(fileURL, options)
+    {
+        //if the URL is an ftp url then fail
+        if(fileURL.indexOf("ftp://") === 0)
+        {
+            var errorMsg = "FTP files are not supported.";
+            if($.isFunction(options.failCallBack)) {
+                options.failCallBack(errorMsg);
+            }
+            throw new Error(errorMsg);
+        }
+        var credentials = false;
+        if(fileURL.indexOf("https://") === 0)
+        {
+            credentials = true;
+        }
+
+        if(options === undefined)
+        {
+            options = {};
+        }
+
+        if(options.headers === undefined)
+        {
+            options.headers =  {}
+        }
+
+        $.extend(options.headers, gpAuthorizationHeaders);
+
+        $.ajax({
+            contentType: null,
+            method: "HEAD",
+            url: fileURL,
+            headers: options.headers,
+            xhrFields: {
+                withCredentials: credentials
+            },
+            crossDomain: true
+        }).done(function (response, status, xhr)
+        {
+            var allowRangeRequests = false;
+            var acceptRanges = xhr.getResponseHeader("Accept-Ranges");
+            if(acceptRanges === "bytes")
+            {
+                allowRangeRequests = true;
+            }
+
+            if($.isFunction(options.successCallBack))
+            {
+                options.successCallBack(allowRangeRequests, response);
+            }
+        }).fail(function (response, status, xhr)
+        {
+            if($.isFunction(options.failCallBack))
+            {
+                options.failCallBack(response.statusText, response);
+            }
+        });
+    }
+
+    function readBytesFromURL(fileURL, maxNumLines, byteStart, byteIncrement, options)
+    {
+        if(byteStart === undefined || byteStart === null || byteStart === "")
+        {
+            throw Error("No starting byte specified for range request");
+        }
+
+        if(byteStart < 0)
+        {
+            throw Error("Invalid starting byte specified for range request: " + byteStart);
+        }
+
+        //if the URL is an ftp url then fail
+        if(fileURL.indexOf("ftp://") === 0)
+        {
+            var errorMsg = "FTP files are not supported.";
+            if($.isFunction(options.failCallBack)) {
+                options.failCallBack(errorMsg);
+            }
+            throw new Error(errorMsg);
+        }
+
+        var credentials = false;
+        if(fileURL.indexOf("https://") === 0)
+        {
+            credentials = true;
+        }
+
+        if(options === undefined)
+        {
+            options = {};
+        }
+
+        if(options.headers === undefined)
+        {
+            options.headers =  {};
+        }
+
+        var byteEnd = "";
+        //if no byte increment is specified then default to +1000000 bytes from start
+        if(byteIncrement === undefined || byteIncrement === null)
+        {
+            byteIncrement = 1000000;
+        }
+
+        //byteIncrement is empty then do not set an ending byte range
+        if(byteIncrement != "")
+        {
+            byteEnd = byteStart + byteIncrement;
+        }
+
+        //get all bytes since max is not specified
+        if(byteEnd == -1)
+        {
+            byteEnd = "";
+        }
+
+        //Just in case byte range requests are allowed
+        if(options.headers.Range == undefined)
+        {
+            $.extend(options.headers, {"Range" : "bytes=" + byteStart + "-" + byteEnd});
+        }
+
+        $.extend(options.headers, gpAuthorizationHeaders);
+
+        $.ajax({
+            contentType: null,
+            url: fileURL,
+            headers: options.headers,
+            xhrFields: {
+                withCredentials: credentials
+            },
+            crossDomain: true
+        }).done(function (response, status, xhr) {
+            if($.isFunction(options.successCallBack))
+            {
+                byteStart = byteEnd + 1;
+
+                var contentRange = xhr.getResponseHeader("Content-Range");
+                var result = contentRange.split("/");
+
+                byteEnd = byteStart + byteIncrement;
+                if(result.length >= 2)
+                {
+                    var length = parseInt(result[1]);
+                    if(byteEnd > length)
+                    {
+                        byteEnd = length-1;
+                    }
+
+                    if(byteStart > length)
+                    {
+                        byteStart = -1;
+                        byteEnd = -1;
+                    }
+                }
+                options.successCallBack(fileURL, maxNumLines, byteStart, byteIncrement, response);
+            }
+        }).fail(function (response, status, xhr)
+        {
+            console.log(response.statusText);
+            if($.isFunction(options.failCallBack))
+            {
+                options.failCallBack(response.statusText, response);
+            }
+        });
+    }
+
     // declare 'public' functions
     return {
         uploadDataToFilesTab:uploadDataToFilesTab,
@@ -489,7 +651,9 @@ var gpLib = function() {
         parseGCTFile: parseGCTFile,
         parseODF: parseODF,
         isGenomeSpaceFile: isGenomeSpaceFile,
-        logToAppLogger: logToAppLogger
+        logToAppLogger: logToAppLogger,
+        rangeRequestsAllowed: rangeRequestsAllowed,
+        readBytesFromURL: readBytesFromURL
     };
 }
 

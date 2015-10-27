@@ -5,15 +5,109 @@ var cmsOdf;
 var datasetFile;
 var odfFile;
 var computedStatsColumnNames;
+var cmsOdfContents = "";
 
 function loadDataset(data) {
     dataset = gpLib.parseGCTFile(data);
 }
 
-function displayViewer(data) {
-    cmsOdf = gpLib.parseODF(data, "Comparative Marker Selection");
-    console.log("Finished parsing the odf file " + odfFile);
+function loadOdfFile(odfURL)
+{
+    gpLib.rangeRequestsAllowed(odfURL,
+    {
+        successCallBack: function(acceptRanges)
+        {
+            if(acceptRanges)
+            {
+                blockElement($("body"), "Loading and parsing ODF file");
 
+                //get the third data row in order to get the sample names
+                getFileContentsUsingByteRequests(odfURL, -1, 0, 1000000);
+            }
+            else
+            {
+                gpLib.getDataAtUrl(odfURL,
+                {
+                    successCallBack: displayViewer,
+                    failCallBack: displayLoadError
+                });
+            }
+        },
+        failCallBack: displayLoadError
+    });
+}
+
+function blockElement(element, message)
+{
+    element.block(
+    {
+        message: '<h2><img src="css/images/spin.gif" />'+ message +'</h2>',
+        css: {
+            padding:            0,
+            margin:             0,
+            width:              '30%',
+            top:                '14%%',
+            left:               '35%',
+            textAlign:          'center',
+            color:              '#000',
+            border:             '2px solid #aaa',
+            "font-size":        '14px',
+            "font-weight":      'normal',
+            backgroundColor:    '#fff',
+            cursor:             'wait'
+        },
+        centerY: false,
+        centerX: false,
+        overlayCSS:  {
+            backgroundColor: '#000',
+            opacity:         0.1,
+            cursor:          'wait'
+        }
+    });
+}
+function getFileContentsUsingByteRequests(fileURL, maxNumLines, startBytes, byteIncrement, fileContents)
+{
+    if(fileContents != undefined)
+    {
+        cmsOdfContents += fileContents;
+    }
+
+    if(startBytes != undefined && startBytes != null && startBytes >= 0 && fileContents != "")
+    {
+        gpLib.readBytesFromURL(fileURL, maxNumLines, startBytes, byteIncrement,
+        {
+            successCallBack: getFileContentsUsingByteRequests,
+            failCallBack: displayLoadError
+        });
+
+    }
+    else
+    {
+        if(cmsOdfContents != undefined && cmsOdfContents != null && cmsOdfContents.length > 0)
+        {
+            displayViewer(cmsOdfContents);
+        }
+        else
+        {
+            displayLoadError("data is empty");
+        }
+    }
+}
+
+
+function displayViewer(data) {
+
+    try
+    {
+        cmsOdf = gpLib.parseODF(data, "Comparative Marker Selection");
+    }
+    catch(err) {
+        displayLoadError(err);
+    }
+
+    $("body").unblock();
+
+    console.log("Finished parsing the odf file " + odfFile);
 
     //Rename the Score to the name of the Test Statistic
     var testStatisticLabel = cmsOdf["Test Statistic"];
@@ -32,7 +126,6 @@ function displayViewer(data) {
             computedStatsColumnNames.push(columnName);
         }
     }
-    //initToolbar();
     initMenu();
     initTable();
     scorePlot(w2ui['cmsTable'].records);
@@ -864,6 +957,7 @@ function scorePlot(records, subsetIds)
     if(records == undefined || records.length < 1)
     {
         console.log("No data found to plot scores");
+        alert.log("No data found to plot scores");
         return;
     }
     //create a two dimensional array of the x and y points
@@ -1432,7 +1526,7 @@ function displayLoadError(errorMessage)
 {
     var errorMsg = errorMessage;
     $("#cmsMain").empty();
-    $("#cmsMain").append("<h3 style='color:red'>There was an error loading the ComparativeMarkerSelectionViewer: <p>Error: " + errorMsg +"</p></h3>");
+    $("#cmsMain").append("<h3 style='color:red'>There was an error loading the ComparativeMarkerSelectionViewer: <p>" + errorMsg +"</p></h3>");
 }
 
 function loadCMSViewer()
@@ -1478,11 +1572,12 @@ function loadCMSViewer()
         }
 
         //load the odf file and display plot and table
-        gpLib.getDataAtUrl(odfFile,
+       /* gpLib.getDataAtUrl(odfFile,
             {   headers: headers,
                 successCallBack: displayViewer,
                 failCallBack: displayLoadError
-            });
+            });*/
+        loadOdfFile(odfFile);
 
         /*headers = {};
          if(gpLib.isGenomeSpaceFile(datasetFile))

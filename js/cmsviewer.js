@@ -50,7 +50,15 @@ function loadOdfFile(odfURL)
                 });
             }
         },
-        failCallBack: displayLoadError
+        failCallBack: function()
+        {
+            gpLib.getDataAtUrl(odfURL,
+            {
+                headers: headers,
+                successCallBack: displayViewer,
+                failCallBack: displayLoadError
+            });
+        }
     });
 }
 
@@ -94,7 +102,21 @@ function loadDatasetFile(datasetURL)
                 });
             }
         },
-        failCallBack: displayLoadError
+        failCallBack: function()
+        {
+            gpLib.getDataAtUrl(datasetFile,
+            {
+                headers: headers,
+                successCallBack: loadDataset,
+                failCallBack: function(errorMsg, response) {
+                    alert("Failed to load the dataset at " + datasetFile + ": \n" + errorMsg);
+
+                    console.log("Failed to load the dataset at " + datasetFile + ": \n" + errorMsg);
+                    $("#saveDataset").addClass("disabled");
+                    $("#profile").addClass("disabled");
+                }
+            });
+        }
     });
 }
 

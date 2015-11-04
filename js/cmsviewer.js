@@ -821,6 +821,9 @@ function applyFilter(filterObj)
         w2ui['cmsTable'].records = visibleRecords;
         w2ui['cmsTable'].refresh();
         scorePlot(w2ui['cmsTable'].records);
+
+        updateNumRecordsInfo(visibleRecords.length, cmsOdf[cmsOdf.COLUMN_NAMES[0]].length);
+
         return true;
     }
     else
@@ -1157,6 +1160,7 @@ function initTable()
             selectColumn: true,
             toolbar: true,
             lineNumbers: true
+            //footer: true
         },
         multiSearch: true,
         onColumnOnOff: function(event) {
@@ -1176,6 +1180,9 @@ function initTable()
         caption: 'recid',
         searchable: false
     });
+
+    var numVisibleRecords = $("<div/>").attr("id", "numRecordsInfo");
+    $("#tb_cmsTable_toolbar_right").append(numVisibleRecords);
 
     for(var c=0;c<cmsOdf.COLUMN_NAMES.length;c++)
     {
@@ -1218,6 +1225,13 @@ function initTable()
     resetRecords();
 }
 
+function updateNumRecordsInfo(visibleRecords, maxRecords)
+{
+    var numVisibleRecords = $("#numRecordsInfo");
+    numVisibleRecords.empty();
+    numVisibleRecords.append("Showing " + visibleRecords + " of " + maxRecords + " features");
+}
+
 function resetRecords()
 {
     var records = [];
@@ -1241,7 +1255,7 @@ function resetRecords()
     w2ui['cmsTable'].records = records;
     w2ui['cmsTable'].refresh();
 
-    scorePlot(w2ui['cmsTable'].records);
+    updateNumRecordsInfo(records.length, numRows);
 }
 
 function createDataset()

@@ -1335,17 +1335,24 @@ function exportTable()
     return content;
 }
 
-function saveImage(type)
+function saveImage(type, defaultFileName)
 {
+    var disableSave = false;
+    if(defaultFileName === undefined || defaultFileName === null)
+    {
+        defaultFileName = "";
+        disableSave = true;
+    }
+
     w2popup.open({
         title: 'Save Image',
         width: 350,
         height: 200,
         showMax: true,
         modal: true,
-        body: '<div id="gpDialog" style="margin: 30px 15px 2px 25px;"><label>File name: <input type="text" id="fileName"/></label></div>',
+        body: '<div id="gpDialog" style="margin: 30px 15px 2px 25px;"><label>File name: <input type="text" id="fileName" value="'+ defaultFileName +'"/></label></div>',
         buttons: '<button class="btn" onclick="w2popup.close();">Cancel</button> ' +
-            '<button id="closePopup" class="btn" onclick="w2popup.close();" disabled="disabled">OK</button>',
+            '<button id="saveImageBtn" class="btn">OK</button>',
         onOpen: function (event) {
             event.onComplete = function () {
                 $("#fileName").keyup(function()
@@ -1353,53 +1360,58 @@ function saveImage(type)
                     var value = $(this).val();
                     if(value.length == 0)
                     {
-                        $("#closePopup").prop( "disabled", true );
+                        $("#saveImageBtn").prop( "disabled", true );
                     }
                     else
                     {
-                        $("#closePopup").prop( "disabled", false );
+                        $("#saveImageBtn").prop( "disabled", false );
                     }
                 });
             };
-        },
-        onClose: function (event) {
-            var fileName = $("#fileName").val();
-            event.onComplete = function () {
-                var plot = $('#cmsScorePlot');
-
-                if($('#plot').is(":visible"))
-                {
-                    plot = $('#plot');
-                }
-                var chart = plot.highcharts();
-
-                if(type.toLowerCase() === "jpeg")
-                {
-                    type = "image/jpeg";
-
-                }
-                else if(type.toLowerCase() === "svg")
-                {
-                    type = "image/svg+xml";
-
-                }
-                else if(type.toLowerCase() === "pdf")
-                {
-                    type = "application/pdf";
-
-                }
-                else
-                {
-                    type = "image/png";
-
-                }
-
-                chart.exportChart({
-                    type: type,
-                    filename: fileName
-                });
-            }
         }
+    });
+
+    if(disableSave)
+    {
+        $("#saveImageBtn").prop( "disabled", true );
+    }
+
+    $("#saveImageBtn").click(function (event)
+    {
+        var fileName = $("#fileName").val();
+        var plot = $('#cmsScorePlot');
+
+        if($('#plot').is(":visible"))
+        {
+            plot = $('#plot');
+        }
+        var chart = plot.highcharts();
+
+        if(type.toLowerCase() === "jpeg")
+        {
+            type = "image/jpeg";
+
+        }
+        else if(type.toLowerCase() === "svg")
+        {
+            type = "image/svg+xml";
+
+        }
+        else if(type.toLowerCase() === "pdf")
+        {
+            type = "application/pdf";
+
+        }
+        else
+        {
+            type = "image/png";
+
+        }
+
+        chart.exportChart({
+            type: type,
+            filename: fileName
+        });
     });
 }
 
@@ -1656,7 +1668,9 @@ function initMenu()
             {
                 gpLib.logToAppLogger(APPLICATION_NAME, "save image: " + text.toLowerCase(), "save");
 
-                saveImage(text);
+                var defaultFileName = odfFileName.replace(/\.odf$/i, '') + "_img." + text.toLowerCase();
+
+                saveImage(text, defaultFileName);
             }
         }
         else

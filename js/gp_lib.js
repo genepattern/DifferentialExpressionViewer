@@ -59,7 +59,13 @@ var gpLib = function() {
      * This function displays a dialog displaying the directories in the Files Tab for the current GP user
      * @param callBack - a callback function if a directory in the Files Tab was selected
      */
-    function saveFileDialog(contents, extension, callBack) {
+    function saveFileDialog(contents, extension, defaultFileName, callBack)
+    {
+        if(defaultFileName === undefined || defaultFileName === null)
+        {
+            defaultFileName = "";
+        }
+
         //create dialog
         w2popup.open({
             title: 'Save File',
@@ -67,12 +73,12 @@ var gpLib = function() {
             height: 380,
             showMax: true,
             modal: true,
-            body: '<div id="gpDialog" style="margin: 14px 15px 2px 15px;"><label>File name: <input type="text" id="fileName"/>' +
+            body: '<div id="gpDialog" style="margin: 14px 15px 2px 15px;"><label>File name: <input type="text" value="' + defaultFileName + '"id="fileName" style="width: 250px;"/>' +
                 '</label><div style="margin: 8px 8px 8px 2px;"><input name="saveMethod" value="gp" type="radio" checked="checked" style="margin-right: 5px"/>Save To GenePattern' +
                 '<input name="saveMethod" type="radio" value="download"/>Download</div>' +
                 '<div id="gpSave">Select save location:<br/><div id="fileTree" style="height: 200px;border:2px solid white"/></div> </div>',
-            buttons: '<button class="btn" onclick="w2popup.close();">Cancel</button> ' +
-                '<button id="closePopup" class="btn" onclick="w2popup.close();" disabled="disabled">OK</button>',
+            buttons: '<button id="cancelSaveToGPBtn" class="btn" onclick="w2popup.close();">Cancel</button> ' +
+                '<button id="saveToGPBtn" class="btn" disabled="disabled">OK</button>',
             onOpen: function (event) {
                 event.onComplete = function () {
                     $("input[name='saveMethod']").click(function()
@@ -81,11 +87,11 @@ var gpLib = function() {
                         if(checkedValue == "gp")
                         {
                             $("#gpSave").show();
-                            $("#closePopup").prop( "disabled", true );
+                            $("#saveToGPBtn").prop( "disabled", true );
                         }
                         else
                         {
-                            $("#closePopup").prop( "disabled", false );
+                            $("#saveToGPBtn").prop( "disabled", false );
 
                             $("#gpSave").hide();
                         }
@@ -99,57 +105,58 @@ var gpLib = function() {
                             //enable the OK button if a directory was selected
                             if(directory != undefined && directory.url.length > 0)
                             {
-                                $("#closePopup").prop( "disabled", false );
+                                $("#saveToGPBtn").prop( "disabled", false );
                             }
                         }
                     });
                 };
-            },
-            onClose: function (event) {
-                var selectedGpDirObj = $("#fileTree").gpUploadsTree("selectedDir");
-                var saveMethod = $("input[name='saveMethod']:checked").val();
-                var fileName = $("#fileName").val();
+            }
+        });
 
-                if(extension != undefined && !gpUtil.endsWith(fileName, extension))
+        $("#saveToGPBtn").click(function(event)
+        {
+            var selectedGpDirObj = $("#fileTree").gpUploadsTree("selectedDir");
+            var saveMethod = $("input[name='saveMethod']:checked").val();
+            var fileName = $("#fileName").val();
+
+            if(extension != undefined && !gpUtil.endsWith(fileName, extension))
+            {
+                fileName += extension;
+            }
+            var result = "success";
+            $("#fileTree").gpUploadsTree("destroy");
+
+            //save the file either to GenePattern or locally
+            if(saveMethod == "gp")
+            {
+                var text = [];
+                text.push(contents);
+
+                var saveLocation = selectedGpDirObj.url + fileName;
+                console.log("save location: " + saveLocation);
+                uploadDataToFilesTab(saveLocation, text, function(result)
                 {
-                    fileName += extension;
-                }
-                event.onComplete = function () {
-                    var result = "success";
-                    $("#fileTree").gpUploadsTree("destroy");
-
-                    //save the file either to GenePattern or locally
-                    if(saveMethod == "gp")
+                    if(result !== "success")
                     {
-                        var text = [];
-                        text.push(contents);
-
-                        var saveLocation = selectedGpDirObj.url + fileName;
-                        console.log("save location: " + saveLocation);
-                        uploadDataToFilesTab(saveLocation, text, function(result)
-                        {
-                            if(result !== "success")
-                            {
-                                w2alert("Error saving file. " + result, 'File Save Error');
-                            }
-                            else
-                            {
-                                w2alert("File " + fileName + " saved.", 'File Save' );
-                            }
-                        });
+                        w2alert("Error saving file. " + result, 'File Save Error');
                     }
                     else
                     {
-                        downloadFile(fileName, contents);
+                        w2alert("File " + fileName + " saved.", 'File Save' );
                     }
-
-                    if($.isFunction(callBack))
-                    {
-                        callBack(result);
-                    }
-
-                }
+                });
             }
+            else
+            {
+                downloadFile(fileName, contents);
+            }
+
+            if($.isFunction(callBack))
+            {
+                callBack(result);
+            }
+
+            w2popup.close();
         });
     }
 

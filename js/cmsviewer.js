@@ -5,6 +5,7 @@ var dataset;
 var cmsOdf;
 var datasetFile;
 var odfFile;
+var odfFileName;
 var computedStatsColumnNames;
 var cmsOdfContents = "";
 var datasetContents = "";
@@ -19,7 +20,7 @@ function loadOdfFile(odfURL)
 {
     var headers = {};
 
-    if(gpLib.isGenomeSpaceFile(odfFile))
+    if(gpLib.isGenomeSpaceFile(odfURL))
     {
         if(requestParams["|gst"] !== undefined && requestParams["|gsu"] !== undefined) {
             headers = {
@@ -1584,7 +1585,8 @@ function initMenu()
                 var content = exportTable();
                 if(content != undefined && content.length > 0)
                 {
-                    gpLib.saveFileDialog(content, ".txt");
+                    var defaultFileName = odfFileName.replace(/\.odf$/i, '') + "_table.txt";
+                    gpLib.saveFileDialog(content, ".txt", defaultFileName);
                 }
             }
             else if(text == "Save Feature List")
@@ -1623,7 +1625,9 @@ function initMenu()
                     content = createFeatureList(true);
                     if(content != undefined && content.length > 0)
                     {
-                        gpLib.saveFileDialog(content, ".txt");
+                        var defaultFileName = odfFileName.replace(/\.odf$/i, '') + "_features.txt";
+
+                        gpLib.saveFileDialog(content, ".txt", defaultFileName);
                     }
                 }
             }
@@ -1642,7 +1646,9 @@ function initMenu()
                     content = createDataset();
                     if(content != undefined && content.length > 0)
                     {
-                        gpLib.saveFileDialog(content, ".gct");
+                        var defaultFileName = odfFileName.replace(/\.odf$/i, '') + "_cms.gct";
+
+                        gpLib.saveFileDialog(content, ".gct", defaultFileName);
                     }
                 }
             }
@@ -1688,7 +1694,7 @@ function loadCMSViewer()
         var parser = $('<a/>');
         parser.attr("href", odfFile);
 
-        var odfFileName = parser[0].pathname.substring(parser[0].pathname.lastIndexOf('/')+1);
+        odfFileName = parser[0].pathname.substring(parser[0].pathname.lastIndexOf('/')+1);
         $("#fileLoaded").append("<span>Loaded: <a href='" + odfFile + "' target='_blank'>" + odfFileName + "</a></span>");
 
         //HACK for the GenePattern protocols

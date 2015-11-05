@@ -296,6 +296,7 @@ function plotHistogram(plotTitle, dataColumnName, numBins)
     $("#cmsScorePlot").hide();
     $('#plot').show();
 
+    var seriesName = "Features";
     $('#plot').highcharts({
         title: {
             text: plotTitle
@@ -331,12 +332,7 @@ function plotHistogram(plotTitle, dataColumnName, numBins)
         {
             title: {
                 text: "Occurrences"
-            },
-            plotLines: [{
-                value: 0,
-                width: 2,
-                color: '#808080'
-            }]
+            }
         },
         legend:
         {
@@ -347,11 +343,14 @@ function plotHistogram(plotTitle, dataColumnName, numBins)
         },
         tooltip:
         {
-            enabled: true
+            enabled: true,
+            formatter: function () {
+                return seriesName + ': ' +  this.y;
+            }
         },
         series: [
             {
-                name: "Features",
+                name: seriesName,
                 data: hist
             }
         ]

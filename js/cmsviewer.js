@@ -1099,27 +1099,25 @@ function scorePlot(records, subsetIds)
     for(var x=0;x<records.length;x++)
     {
         if(subsetIds == undefined || subsetIds.length == 0
-            || $.inArray(records[x].recid, subsetIds) !== -1)
-        {
+            || $.inArray(records[x].recid, subsetIds) !== -1) {
             var yValue = records[x][yData];
-            if (yValue > 0)
-            {
-                upRegulatedClassZero.push([recordCount, yValue]);
+            if (isNaN(yValue)) {
+                yValue = 0;
             }
-            else if (yValue < 0)
+
+            if (isFinite(yValue))
             {
-                upRegulatedClassOne.push([recordCount, yValue]);
-            }
-            else
-            {
-                if(isNaN(yValue))
-                {
-                    yValue = 0;
+                if (yValue > 0) {
+                    upRegulatedClassZero.push([recordCount, yValue]);
                 }
+                else if (yValue < 0) {
+                    upRegulatedClassOne.push([recordCount, yValue]);
+                }
+                else {
 
-                equal.push([recordCount, yValue]);
+                    equal.push([recordCount, yValue]);
+                }
             }
-
             recordCount++;
         }
     }

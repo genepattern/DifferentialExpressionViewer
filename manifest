@@ -10,7 +10,7 @@ requiredPatchLSIDs=urn\:lsid\:broadinstitute.org\:plugin\:GenePattern_3_9_3\:1,
 requiredPatchURLs=http\://www.broadinstitute.org/webservices/gpModuleRepository/download/prod/patch/?file\=/GenePattern_3_9_3/broadinstitute.org\:plugin/GenePattern_3_9_3/1/GenePattern_3_9_3.zip
 taskType=javascript
 userid=GenePattern
-version=Modified to display the current total number of rows shown and also added a default file name for saved output files
+version=Modified to handle infinity values in the score plot and improved the tooltip for the histogram plot
 taskDoc=doc.html
 
 p1_default_value=

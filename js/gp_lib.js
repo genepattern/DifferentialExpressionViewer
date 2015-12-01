@@ -204,7 +204,7 @@ var gpLib = function() {
             rowDescriptions: [],
             matrix: [[]]
         };
-        var lines = fileContents.split(/\n/);
+        var lines = fileContents.split(/\r|\n/);
 
         if(lines.length >= 4 && lines[0].indexOf("#1.2") != -1)
         {
@@ -234,7 +234,7 @@ var gpLib = function() {
     {
         var data = {};
 
-        var lines = fileContents.split(/\n/);
+        var lines = fileContents.split(/\r|\n/);
 
         if(lines.length < 2)
         {

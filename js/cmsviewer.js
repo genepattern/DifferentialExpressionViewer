@@ -227,7 +227,9 @@ function displayViewer(data) {
         cmsOdf = gpLib.parseODF(data, "Comparative Marker Selection");
     }
     catch(err) {
+        $("body").unblock();
         displayLoadError(err);
+        return;
     }
 
     $("body").unblock();

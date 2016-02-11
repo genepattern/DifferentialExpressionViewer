@@ -1713,7 +1713,7 @@ function loadCMSViewer()
         //HACK for the GenePattern protocols
         if(odfFile == "ftp://ftp.broadinstitute.org/pub/genepattern/datasets/protocols/all_aml_test.preprocessed.comp.marker.odf")
         {
-            odfFile = "http://www.broadinstitute.org/cancer/software/genepattern/data/protocols/all_aml_test.preprocessed.comp.marker.odf";
+            odfFile = "https://www.broadinstitute.org/cancer/software/genepattern/data/protocols/all_aml_test.preprocessed.comp.marker.odf";
         }
 
         //load the odf file and display plot and table
@@ -1738,7 +1738,7 @@ function loadCMSViewer()
             //HACK so that the GenePattern protocols work
             if(datasetFile == "ftp://ftp.broadinstitute.org/pub/genepattern/datasets/protocols/all_aml_test.preprocessed.gct")
             {
-                datasetFile = "http://www.broadinstitute.org/cancer/software/genepattern/data/protocols/all_aml_test.preprocessed.gct";
+                datasetFile = "https://www.broadinstitute.org/cancer/software/genepattern/data/protocols/all_aml_test.preprocessed.gct";
             }
 
             loadDatasetFile(datasetFile);

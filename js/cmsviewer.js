@@ -9,6 +9,7 @@ var odfFileName;
 var computedStatsColumnNames;
 var cmsOdfContents = "";
 var datasetContents = "";
+var cmsHeatMap;
 
 function loadDataset(data) {
     dataset = gpLib.parseGCTFile(data);
@@ -255,7 +256,7 @@ function displayViewer(data) {
     }
     initMenu();
     initTable();
-    scorePlot(w2ui['cmsTable'].records);
+    initHeatMap();
 }
 
 function calculateHistogram(numBins, data)
@@ -1077,6 +1078,19 @@ function updateScatterPlot(chartContainer, plotTitle, xDataName, yDataName, seri
     }, zoomAnnotation);
 }
 
+function initHeatMap() {
+    $("#heatmap").show();
+    $('#plot').hide();
+
+    cmsHeatMap = new gpVisual.HeatMap(datasetFile, $("#heatmap"));
+    cmsHeatMap.drawHeatMap();
+}
+
+function updateHeatMap(options)
+{
+    cmsHeatMap.drawHeatMap(options);
+}
+
 function scorePlot(records, subsetIds)
 {
     //hide the no plot
@@ -1551,6 +1565,35 @@ function initMenu()
                 $("#plot").data("dataColName", text);
                 plotHistogram(text + " Histogram", text);
             }
+            else if(text == "Heatmap")
+            {
+                if ($("#heatmap").length == 0) {
+                    initHeatMap();
+                }
+                else {
+                    $("#plot").hide();
+                    $("#cmsScorePlot").hide();
+                    $("#heatmap").show();
+                    updateHeatMap(options);
+                }
+            }
+            else if(highlightedParent == "Heatmap" && text == "Show Legend")
+            {
+                var options = {
+                    showLegend: true
+                };
+
+                if ($("#heatmap").length == 0) {
+
+                    initHeatMap(options);
+                }
+                else {
+                    $("#plot").hide();
+                    $("#cmsScorePlot").hide();
+                    $("#heatmap").show();
+                    updateHeatMap(options);
+                }
+            }
             else if(text == "Upregulated Features") {
                 gpLib.logToAppLogger(APPLICATION_NAME, "upregulated features", "plot");
 
@@ -1559,6 +1602,7 @@ function initMenu()
                 }
                 else {
                     $("#plot").hide();
+                    $("#heatmap").show();
                     $("#cmsScorePlot").show();
                 }
             }

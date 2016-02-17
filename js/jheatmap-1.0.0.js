@@ -238,26 +238,26 @@ BrowserDetect.init();
             enumerable: false
         });
 
-       /* Array.prototype.mergeSort = function (compare, token) {
-            compare = compare || function (a, b) {
-                return a > b ? 1 : (a < b ? -1 : 0);
-            };
-            if (this.length > 1) {
-                // Split and sort both parts
-                var right = this.splice(Math.floor(this.length / 2)).mergeSort(compare);
-                var left = this.splice(0).mergeSort(compare); // 'this' is now empty.
+        /* Array.prototype.mergeSort = function (compare, token) {
+         compare = compare || function (a, b) {
+         return a > b ? 1 : (a < b ? -1 : 0);
+         };
+         if (this.length > 1) {
+         // Split and sort both parts
+         var right = this.splice(Math.floor(this.length / 2)).mergeSort(compare);
+         var left = this.splice(0).mergeSort(compare); // 'this' is now empty.
 
-                // Merge parts together
-                while (left.length > 0 || right.length > 0) {
-                    this.push(
-                        right.length === 0 ? left.shift()
-                            : left.length === 0 ? right.shift()
-                            : compare(left[0], right[0]) > 0 ? right.shift()
-                            : left.shift());
-                }
-            }
-            return this;
-        }*/
+         // Merge parts together
+         while (left.length > 0 || right.length > 0) {
+         this.push(
+         right.length === 0 ? left.shift()
+         : left.length === 0 ? right.shift()
+         : compare(left[0], right[0]) > 0 ? right.shift()
+         : left.shift());
+         }
+         }
+         return this;
+         }*/
     }
 
     String.prototype.splitCSV = function (sep) {
@@ -696,6 +696,7 @@ jheatmap.readers.ClsReader.prototype.read = function (result, initialize) {
                 result.values = [];
             }
 
+            var classLabels = [];
             var lines = file.replace('\r', '').split('\n');
             jQuery.each(lines, function (lineCount, line) {
                 line = line.trim();
@@ -703,8 +704,8 @@ jheatmap.readers.ClsReader.prototype.read = function (result, initialize) {
                     if (lineCount == 1 && line.startsWith("#"))
                     {
                         //the is the line that has the class names
-                        //result.header = line.splitCSV(sep);
-                        //result.header = result.header.slice(2);
+                        classLabels = line.splitCSV(sep);
+                        classLabels = classLabels.slice(1);
                     }
 
                     if(lineCount > 1)
@@ -717,9 +718,14 @@ jheatmap.readers.ClsReader.prototype.read = function (result, initialize) {
                                 result.values[v] = [];
                             }
 
-                            result.values[v].push(labelLines[v]);
+                            var classLabel = labelLines[v];
+                            var classNum = parseInt(labelLines[v]);
+                            if(!isNaN(classNum) && classNum < classLabels.length)
+                            {
+                                classLabel = classLabels[classNum];
+                            }
+                            result.values[v].push(classLabel);
                         }
-                        //result.values[result.values.length] = labelLines;
                     }
                 }
             });
@@ -2568,7 +2574,7 @@ jheatmap.components.CellBodyPanel.prototype.paint = function(context)
         cellCtx = context;
 
         offset_x = this.canvas.offset().left;
-        offset_y = this.canvas.offset().top - 112;
+        offset_y = this.canvas.offset().top - 100;
     }
     else
     {
@@ -2672,11 +2678,12 @@ jheatmap.components.CellSelector = function(drawer, heatmap, container) {
 jheatmap.components.LegendPanel = function(drawer, heatmap)
 {
     this.heatmap = heatmap;
+    this.visible = heatmap.controls.showLegend;
 
     // Create markup
     this.markup = $("<tr >");
     this.width = 360;
-    this.height = 70;
+    this.height = 45;
 
     var legendCell = $("<td colspan='2'>");
     this.bodyCanvas = $("<canvas width='" + (heatmap.size.width + heatmap.rows.labelSize + 16) + "'" + " height='" + this.height +"'" + "></canvas>");
@@ -2686,119 +2693,120 @@ jheatmap.components.LegendPanel = function(drawer, heatmap)
 
 jheatmap.components.LegendPanel.prototype.paint = function(context)
 {
-    var legendContext = this.bodyCanvas.get()[0].getContext('2d');
-
-    if(context !== undefined && context !== null)
+    if (this.visible)
     {
-        legendContext = context;
-    }
-    else
-    {
-        legendContext.clearRect(0, 0, legendContext.canvas.width, legendContext.canvas.height);
-        legendContext.fillStyle = "white";
-        legendContext.fillRect(0, 0, legendContext.canvas.width, legendContext.canvas.height);
-    }
+        var legendContext = this.bodyCanvas.get()[0].getContext('2d');
 
-    var width = 300;
-    var height = 24;
-    var fractions = [0, 0.5, 1];
-    var colors = ["rgb(0,0,255)", "rgb(255,255,255)", "rgb(255,0,0)"]; //blue, white, red
-
-    var heatmap = this.heatmap;
-
-    var minValueText = "row min";
-    var meanValueText = "row mean";
-    var maxValueText = "row max";
-
-    var decorator = heatmap.cells.decorators[0];
-    if(decorator.minColor !== undefined && decorator.minColor !== null && decorator.minColor.length == 3
-        && decorator.midColor !== undefined && decorator.midColor !== null && decorator.midColor.length == 3
-        && decorator.maxColor !== undefined && decorator.maxColor !== null && decorator.maxColor.length == 3)
-    {
-        var minColor = decorator.minColor;
-        var midColor = decorator.midColor;
-        var maxColor = decorator.maxColor;
-
-        colors[0] = (new jheatmap.utils.RGBColor(minColor)).toRGB();
-        colors[1] = (new jheatmap.utils.RGBColor(midColor)).toRGB();
-        colors[2] = (new jheatmap.utils.RGBColor(maxColor)).toRGB();
-
-        minValueText = heatmap.cells.minValue.toFixed(2);
-        meanValueText = heatmap.cells.meanValue.toFixed(2);
-        maxValueText = heatmap.cells.maxValue.toFixed(2);
-    }
-
-    if(decorator.colors !== undefined && decorator.colors !== null && decorator.colors.length == 2
-        && decorator.colors[0].length == 2 && decorator.colors[1].length == 2)
-    {
-        var minColor = decorator.colors[0][0];
-        var midColor = decorator.colors[0][1];
-        var maxColor = decorator.colors[1][1];
-
-        colors[0] = (new jheatmap.utils.RGBColor(minColor)).toRGB();
-        colors[1] = (new jheatmap.utils.RGBColor(midColor)).toRGB();
-        colors[2] = (new jheatmap.utils.RGBColor(maxColor)).toRGB();
-    }
-
-    if(decorator.isDiscrete !== undefined && decorator.isDiscrete)
-    {
-        if(decorator.colors != undefined)
+        if(context !== undefined && context !== null)
         {
-            colors = decorator.colors;
+            legendContext = context;
+        }
+        else
+        {
+            legendContext.clearRect(0, 0, legendContext.canvas.width, legendContext.canvas.height);
+            legendContext.fillStyle = "white";
+            legendContext.fillRect(0, 0, legendContext.canvas.width, legendContext.canvas.height);
         }
 
-        //Make the minimum value the first value in the slots
-        var slots = decorator.slots;
+        var width = 300;
+        var height = 24;
+        var fractions = [0, 0.5, 1];
+        var colors = ["rgb(0,0,255)", "rgb(255,255,255)", "rgb(255,0,0)"]; //blue, white, red
 
-        if(!decorator.relative && slots !== undefined)
+        var heatmap = this.heatmap;
+
+        var minValueText = "row min";
+        var meanValueText = "row mean";
+        var maxValueText = "row max";
+
+        var decorator = heatmap.cells.decorators[0];
+        if(decorator.minColor !== undefined && decorator.minColor !== null && decorator.minColor.length == 3
+            && decorator.midColor !== undefined && decorator.midColor !== null && decorator.midColor.length == 3
+            && decorator.maxColor !== undefined && decorator.maxColor !== null && decorator.maxColor.length == 3)
         {
-            slots = decorator.slots.slice();
-            slots.unshift(heatmap.cells.minValue);
+            var minColor = decorator.minColor;
+            var midColor = decorator.midColor;
+            var maxColor = decorator.maxColor;
+
+            colors[0] = (new jheatmap.utils.RGBColor(minColor)).toRGB();
+            colors[1] = (new jheatmap.utils.RGBColor(midColor)).toRGB();
+            colors[2] = (new jheatmap.utils.RGBColor(maxColor)).toRGB();
+
+            minValueText = heatmap.cells.minValue.toFixed(2);
+            meanValueText = heatmap.cells.meanValue.toFixed(2);
+            maxValueText = heatmap.cells.maxValue.toFixed(2);
         }
 
-        for (var i = 0, length = colors.length; i < length; i++)
+        if(decorator.colors !== undefined && decorator.colors !== null && decorator.colors.length == 2
+            && decorator.colors[0].length == 2 && decorator.colors[1].length == 2)
         {
-            legendContext.fillStyle = (new jheatmap.utils.RGBColor(colors[i])).toRGB();
+            var minColor = decorator.colors[0][0];
+            var midColor = decorator.colors[0][1];
+            var maxColor = decorator.colors[1][1];
 
-            var barWidth = 60;
-            legendContext.fillRect(24 + (i*barWidth), 20, barWidth, 15);
+            colors[0] = (new jheatmap.utils.RGBColor(minColor)).toRGB();
+            colors[1] = (new jheatmap.utils.RGBColor(midColor)).toRGB();
+            colors[2] = (new jheatmap.utils.RGBColor(maxColor)).toRGB();
+        }
 
-            legendContext.strokeStyle = 'black';
-            legendContext.strokeRect(24 + (i*barWidth), 20, barWidth, 15);
-
-            if(!decorator.relative && slots !== undefined && slots.length > i)
+        if(decorator.isDiscrete !== undefined && decorator.isDiscrete)
+        {
+            if(decorator.colors != undefined)
             {
-                legendContext.fillStyle = "black";
-                legendContext.fillText(slots[i].toFixed(2), (24 + (i*barWidth)), 47);
+                colors = decorator.colors;
             }
-            else
+
+            //Make the minimum value the first value in the slots
+            var slots = decorator.slots;
+
+            if(!decorator.relative && slots !== undefined)
             {
-                if(i==0 && decorator.relative)
+                slots = decorator.slots.slice();
+                slots.unshift(heatmap.cells.minValue);
+            }
+
+            for (var i = 0, length = colors.length; i < length; i++)
+            {
+                legendContext.fillStyle = (new jheatmap.utils.RGBColor(colors[i])).toRGB();
+
+                var barWidth = 60;
+                legendContext.fillRect(24 + (i*barWidth), 20, barWidth, 15);
+
+                legendContext.strokeStyle = 'black';
+                legendContext.strokeRect(24 + (i*barWidth), 20, barWidth, 15);
+
+                if(!decorator.relative && slots !== undefined && slots.length > i)
                 {
                     legendContext.fillStyle = "black";
-                    legendContext.fillText("row relative", (24 + (i*barWidth)), 47);
+                    legendContext.fillText(slots[i].toFixed(2), (24 + (i*barWidth)), 47);
+                }
+                else
+                {
+                    if(i==0 && decorator.relative)
+                    {
+                        legendContext.fillStyle = "black";
+                        legendContext.fillText("row relative", (24 + (i*barWidth)), 47);
+                    }
                 }
             }
         }
-    }
-    else
-    {
-        var gradient = legendContext.createLinearGradient(24, 0, width, height);
-        for (var i = 0, length = fractions.length; i < length; i++)
-        {
-            gradient.addColorStop(fractions[i], colors[i]);
+        else {
+            var gradient = legendContext.createLinearGradient(24, 0, width, height);
+            for (var i = 0, length = fractions.length; i < length; i++) {
+                gradient.addColorStop(fractions[i], colors[i]);
+            }
+
+            legendContext.fillStyle = gradient;
+            legendContext.fillRect(24, 20, width, height);
+
+            legendContext.textAlign = 'center';
+            legendContext.textBaseline = 'top';
+            legendContext.fillStyle = 'black';
+
+            legendContext.fillText(minValueText, 24, 50);
+            legendContext.fillText(meanValueText, (width / 2) + 24, 50);
+            legendContext.fillText(maxValueText, width + 24, 50);
         }
-
-        legendContext.fillStyle = gradient;
-        legendContext.fillRect(24, 20, width, height);
-
-        legendContext.textAlign = 'center';
-        legendContext.textBaseline = 'top';
-        legendContext.fillStyle = 'black';
-
-        legendContext.fillText(minValueText, 24, 50);
-        legendContext.fillText(meanValueText, (width/2) + 24, 50);
-        legendContext.fillText(maxValueText, width + 24, 50);
     }
 };
 
@@ -4044,7 +4052,7 @@ jheatmap.components.RowHeaderPanel.prototype.paint = function(context) {
     {
         rowCtx = context;
         offset_x = this.canvas.offset().left;
-        offset_y = this.canvas.offset().top - 112;
+        offset_y = this.canvas.offset().top - 100;
     }
     else
     {
@@ -4290,11 +4298,6 @@ jheatmap.Heatmap = function (options) {
         row: undefined,
         col: undefined
     }
-
-    /*
-     * Whether to display the legend
-     */
-    this.showLegend = false;
 
     /**
      * Current search string to highlight matching rows and columns.
@@ -4855,30 +4858,6 @@ jheatmap.HeatmapDrawer = function (heatmap) {
 
         heatmap.offset.bottom = Math.min(heatmap.offset.top + maxRows, heatmap.rows.order.length);
         heatmap.offset.right = Math.min(heatmap.offset.left + maxCols, heatmap.cols.order.length);
-
-        if(showLegend)
-        {
-            /*var width = 300;
-            var height = 24;
-            var fractions = [0, 0.5, 1];
-            var colors = ["blue", "white", "red"];
-
-            var gradient = context.createLinearGradient(30, 30, width, height);
-            for (var i = 0, length = fractions.length; i < length; i++) {
-                gradient.addColorStop(fractions[i], colors[i]);
-            }
-            context.fillStyle = gradient;
-            context.fillRect(30, 30, width, height);
-
-            context.textAlign = 'center';
-            context.textBaseline = 'top';
-            context.fillStyle = 'black';
-
-            context.fillText('row min', 30, 55);
-            context.fillText('row max', width + 30, 55);*/
-
-            // Column headers panel
-        }
 
         // Column headers panel
         columnHeaderPanel.paint(context);

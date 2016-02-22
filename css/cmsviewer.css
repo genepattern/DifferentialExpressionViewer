@@ -128,3 +128,20 @@
     width: 280px;
 }
 
+#heatmapMain
+{
+    height: 55%;
+    min-width:  300px;
+    overflow: auto;
+}
+
+#heatMapOptions
+{
+    width: 100%;
+}
+
+#displayCustomPlot div
+{
+    margin-top: 4px;
+}
+

@@ -254,9 +254,12 @@ function displayViewer(data) {
             computedStatsColumnNames.push(columnName);
         }
     }
+
+    $("#cmsScorePlot").hide();
+
     initMenu();
     initTable();
-    initHeatMap();
+    setUpHeatMap();
 }
 
 function calculateHistogram(numBins, data)
@@ -285,6 +288,14 @@ function getDataInColumn(columnName)
     return data;
 }
 
+function clearView()
+{
+    $("#plot").hide();
+    $("#histogramBins").hide();
+    $("#cmsScorePlot").hide();
+    $("#heatMapMain").hide();
+}
+
 function plotHistogram(plotTitle, dataColumnName, numBins)
 {
     if(numBins == undefined)
@@ -295,8 +306,9 @@ function plotHistogram(plotTitle, dataColumnName, numBins)
     var data = getDataInColumn(dataColumnName);
     var hist = calculateHistogram(numBins, data);
 
-    //hide the main plot
-    $("#cmsScorePlot").hide();
+    //hide all the plots
+    clearView();
+
     $('#plot').show();
 
     var seriesName = "Features";
@@ -482,7 +494,7 @@ function displayExpressionProfile(plotTitle, xDataName, yDataName, samples, seri
                 color: '#808080'
             }]
         },
-        legend: {
+        endend: {
             layout: 'vertical',
             align: 'right',
             verticalAlign: 'middle',
@@ -1078,31 +1090,70 @@ function updateScatterPlot(chartContainer, plotTitle, xDataName, yDataName, seri
     }, zoomAnnotation);
 }
 
-function initHeatMap() {
-    $("#heatmap").show();
-    $('#plot').hide();
+function setUpHeatMap()
+{
+    clearView();
+    $("#heatMapMain").show();
 
-    cmsHeatMap = new gpVisual.HeatMap(datasetFile, $("#heatmap"));
-    cmsHeatMap.drawHeatMap();
+    $("#heatMapOptions").remove();
+
+    var optionsDiv = $("<div/>").attr("id", "heatMapOptions");
+    var legendControl = $("<input type='checkbox'/>");
+    legendControl.click(function()
+    {
+        var showLegend = $(this).is(":checked");
+        var options =
+        {
+            showLegend: showLegend,
+            poweredByJHeatmap: false,
+            controls : {
+                columnSelector: false,
+                rowSelector: false
+            }
+        };
+
+        drawHeatMap(options);
+    });
+
+    var options =
+    {
+        showLegend: false,
+        poweredByJHeatmap: false,
+        controls : {
+            columnSelector: false,
+            rowSelector: false
+        }
+    };
+
+    $("<label>Display Legend</label>").prepend(legendControl).appendTo(optionsDiv);
+    $("#heatMapMain").prepend(optionsDiv);
+
+    drawHeatMap(options);
 }
 
-function updateHeatMap(options)
+function drawHeatMap(options)
 {
+    clearView();
+    $("#heatMapMain").show();
+
+    cmsHeatMap = new gpVisual.HeatMap(datasetFile, $("#heatmap"));
     cmsHeatMap.drawHeatMap(options);
 }
 
+
 function scorePlot(records, subsetIds)
 {
-    //hide the no plot
-    $("#cmsScorePlot").show();
-    $('#plot').hide();
-
     if(records == undefined || records.length < 1)
     {
         console.log("No data found to plot scores");
         alert.log("No data found to plot scores");
         return;
     }
+
+    //clear all the plots
+    clearView();
+    $("#cmsScorePlot").show();
+
     //create a two dimensional array of the x and y points
     var upRegulatedClassZero = [];
     var upRegulatedClassOne = [];
@@ -1348,26 +1399,52 @@ function exportTable()
     return content;
 }
 
-function saveImage(type, defaultFileName)
+function saveImage(defaultFileName)
 {
     var disableSave = false;
     if(defaultFileName === undefined || defaultFileName === null)
     {
-        defaultFileName = "";
+        defaultFileName = "cms_image_download";
         disableSave = true;
     }
 
     w2popup.open({
         title: 'Save Image',
         width: 350,
-        height: 200,
+        height: 240,
         showMax: true,
         modal: true,
-        body: '<div id="gpDialog" style="margin: 30px 15px 2px 25px;"><label>File name: <input type="text" id="fileName" value="'+ defaultFileName +'"/></label></div>',
+        body: '<div id="saveImageDialog" style="margin: 30px 15px 2px 25px;"><label>File name: <input type="text" id="fileName" value="'+ defaultFileName +'"/></label></div>',
         buttons: '<button class="btn" onclick="w2popup.close();">Cancel</button> ' +
             '<button id="saveImageBtn" class="btn">OK</button>',
-        onOpen: function (event) {
-            event.onComplete = function () {
+        onOpen: function (event)
+        {
+            event.onComplete = function ()
+            {
+                //Add the image file formats
+                var imageFormats = [];
+
+                imageFormats.push("svg");
+                imageFormats.push("png");
+
+                //jpeg and pdf is available for the plots generated with highcharts
+                if(!$("#heatmap").is(":visible"))
+                {
+                    imageFormats.push("jpeg");
+                    imageFormats.push("pdf");
+                }
+
+                //add the save formats that are supported for all images
+                var saveFormats = $('<label>File type: <br/> <input type="list" id="fileType"/></label>');
+
+                $("<div/>").append(saveFormats).appendTo("#saveImageDialog");
+
+                $("#fileType").w2field('list',
+                {
+                    items: imageFormats,
+                    selected: imageFormats[0]
+                });
+
                 $("#fileName").keyup(function()
                 {
                     var value = $(this).val();
@@ -1392,61 +1469,73 @@ function saveImage(type, defaultFileName)
     $("#saveImageBtn").click(function (event)
     {
         var fileName = $("#fileName").val();
+        var fileType = $("#fileType").val();
         var plot = $('#cmsScorePlot');
 
-        if($('#plot').is(":visible"))
-        {
+        if($('#plot').is(":visible")) {
             plot = $('#plot');
         }
-        var chart = plot.highcharts();
 
-        if(type.toLowerCase() === "jpeg")
+        if(!gpUtil.endsWith(fileName, fileType))
         {
-            type = "image/jpeg";
-
+            fileName += "." + fileType;
         }
-        else if(type.toLowerCase() === "svg")
-        {
-            type = "image/svg+xml";
 
-        }
-        else if(type.toLowerCase() === "pdf")
+        if($("#heatmap").is(":visible"))
         {
-            type = "application/pdf";
-
+            cmsHeatMap.saveImage(fileName, fileType);
         }
         else
         {
-            type = "image/png";
+            var chart = plot.highcharts();
 
+
+            if (fileType.toLowerCase() === "jpeg") {
+                fileType = "image/jpeg";
+
+            }
+            else if (fileType.toLowerCase() === "svg") {
+                fileType = "image/svg+xml";
+
+            }
+            else if (type.toLowerCase() === "pdf") {
+                fileType = "application/pdf";
+
+            }
+            else {
+                fileType = "image/png";
+
+            }
+
+            chart.exportChart({
+                type: type,
+                filename: fileName
+            });
         }
 
-        chart.exportChart({
-            type: type,
-            filename: fileName
-        });
+        w2popup.close();
     });
 }
 
-function customPlot()
+function mmPlot()
 {
     //prompt the user for the x and y axes
     w2popup.open({
         title   : 'Custom Plot',
-        width   : 570,
+        width   : 300,
         opacity: 0,
         height  : 220,
         showMax : true,
         body    : '<div id="customPlotDialog" style="padding-top: 20px;width: 100px"></div>',
         buttons   : '<button class="btn" onclick="w2popup.close();">Cancel</button> '+
-            '<button class="btn" id="displayCustomPlot">OK</button>',
+            '<button class="btn" id="l">OK</button>',
         onOpen  : function (event) {
             event.onComplete = function () {
                  var div = $("<div/>");
-                 var xAxisList = '<span><label>X-axis:<input id="customXAxis" type="list"></label></span>';
+                 var xAxisList = '<div><label>X-axis: <br/><input id="customXAxis" type="list"></label></div>';
                  div.append(xAxisList);
 
-                 var yAxisList = '<span><label>Y-axis:<input id="customYAxis" type="list"></label></span>';
+                 var yAxisList = '<div><label>Y-axis: <br/><input id="customYAxis" type="list"></label></div>';
                  div.append(yAxisList);
 
                  $("#customPlotDialog").append(div);
@@ -1463,7 +1552,7 @@ function customPlot()
                     selected: computedStatsColumnNames[1]
                  });
 
-                 var typeOfPlot = '<span><label>Plot Type:<input id="customPlotType" type="list"></label></span>';
+                 var typeOfPlot = '<div><label>Plot Type: <br/> <input id="customPlotType" type="list"></label></div>';
 
                  $("#customPlotDialog").append(typeOfPlot);
                  $("#customPlotType").w2field('list',
@@ -1567,42 +1656,16 @@ function initMenu()
             }
             else if(text == "Heatmap")
             {
-                if ($("#heatmap").length == 0) {
-                    initHeatMap();
-                }
-                else {
-                    $("#plot").hide();
-                    $("#cmsScorePlot").hide();
-                    $("#heatmap").show();
-                    updateHeatMap(options);
-                }
-            }
-            else if(highlightedParent == "Heatmap" && text == "Show Legend")
-            {
-                var options = {
-                    showLegend: true
-                };
-
-                if ($("#heatmap").length == 0) {
-
-                    initHeatMap(options);
-                }
-                else {
-                    $("#plot").hide();
-                    $("#cmsScorePlot").hide();
-                    $("#heatmap").show();
-                    updateHeatMap(options);
-                }
+                setUpHeatMap();
             }
             else if(text == "Upregulated Features") {
                 gpLib.logToAppLogger(APPLICATION_NAME, "upregulated features", "plot");
 
-                if ($("#cmsScorePlot").length == 0) {
-                    scorePlot();
+                if ($("#cmsScorePlot").children().length == 0) {
+                    scorePlot(w2ui['cmsTable'].records);
                 }
                 else {
-                    $("#plot").hide();
-                    $("#heatmap").show();
+                    clearView();
                     $("#cmsScorePlot").show();
                 }
             }
@@ -1707,13 +1770,13 @@ function initMenu()
                     }
                 }
             }
-            else if(text == "PNG" || text == "JPEG" || text == "SVG" || text == "PDF")
+            else if(text == "Save Image")
             {
                 gpLib.logToAppLogger(APPLICATION_NAME, "save image: " + text.toLowerCase(), "save");
 
-                var defaultFileName = odfFileName.replace(/\.odf$/i, '') + "_img." + text.toLowerCase();
+                var defaultFileName = odfFileName.replace(/\.odf$/i, '') + "_img";
 
-                saveImage(text, defaultFileName);
+                saveImage(defaultFileName);
             }
         }
         else

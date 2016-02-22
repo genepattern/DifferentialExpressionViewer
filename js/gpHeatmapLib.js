@@ -36,14 +36,34 @@ gpVisual.HeatMap = function(dataUrl, container) {
                     gpHeatmap = heatmap;
 
                     heatmap.controls.shortcuts = false;
-                    //heatmap.controls.columnSelector = false;
                     heatmap.controls.cellSelector = false;
 
                     heatmap.controls.legend = false;
 
-                    if(options !== undefined && options.showLegend !== undefined)
+                    if(options !== undefined)
                     {
-                        heatmap.controls.legend = options.showLegend;
+                        if (options.showLegend !== undefined)
+                        {
+                            heatmap.controls.legend = options.showLegend;
+                        }
+
+                        if(options.controls !== undefined)
+                        {
+                            if(options.controls.columnSelector !== undefined)
+                            {
+                                heatmap.controls.columnSelector = options.controls.columnSelector;
+                            }
+
+                            if(options.controls.rowSelector !== undefined)
+                            {
+                                heatmap.controls.rowSelector = options.controls.rowSelector;
+                            }
+                        }
+
+                        if(options.poweredByJHeatmap !== undefined)
+                        {
+                            heatmap.poweredByJHeatmap = options.poweredByJHeatmap;
+                        }
                     }
                     //height of the columns
                     heatmap.cols.labelSize = 150;

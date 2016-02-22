@@ -2681,7 +2681,7 @@ jheatmap.components.LegendPanel = function(drawer, heatmap)
     // Create markup
     this.markup = $("<tr >");
     this.width = 360;
-    this.height = 45;
+    this.height = 60;
 
     var legendCell = $("<td colspan='2'>");
     this.bodyCanvas = $("<canvas width='" + (heatmap.size.width + heatmap.rows.labelSize + 16) + "'" + " height='" + this.height +"'" + "></canvas>");

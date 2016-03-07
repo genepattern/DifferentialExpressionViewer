@@ -259,7 +259,7 @@ function displayViewer(data) {
 
     initMenu();
     initTable();
-    setUpHeatMap();
+    initHeatMap();
 }
 
 function calculateHistogram(numBins, data)
@@ -1090,53 +1090,11 @@ function updateScatterPlot(chartContainer, plotTitle, xDataName, yDataName, seri
     }, zoomAnnotation);
 }
 
-function setUpHeatMap()
+function displayHeatMap(options)
 {
     clearView();
     $("#heatMapMain").show();
 
-    $("#heatMapOptions").remove();
-
-    var optionsDiv = $("<div/>").attr("id", "heatMapOptions");
-    var legendControl = $("<input type='checkbox'/>");
-    legendControl.click(function()
-    {
-        var showLegend = $(this).is(":checked");
-        var options =
-        {
-            showLegend: showLegend,
-            poweredByJHeatmap: false,
-            controls : {
-                columnSelector: false,
-                rowSelector: false
-            }
-        };
-
-        drawHeatMap(options);
-    });
-
-    var options =
-    {
-        showLegend: false,
-        poweredByJHeatmap: false,
-        controls : {
-            columnSelector: false,
-            rowSelector: false
-        }
-    };
-
-    $("<label>Display Legend</label>").prepend(legendControl).appendTo(optionsDiv);
-    $("#heatMapMain").prepend(optionsDiv);
-
-    drawHeatMap(options);
-}
-
-function drawHeatMap(options)
-{
-    clearView();
-    $("#heatMapMain").show();
-
-    cmsHeatMap = new gpVisual.HeatMap(datasetFile, $("#heatmap"));
     cmsHeatMap.drawHeatMap(options);
 }
 
@@ -1656,7 +1614,7 @@ function initMenu()
             }
             else if(text == "Heatmap")
             {
-                setUpHeatMap();
+                displayHeatMap();
             }
             else if(text == "Upregulated Features") {
                 gpLib.logToAppLogger(APPLICATION_NAME, "upregulated features", "plot");
@@ -1823,12 +1781,6 @@ function loadCMSViewer()
             odfFile = "https://www.broadinstitute.org/cancer/software/genepattern/data/protocols/all_aml_test.preprocessed.comp.marker.odf";
         }
 
-        //load the odf file and display plot and table
-       /* gpLib.getDataAtUrl(odfFile,
-            {   headers: headers,
-                successCallBack: displayViewer,
-                failCallBack: displayLoadError
-            });*/
         loadOdfFile(odfFile);
 
         //load the expression dataset
@@ -1852,6 +1804,88 @@ function loadCMSViewer()
         }
     }
 }
+
+function initHeatMap()
+{
+    clearView();
+    $("#heatMapMain").show();
+
+    $("#heatMapOptions").remove();
+
+    var optionsDiv = $("<div/>").attr("id", "heatMapOptions");
+    var legendControl = $("<input type='checkbox'/>");
+    legendControl.click(function()
+    {
+        var showLegend = $(this).is(":checked");
+        var options =
+        {
+            showLegend: showLegend,
+            poweredByJHeatmap: false,
+            controls : {
+                columnSelector: false,
+                rowSelector: false
+            }
+        };
+
+        cmsHeatMap.drawHeatMap(options);
+    });
+    $("<label>Display Legend</label>").prepend(legendControl).appendTo(optionsDiv);
+    $("#heatMapMain").prepend(optionsDiv);
+
+    cmsHeatMap = new gpVisual.HeatMap(
+    {
+        dataUrl: datasetFile,
+        container: $("#heatmap"),
+        showLegend: false,
+        onLoadData: function(status)
+        {
+            if(status !== undefined && status.error !== undefined)
+            {
+                $("#heatmap").empty();
+                $("#heatmap").append("<p class='error'>Error: " + status.error + "</p>");
+            }
+            else
+            {
+               // setUpHeatMap();
+            }
+        }
+    });
+}
+
+/*function setUpHeatMap()
+{
+    //change to the sort to be by the value of the test statistic
+    var testStatisticName = cmsOdf["Test Statistic"];
+    var testStatisticArr = [testStatisticName];
+
+    //for(var i=0; i<w2ui['cmsTable'].records.length;i++)
+    // {
+    // testStatisticArr.push(w2ui['cmsTable'].records[i][testStatisticName].toString());
+    //}
+
+    /*var featureNames = cmsHeatMap.getRowNames();
+    for(var i=0;i<featureNames.length;i++)
+    {
+         var match = w2ui['cmsTable'].find({ Feature: featureNames[i] });
+         if(match !==undefined && match.length == 1)
+         {
+             var recid = match[0];
+             var record = w2ui['cmsTable'].get(recid);
+             testStatisticArr.push(record[testStatisticName].toString());
+         }
+    }
+
+    //cmsHeatMap.addFeatureLabels(null, testStatisticArr, false);
+    //cmsHeatMap.sortByFeatureLabel(testStatisticName);*/
+
+    /* lastest calls to sort by annotation
+     cmsHeatMap.addDataColumn(testStatisticArr, false);
+     cmsHeatMap.sortByColumn(testStatisticName, false);*/
+
+/*    clearView();
+    $("#heatMapMain").show();
+}*/
+
 
 $(function()
 {

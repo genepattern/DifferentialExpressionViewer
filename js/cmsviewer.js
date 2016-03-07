@@ -1773,7 +1773,7 @@ function loadCMSViewer()
         parser.attr("href", odfFile);
 
         odfFileName = parser[0].pathname.substring(parser[0].pathname.lastIndexOf('/')+1);
-        $("#fileLoaded").append("<span>Loaded: <a href='" + odfFile + "' target='_blank'>" + odfFileName + "</a></span>");
+        $("#fileLoaded").append("<span>Loaded: <a href='" + odfFile + "' target='_blank'>" + decodeURIComponent(odfFileName) + "</a></span>");
 
         //HACK for the GenePattern protocols
         if(odfFile == "ftp://ftp.broadinstitute.org/pub/genepattern/datasets/protocols/all_aml_test.preprocessed.comp.marker.odf")

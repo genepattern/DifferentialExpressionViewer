@@ -359,7 +359,7 @@ jheatmap.utils.reindexField = function(value, headers) {
  * A text separated value file table reader
  *
  * @example
- * new jheatmap.readers.AnnotationReader({ url: "filename.tsv" });
+ * new jheatmap.readers.FeatureLabelsReader({ url: "filename.txt" });
  *
  * @class
  * @param {string}  p.url                 File url
@@ -369,6 +369,7 @@ jheatmap.readers.FeatureLabelsReader = function (p) {
     p = p || {};
     this.url = p.url || "";
     this.separator = p.separator || "\t";
+    this.handleError = p.handleError;
 };
 
 /**
@@ -383,12 +384,21 @@ jheatmap.readers.FeatureLabelsReader.prototype.read = function (result, initiali
 
     var sep = this.separator;
     var url = this.url;
+    var handleError = this.handleError;
+
+    var credentials = false;
+    if(url.indexOf("https://") === 0)
+    {
+        credentials = true;
+    }
 
     jQuery.ajax({
-
         url: url,
-
         dataType: "text",
+        xhrFields: {
+            withCredentials: credentials
+        },
+        crossDomain: true,
 
         success: function (file) {
 
@@ -396,31 +406,64 @@ jheatmap.readers.FeatureLabelsReader.prototype.read = function (result, initiali
             {
                 result.header = [];
             }
-            var lines = file.replace('\r', '').split('\n');
-            jQuery.each(lines, function (lineCount, line) {
-                if (line.length > 0 && !line.startsWith("#")) {
-                    if (lineCount == 0) {
-                        result.header = result.header.concat(line.splitCSV(sep));
-                    }
-                    else
-                    {
-                        var labelLines = line.splitCSV(sep);
-                        for(var v=0; v <labelLines.length;v++)
-                        {
-                            if(result.values[v] === undefined)
-                            {
-                                result.values[v] = [];
-                            }
 
-                            result.values[v].push(labelLines[v]);
+            try
+            {
+               // var lines = file.replace('\r', '').split('\n');
+                var lines = file.split(/\r\n|\r|\n/);
+
+                jQuery.each(lines, function (lineCount, line) {
+                    if (line.length > 0 && !line.startsWith("#")) {
+                        if (lineCount == 0)
+                        {
+                            var labelNames = line.splitCSV(sep);
+
+
+                            for(var i=0;i<labelNames.length;i++)
+                            {
+                                if(result.header !== undefined && $.inArray(labelNames[i], result.header) !== -1)
+                                {
+                                    throw("Label " + labelNames[i] +  " already exists.");
+                                }
+                                else {
+                                   result.header.push(labelNames[i]);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            var labelLines = line.splitCSV(sep);
+                            for(var v=0; v <labelLines.length;v++)
+                            {
+                                var index = lineCount -1;
+                                if(result.values[index] === undefined)
+                                {
+                                    result.values[index] = [];
+                                }
+
+                                result.values[index].push(labelLines[v]);
+                            }
                         }
                     }
+                });
+
+                result.ready = true;
+
+                initialize.call(this);
+            }
+            catch(err)
+            {
+                if(err !== undefined && err.length > 0
+                    && handleError != undefined && typeof handleError == 'function')
+                {
+                    var status = {
+                        error: err
+                    };
+
+                    console.log(err);
+                    handleError(status);
                 }
-            });
-
-            result.ready = true;
-
-            initialize.call(this);
+            }
         }
     });
 };
@@ -507,6 +550,7 @@ jheatmap.readers.GctHeatmapReader = function (p) {
     this.url = p.url || "";
     this.separator = p.separator || "\t";
     this.colAnnotationUrl = p.colAnnotationUrl || null;
+    this.handleError = p.handleError;
 
 };
 
@@ -522,74 +566,120 @@ jheatmap.readers.GctHeatmapReader.prototype.read = function (heatmap, initialize
     var sep = this.separator;
     var url = this.url;
     var colAnnotationUrl = this.colAnnotationUrl;
+    var handleError = this.handleError;
+
+    var credentials = true;
+    if(url.indexOf("https://") === 0)
+    {
+        credentials = true;
+    }
 
     jQuery.ajax({
         url: url,
         dataType: "text",
+        xhrFields: {
+            withCredentials: credentials
+        },
+        crossDomain: true,
         success: function (file) {
 
-            var lines = file.replace('\r', '').split('\n');
-            jQuery.each(lines, function (lineCount, line) {
-                if (line.length > 0 && !line.startsWith("#")) {
-                    if (lineCount < 2) {
-                        // skip lines 1,2 with the gct header
-                    } else if (lineCount == 2) {
-                        var headerLine = line.splitCSV(sep);
-                        headerLine.shift();
-                        headerLine.shift();
-                        heatmap.cells.header = headerLine;
-                    } else {
-                        var valLine = line.splitCSV(sep);
-                        heatmap.cells.values[heatmap.cells.values.length] = valLine;
-                    }
-                }
-            });
+            try {
+                //var lines = file.replace('\r', '').split('\n');
+                var lines = file.split(/\r\n|\r|\n/);
 
-            if(heatmap.cols.header === undefined || heatmap.cols.header === null)
+                if(file == "")
+                {
+                    throw("Dataset is too large to load.");
+                }
+
+                jQuery.each(lines, function (lineCount, line)
+                {
+                    line = line.trim();
+                    if (line.length > 0)
+                    {
+                        if (lineCount === 0 && line !== "#1.2")
+                        {
+                            throw("Invalid GCT file. Expected '#1.2' on line 1.");
+                        }
+                        if (lineCount == 0 || lineCount === 1)
+                        {
+                            //do nothing
+                        }
+                        else if (lineCount === 2)
+                        {
+                            //parse the third line which contains the sample names
+                            var headerLine = line.splitCSV(sep);
+                            headerLine.shift();
+                            headerLine.shift();
+
+                            if(headerLine.length == 0)
+                            {
+                                throw("No sample names found in GCT file");
+                            }
+
+                            heatmap.cells.header = headerLine;
+                        }
+                        else
+                        {
+                            var valLine = line.splitCSV(sep);
+                            heatmap.cells.values[heatmap.cells.values.length] = valLine;
+                        }
+                    }
+                });
+            }
+            catch(err)
             {
+                if(err !== undefined && err.length > 0
+                    && handleError != undefined && typeof handleError == 'function')
+                {
+                    var status = {
+                        error: err
+                    };
+
+                    console.log(err);
+                    handleError(status);
+                    return;
+                }
+            }
+
+            if (heatmap.cols.header === undefined || heatmap.cols.header === null) {
                 heatmap.cols.header = [];
             }
 
-            heatmap.cols.header.unshift( "Samples" );
-            for (var i = 0; i < heatmap.cells.header.length; i++)
-            {
-                if(heatmap.cols.values !== undefined && heatmap.cols.values[i] != undefined)
-                {
+            heatmap.cols.header.unshift("Samples");
+            for (var i = 0; i < heatmap.cells.header.length; i++) {
+                if (heatmap.cols.values !== undefined && heatmap.cols.values[i] != undefined) {
                     heatmap.cols.values[i].unshift(heatmap.cells.header[i]);
                 }
-                else
-                {
+                else {
                     heatmap.cols.values[heatmap.cols.values.length] = [ heatmap.cells.header[i] ];
                 }
             }
 
             /*heatmap.cols.header = [ "Samples" ];
-            for (var i = 0; i < heatmap.cells.header.length; i++) {
-                heatmap.cols.values[heatmap.cols.values.length] = [ heatmap.cells.header[i] ];
-            }*/
+             for (var i = 0; i < heatmap.cells.header.length; i++) {
+             heatmap.cols.values[heatmap.cols.values.length] = [ heatmap.cells.header[i] ];
+             }*/
 
             var count = 0;
-            var sum =0;
+            var sum = 0;
             var cellValues = [];
             heatmap.rows.header = [ "Feature Name", "Description" ];
             for (var row = 0; row < heatmap.cells.values.length; row++) {
-                heatmap.rows.values[heatmap.rows.values.length] = [ heatmap.cells.values[row][0],  heatmap.cells.values[row][1]];
+                heatmap.rows.values[heatmap.rows.values.length] = [ heatmap.cells.values[row][0], heatmap.cells.values[row][1]];
                 for (var col = 0; col < heatmap.cols.values.length; col++) {
                     cellValues[cellValues.length] = [ heatmap.cells.values[row][col + 2] ];
 
                     //Keep track of minimum and maximum value in each row
                     var value = parseFloat(heatmap.cells.values[row][col + 2]);
-                    if(!isNaN(value))
-                    {
-                        if(heatmap.cells.maxValue == undefined || heatmap.cells.maxValue == null
-                            || heatmap.cells.maxValue < value)
-                        {
+                    if (!isNaN(value)) {
+                        if (heatmap.cells.maxValue == undefined || heatmap.cells.maxValue == null
+                            || heatmap.cells.maxValue < value) {
                             heatmap.cells.maxValue = value;
                         }
 
-                        if(heatmap.cells.minValue == undefined || heatmap.cells.minValue == null
-                            || heatmap.cells.minValue > value)
-                        {
+                        if (heatmap.cells.minValue == undefined || heatmap.cells.minValue == null
+                            || heatmap.cells.minValue > value) {
                             heatmap.cells.minValue = value;
                         }
 
@@ -599,13 +689,13 @@ jheatmap.readers.GctHeatmapReader.prototype.read = function (heatmap, initialize
                 }
             }
 
-            heatmap.cells.meanValue =  sum / count;
+            heatmap.cells.meanValue = sum / count;
             delete heatmap.cells.header;
             delete heatmap.cells.values;
             heatmap.cells.header = [ "Value" ];
             heatmap.cells.values = cellValues;
 
-            if (colAnnotationUrl != null){
+            if (colAnnotationUrl != null) {
                 jQuery.ajax({
                     url: colAnnotationUrl,
                     dataType: "text",
@@ -634,6 +724,7 @@ jheatmap.readers.GctHeatmapReader.prototype.read = function (heatmap, initialize
                 heatmap.cells.ready = true;
                 initialize.call(this);
             }
+
         }
     });
 };
@@ -653,6 +744,7 @@ jheatmap.readers.ClsReader = function (p) {
     this.url = p.url || "";
     this.separator = p.separator || " ";
     this.label = p.label || "";
+    this.handleError = p.handleError;
 };
 
 /**
@@ -668,71 +760,99 @@ jheatmap.readers.ClsReader.prototype.read = function (result, initialize) {
     var sep = this.separator;
     var url = this.url;
     var label = this.label;
+    var handleError = this.handleError;
+
+    var credentials = false;
+    if(url.indexOf("https://") === 0)
+    {
+        credentials = true;
+    }
 
     jQuery.ajax({
         url: url,
-
         dataType: "text",
 
+        xhrFields: {
+            withCredentials: credentials
+        },
+        crossDomain: true,
         success: function (file) {
 
-            if(result.header == undefined )
-            {
-                result.header = [];
-            }
+            try {
+                if (result.header == undefined) {
+                    result.header = [];
+                }
 
-            if(label == undefined || label.length < 1)
-            {
-                var filename = url.split("/");
-                result.header.push(filename[filename.length-1]);
-            }
-            else
-            {
-                result.header.push(label);
-            }
+                if (label === undefined || label.length < 1)
+                {
+                    var filename = url.split("/");
 
-            if(result.values === undefined)
-            {
-                result.values = [];
-            }
-
-            var classLabels = [];
-            var lines = file.replace('\r', '').split('\n');
-            jQuery.each(lines, function (lineCount, line) {
-                line = line.trim();
-                if (line.length > 0 && lineCount > 0) {
-                    if (lineCount == 1 && line.startsWith("#"))
+                    if(filename !== undefined && filename.length > 1)
                     {
-                        //the is the line that has the class names
-                        classLabels = line.splitCSV(sep);
-                        classLabels = classLabels.slice(1);
-                    }
-
-                    if(lineCount > 1)
-                    {
-                        var labelLines = line.splitCSV(sep);
-                        for(var v=0; v <labelLines.length;v++)
-                        {
-                            if(result.values[v] === undefined)
-                            {
-                                result.values[v] = [];
-                            }
-
-                            var classLabel = labelLines[v];
-                            var classNum = parseInt(labelLines[v]);
-                            if(!isNaN(classNum) && classNum < classLabels.length)
-                            {
-                                classLabel = classLabels[classNum];
-                            }
-                            result.values[v].push(classLabel);
-                        }
+                        label = filename[filename.length - 1];
                     }
                 }
-            });
 
-            result.ready = true;
+                //check for duplicate header labels
+                if ($.inArray(label, result.header) !== -1)
+                {
+                    throw("Label " + label + " already exists.");
+                }
 
-            initialize.call(this);
+                result.header.push(label);
+
+                if (result.values === undefined) {
+                    result.values = [];
+                }
+
+                var classLabels = [];
+                //var lines = file.replace('\r', '').split('\n');
+                var lines = file.split(/\r\n|\n|\r/);
+
+                jQuery.each(lines, function (lineCount, line) {
+                    line = line.trim();
+                    if (line.length > 0 && lineCount > 0) {
+                        if (lineCount == 1 && line.startsWith("#")) {
+                            //the is the line that has the class names
+                            classLabels = line.splitCSV(sep);
+                            classLabels = classLabels.slice(1);
+                        }
+
+                        if (lineCount > 1) {
+                            var labelLines = line.splitCSV(sep);
+                            for (var v = 0; v < labelLines.length; v++) {
+                                if (result.values[v] === undefined) {
+                                    result.values[v] = [];
+                                }
+
+                                var classLabel = labelLines[v];
+                                var classNum = parseInt(labelLines[v]);
+                                if (!isNaN(classNum) && classNum < classLabels.length) {
+                                    classLabel = classLabels[classNum];
+                                }
+                                result.values[v].push(classLabel);
+                            }
+                        }
+                    }
+                });
+
+                result.ready = true;
+
+                initialize.call(this);
+            }
+            catch(err)
+            {
+                if(err !== undefined && err.length > 0
+                    && handleError != undefined && typeof handleError == 'function')
+                {
+                    var status = {
+                        error: err
+                    };
+
+                    console.log(err);
+                    handleError(status);
+                }
+            }
         }
     });
 };
@@ -1637,7 +1757,7 @@ jheatmap.aggregators.Addition = function () {
 jheatmap.aggregators.Addition.prototype.accumulate = function (values) {
     var sum = 0;
     for (var i = 0; i < values.length; i++) {
-        var value = values[i];
+        var value = parseFloat(values[i]);
         if (value && !isNaN(value)) {
             sum += value;
         }
@@ -2488,7 +2608,8 @@ jheatmap.components.CellBodyPanel = function(drawer, heatmap) {
     };
 
     // Bind events
-    this.canvas.bind('mousewheel', function (e, delta, deltaX, deltaY) {
+    //disabling mouse wheel - Marc-Danie
+    /*this.canvas.bind('mousewheel', function (e, delta, deltaX, deltaY) {
         e.preventDefault();
 
         if (e.shiftKey) {
@@ -2520,7 +2641,7 @@ jheatmap.components.CellBodyPanel = function(drawer, heatmap) {
 	         drawer.paint();
 
         }
-    });
+    });*/
     this.canvas.bind('gesturechange', function (e) {
         onGestureChange(e);
     });
@@ -2554,7 +2675,7 @@ jheatmap.components.CellBodyPanel = function(drawer, heatmap) {
 
 };
 
-jheatmap.components.CellBodyPanel.prototype.paint = function(context)
+jheatmap.components.CellBodyPanel.prototype.paint = function(context, offsetY)
 {
     var heatmap = this.heatmap;
     var rz = heatmap.rows.zoom;
@@ -2566,18 +2687,18 @@ jheatmap.components.CellBodyPanel.prototype.paint = function(context)
     var endCol = heatmap.offset.right;
 
     var offset_x = 0;
-    var offset_y = 0;
-
+    var offset_y = offsetY;
     var cellCtx = this.canvas.get()[0].getContext('2d');
     if(context !== undefined && context !== null)
     {
         cellCtx = context;
 
         offset_x = this.canvas.offset().left;
-        offset_y = this.canvas.offset().top - 100;
+        //offset_y = this.canvas.offset().top - 100;
     }
     else
     {
+        offset_y = 0;
         cellCtx.clearRect(0, 0, cellCtx.canvas.width, cellCtx.canvas.height);
     }
 
@@ -2681,7 +2802,7 @@ jheatmap.components.LegendPanel = function(drawer, heatmap)
     // Create markup
     this.markup = $("<tr >");
     this.width = 360;
-    this.height = 60;
+    this.height = 70;
 
     var legendCell = $("<td colspan='2'>");
     this.bodyCanvas = $("<canvas width='" + (heatmap.size.width + heatmap.rows.labelSize + 16) + "'" + " height='" + this.height +"'" + "></canvas>");
@@ -2895,7 +3016,7 @@ jheatmap.components.ColumnAnnotationPanel = function(drawer, heatmap)
     });
 };
 
-jheatmap.components.ColumnAnnotationPanel.prototype.paint = function(context) {
+jheatmap.components.ColumnAnnotationPanel.prototype.paint = function(context, offset_y) {
 
     if (this.visible) {
 
@@ -2907,12 +3028,17 @@ jheatmap.components.ColumnAnnotationPanel.prototype.paint = function(context) {
 
         var colAnnHeaderCtx = this.canvasHeader.get()[0].getContext('2d');
 
+        var offset_x = 0;
+        var colAnnHeaderWidth = colAnnHeaderCtx.canvas.width;
         if(context !== undefined && context !== null)
         {
             colAnnHeaderCtx = context;
+            offset_x = this.canvasHeader.offset().left - 2;
+            //offset_y = this.canvasHeader.offset().top;
         }
         else
         {
+            offset_y = 0;
             colAnnHeaderCtx.clearRect(0, 0, colAnnHeaderCtx.canvas.width, colAnnHeaderCtx.canvas.height);
         }
 
@@ -2923,11 +3049,11 @@ jheatmap.components.ColumnAnnotationPanel.prototype.paint = function(context) {
 
         for (i = 0; i < heatmap.cols.annotations.length; i++) {
             var value = heatmap.cols.header[heatmap.cols.annotations[i]];
-            colAnnHeaderCtx.fillText(value, colAnnHeaderCtx.canvas.width - 5 - textSpacing, (i * heatmap.cols.annotationSize) + (heatmap.cols.annotationSize / 2));
+            colAnnHeaderCtx.fillText(value, offset_x + (colAnnHeaderWidth - 5 - textSpacing), offset_y + ((i * heatmap.cols.annotationSize) + (heatmap.cols.annotationSize / 2)));
 
             // Order mark
             colAnnHeaderCtx.save();
-            colAnnHeaderCtx.translate(colAnnHeaderCtx.canvas.width - 4, Math.round((i * heatmap.cols.annotationSize) + (heatmap.cols.annotationSize / 2)));
+            colAnnHeaderCtx.translate(offset_x + (colAnnHeaderWidth - 4),  offset_y + ((Math.round((i * heatmap.cols.annotationSize) + (heatmap.cols.annotationSize / 2)))));
             colAnnHeaderCtx.rotate(-Math.PI / 4);
             if (heatmap.cols.sorter.field == heatmap.cols.annotations[i]) {
                 jheatmap.components.OrderSymbol(colAnnHeaderCtx, heatmap.cols.sorter.asc);
@@ -2946,9 +3072,12 @@ jheatmap.components.ColumnAnnotationPanel.prototype.paint = function(context) {
         if(context !== undefined && context !== null)
         {
             colAnnValuesCtx = context;
+            offset_x = this.canvasBody.offset().left - 5;
+            //offset_y = this.canvasBody.offset().top;
         }
         else
         {
+            offset_y = 0;
             colAnnValuesCtx.clearRect(0, 0, colAnnValuesCtx.canvas.width, colAnnValuesCtx.canvas.height);
         }
 
@@ -2961,7 +3090,7 @@ jheatmap.components.ColumnAnnotationPanel.prototype.paint = function(context) {
                 if (value != null) {
                     var color = heatmap.cols.decorators[field].toColor(value);
                     colAnnValuesCtx.fillStyle = color;
-                    colAnnValuesCtx.fillRect((col - startCol) * cz, i * heatmap.cols.annotationSize, cz, heatmap.cols.annotationSize);
+                    colAnnValuesCtx.fillRect(offset_x + ((col - startCol) * cz), offset_y + (i * heatmap.cols.annotationSize), cz, heatmap.cols.annotationSize);
                 }
             }
         }
@@ -2969,7 +3098,7 @@ jheatmap.components.ColumnAnnotationPanel.prototype.paint = function(context) {
         for (var col = startCol; col < endCol; col++) {
             if ($.inArray(heatmap.cols.order[col], heatmap.cols.selected) > -1) {
                 colAnnValuesCtx.fillStyle = "rgba(0,0,0,0.1)";
-                colAnnValuesCtx.fillRect((col - startCol) * cz, 0, cz, heatmap.cols.annotations.length * heatmap.cols.annotationSize);
+                colAnnValuesCtx.fillRect((offset_x + (col - startCol) * cz), offset_y + 0, cz, heatmap.cols.annotations.length * heatmap.cols.annotationSize);
                 colAnnValuesCtx.fillStyle = "white";
             }
         }
@@ -3189,7 +3318,7 @@ jheatmap.components.ColumnHeaderPanel = function(drawer, heatmap) {
         drawer.paint();
      });
 
-     this.canvas.bind('mousewheel', function (e, delta, deltaX, deltaY) {
+     /*this.canvas.bind('mousewheel', function (e, delta, deltaX, deltaY) {
               e.preventDefault();
 
               if (e.shiftKey) {
@@ -3214,7 +3343,7 @@ jheatmap.components.ColumnHeaderPanel = function(drawer, heatmap) {
               }
 
               drawer.paint();
-     });
+     });*/
 
      this.canvas.bind('mouseover', function(e) {
          drawer.handleFocus(e);
@@ -3228,7 +3357,7 @@ jheatmap.components.ColumnHeaderPanel = function(drawer, heatmap) {
      });
 };
 
-jheatmap.components.ColumnHeaderPanel.prototype.paint = function(context) {
+jheatmap.components.ColumnHeaderPanel.prototype.paint = function(context, offset_y) {
 
     var heatmap = this.heatmap;
 
@@ -3241,16 +3370,16 @@ jheatmap.components.ColumnHeaderPanel.prototype.paint = function(context) {
     var colCtx = canvas.getContext('2d');
 
     var offset_x = 0;
-    var offset_y = 0;
 
     if(context !== undefined && context !== null)
     {
         colCtx = context;
         offset_x = this.canvas.offset().left;
-        offset_y = this.canvas.offset().top;
+        //offset_y = this.canvas.offset().top;
     }
     else
     {
+        offset_y = 0;
         colCtx.clearRect(0, 0, colCtx.canvas.width, colCtx.canvas.height);
     }
 
@@ -3272,14 +3401,14 @@ jheatmap.components.ColumnHeaderPanel.prototype.paint = function(context) {
     for (var c = startCol; c < endCol; c++) {
         var value = heatmap.cols.getValue(c, heatmap.cols.selectedValue);
         colCtx.save();
-        colCtx.translate((c - startCol) * cz + (cz / 2) + offset_x, heatmap.cols.labelSize - 5);
+        colCtx.translate((c - startCol) * cz + (cz / 2) + offset_x, (heatmap.cols.labelSize - 5) + offset_y);
         colCtx.rotate(Math.PI / 2);
         colCtx.fillText(value, -textSpacing, 0);
         colCtx.restore();
 
         // Order mark
         colCtx.save();
-        colCtx.translate(Math.round(((c - startCol) * cz) + (cz / 2)) + offset_x, heatmap.cols.labelSize - 4)
+        colCtx.translate(Math.round(((c - startCol) * cz) + (cz / 2)) + offset_x, (heatmap.cols.labelSize - 4) + offset_y);
         colCtx.rotate(Math.PI / 4);
         if (    (heatmap.rows.sorter.field == heatmap.cells.selectedValue) &&
             ($.inArray(heatmap.cols.order[c], heatmap.rows.sorter.indices) > -1)
@@ -3691,7 +3820,7 @@ jheatmap.components.RowAnnotationPanel = function(drawer, heatmap) {
 
 };
 
-jheatmap.components.RowAnnotationPanel.prototype.paint = function(context) {
+jheatmap.components.RowAnnotationPanel.prototype.paint = function(context, offset_y) {
 
     if (this.visible) {
 
@@ -3703,12 +3832,17 @@ jheatmap.components.RowAnnotationPanel.prototype.paint = function(context) {
         var textSpacing = 5;
         var annRowHeadCtx = this.headerCanvas.get()[0].getContext('2d');
 
+        var offset_x = 0;
         if(context !== undefined && context !== null)
         {
             annRowHeadCtx = context;
+            offset_x = this.headerCanvas.offset().left - 6;
+            offset_y = offset_y + 10;
         }
         else
         {
+            offset_y = 0;
+
             annRowHeadCtx.clearRect(0, 0, annRowHeadCtx.canvas.width, annRowHeadCtx.canvas.height);
         }
 
@@ -3717,18 +3851,25 @@ jheatmap.components.RowAnnotationPanel.prototype.paint = function(context) {
         annRowHeadCtx.textBaseline = "middle";
         annRowHeadCtx.font = "bold 11px Helvetica Neue,Helvetica,Arial,sans-serif";
 
+
+        var rowLabelOffset = 150;
+        if(offset_y != 0)
+        {
+            rowLabelOffset = offset_y;
+        }
+
         for (var i = 0; i < heatmap.rows.annotations.length; i++) {
 
             var value = heatmap.rows.header[heatmap.rows.annotations[i]];
             annRowHeadCtx.save();
-            annRowHeadCtx.translate(i * heatmap.rows.annotationSize + (heatmap.rows.annotationSize / 2), 150);
+            annRowHeadCtx.translate(offset_x + (i * heatmap.rows.annotationSize + (heatmap.rows.annotationSize / 2)), rowLabelOffset);
             annRowHeadCtx.rotate(Math.PI / 2);
-            annRowHeadCtx.fillText(value, -textSpacing - 5, 0);
+            annRowHeadCtx.fillText(value, (-textSpacing - 5), 0);
             annRowHeadCtx.restore();
 
             // Order mark
             annRowHeadCtx.save();
-            annRowHeadCtx.translate(Math.round((i * heatmap.rows.annotationSize) + (heatmap.rows.annotationSize / 2)), annRowHeadCtx.canvas.height - 4)
+            annRowHeadCtx.translate(offset_x + Math.round((i * heatmap.rows.annotationSize) + (heatmap.rows.annotationSize / 2)), offset_y + (annRowHeadCtx.canvas.height - 4));
             annRowHeadCtx.rotate(Math.PI / 4);
             if (heatmap.rows.sorter.field == heatmap.rows.annotations[i]) {
                 jheatmap.components.OrderSymbol(annRowHeadCtx, heatmap.rows.sorter.asc);
@@ -3749,9 +3890,12 @@ jheatmap.components.RowAnnotationPanel.prototype.paint = function(context) {
         if(context !== undefined && context !== null)
         {
             rowsAnnValuesCtx = context;
+            offset_x = this.bodyCanvas.offset().left - 6;
+            //offset_y = this.bodyCanvas.offset().top;
         }
         else
         {
+            offset_y = 0;
             rowsAnnValuesCtx.clearRect(0, 0, rowsAnnValuesCtx.canvas.width, rowsAnnValuesCtx.canvas.height);
         }
 
@@ -3763,14 +3907,14 @@ jheatmap.components.RowAnnotationPanel.prototype.paint = function(context) {
 
                 if (value != null) {
                     rowsAnnValuesCtx.fillStyle = heatmap.rows.decorators[field].toColor(value);
-                    rowsAnnValuesCtx.fillRect(i * heatmap.rows.annotationSize, (row - startRow) * rz, heatmap.rows.annotationSize, rz);
+                    rowsAnnValuesCtx.fillRect(offset_x + (i * heatmap.rows.annotationSize), offset_y + ((row - startRow) * rz), heatmap.rows.annotationSize, rz);
                 }
 
             }
 
             if ($.inArray(heatmap.rows.order[row], heatmap.rows.selected) > -1) {
                 rowsAnnValuesCtx.fillStyle = "rgba(0,0,0,0.1)";
-                rowsAnnValuesCtx.fillRect(0, (row - startRow) * rz, heatmap.rows.annotations.length * heatmap.rows.annotationSize, rz);
+                rowsAnnValuesCtx.fillRect(offset_x + 0, offset_y + ((row - startRow) * rz), heatmap.rows.annotations.length * heatmap.rows.annotationSize, rz);
                 rowsAnnValuesCtx.fillStyle = "white";
             }
         }
@@ -3961,6 +4105,11 @@ jheatmap.components.RowHeaderPanel = function(drawer, heatmap) {
         if (nrz != heatmap.rows.zoom) {
             heatmap.rows.zoom = Math.round(nrz);
             heatmap.offset.top = firstRow - Math.floor(firstY / heatmap.rows.zoom);
+
+            /*if(isNaN(heatmap.offset.top))
+            {
+                heatmap.offset.top = 0;
+            }*/
         }
     };
 
@@ -3974,7 +4123,7 @@ jheatmap.components.RowHeaderPanel = function(drawer, heatmap) {
        drawer.paint();
     });
 
-    this.canvas.bind('mousewheel', function (e, delta, deltaX, deltaY) {
+    /*this.canvas.bind('mousewheel', function (e, delta, deltaX, deltaY) {
          e.preventDefault();
 
          if (e.shiftKey) {
@@ -3997,7 +4146,7 @@ jheatmap.components.RowHeaderPanel = function(drawer, heatmap) {
 	         heatmap.offset.top = heatmap.offset.top - delta * momentum;
 	     }
          drawer.paint();
-    });
+    });*/
 
     this.canvas.bind('mouseover', function(e) {
         drawer.handleFocus(e);
@@ -4021,7 +4170,7 @@ jheatmap.components.RowHeaderPanel = function(drawer, heatmap) {
 
 };
 
-jheatmap.components.RowHeaderPanel.prototype.paint = function(context) {
+jheatmap.components.RowHeaderPanel.prototype.paint = function(context, offset_y) {
 
     var heatmap = this.heatmap;
 
@@ -4042,15 +4191,15 @@ jheatmap.components.RowHeaderPanel.prototype.paint = function(context) {
     };
 
     var offset_x = 0;
-    var offset_y = 0;
     if(context !== undefined && context !== null)
     {
         rowCtx = context;
         offset_x = this.canvas.offset().left;
-        offset_y = this.canvas.offset().top - 100;
+        //offset_y = this.canvas.offset().top - 100;
     }
     else
     {
+        offset_y = 0;
         rowCtx.clearRect(0, 0, rowCtx.canvas.width, rowCtx.canvas.height);
     }
 
@@ -4145,6 +4294,12 @@ jheatmap.components.VerticalScrollBar = function(drawer, heatmap) {
         var pY = e.pageY - $(e.target).offset().top - ((endY - iniY) / 2);
         pY = (pY < 0 ? 0 : pY);
         heatmap.offset.top = Math.round((pY / maxHeight) * heatmap.rows.order.length);
+
+        /*if(isNaN(heatmap.offset.top))
+        {
+            heatmap.offset.top = 0;
+        }*/
+
         drawer.paint();
     };
 
@@ -4186,6 +4341,12 @@ jheatmap.components.VerticalScrollBar = function(drawer, heatmap) {
             var pY = e.pageY + vScrollDownOffset - scrollTarget.offset().top - ((endY - iniY) / 2);
             pY = (pY < 0 ? 0 : pY);
             heatmap.offset.top = Math.round((pY / maxHeight) * heatmap.rows.order.length);
+
+            /*if(isNaN(heatmap.offset.top))
+            {
+                heatmap.offset.top = 0;
+            }*/
+
             drawer.paint();
         }
 
@@ -4812,7 +4973,7 @@ jheatmap.HeatmapDrawer = function (heatmap) {
     /**
      * Paint the heatmap.
      */
-    this.paint = function (context, hideScrollBars, showLegend) {
+    this.paint = function (context, hideScrollBars) {
 
         // Minimum zooms
         var mcz = Math.max(3, Math.round(heatmap.size.width / heatmap.cols.order.length));
@@ -4854,20 +5015,26 @@ jheatmap.HeatmapDrawer = function (heatmap) {
         heatmap.offset.bottom = Math.min(heatmap.offset.top + maxRows, heatmap.rows.order.length);
         heatmap.offset.right = Math.min(heatmap.offset.left + maxCols, heatmap.cols.order.length);
 
+        var offsetY = legendPanel.height;
+
         // Column headers panel
-        columnHeaderPanel.paint(context);
+        columnHeaderPanel.paint(context, offsetY);
+
+        offsetY = offsetY + columnHeaderPanel.canvas.height();
 
         // Rows headers
-        rowHeaderPanel.paint(context);
+        rowHeaderPanel.paint(context, offsetY + columnAnnotationPanel.canvasBody.height());
 
         // Row annotations
-        rowAnnotationPanel.paint(context);
+        rowAnnotationPanel.paint(context, offsetY);
 
         // Columns annotations
-        columnAnnotationPanel.paint(context);
+        columnAnnotationPanel.paint(context, offsetY);
+
+        offsetY = offsetY + columnAnnotationPanel.canvasBody.height();
 
         // Cells
-        cellsBodyPanel.paint(context);
+        cellsBodyPanel.paint(context, offsetY);
 
         //Heatmap Legend
         legendPanel.paint(context);
@@ -5491,8 +5658,21 @@ jheatmap.HeatmapSize.prototype.init = function () {
     }
 }(function ($) {
 
+    /*function isEventSupported(eventName) {
+        var el = document.createElement('div');
+        eventName = 'on' + eventName;
+        var isSupported = (eventName in el);
+        if (!isSupported) {
+            el.setAttribute(eventName, 'return;');
+            isSupported = typeof el[eventName] == 'function';
+        }
+        el = null;
+        return isSupported;
+    }*/
+
     var toFix = ['wheel', 'mousewheel', 'DOMMouseScroll', 'MozMousePixelScroll'];
     var toBind = 'onwheel' in document || document.documentMode >= 9 ? ['wheel'] : ['mousewheel', 'DomMouseScroll', 'MozMousePixelScroll'];
+    //var toBind = !isEventSupported('mousewheel') ? ['wheel'] : ['mousewheel', 'DomMouseScroll', 'MozMousePixelScroll'];
     var lowestDelta, lowestDeltaXY;
 
     if ( $.event.fixHooks ) {

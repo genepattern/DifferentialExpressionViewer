@@ -361,8 +361,35 @@ gpVisual.HeatMap = function(options) {
         return details;
     };
 
+    this.showRowAnnotations = function(annName)
+    {
+        if(gpHeatmap.rows.annotations.hidden !== undefined)
+        {
+            var index = $.inArray(annName, gpHeatmap.rows.annotations.hidden);
+
+            if(index !== -1)
+            {
+                gpHeatmap.rows.annotations.hidden.splice(index, 1);
+            }
+        }
+    };
+
+    this.hideRowAnnotations = function(annName)
+    {
+        if(gpHeatmap.rows.annotations.hidden === undefined)
+        {
+            gpHeatmap.rows.annotations.hidden = [];
+        }
+
+        if($.inArray(annName, gpHeatmap.rows.annotations.hidden) === -1)
+        {
+            gpHeatmap.rows.annotations.hidden.push(annName);
+        }
+    };
+
     this._addFeatureLabelsFromArr = function(labelsArr, hidden, callback)
     {
+        var self = this;
         //array must have at least a label name and one label value
         if(labelsArr == undefined && labelsArr !== null && labelsArr.length < 2)
         {
@@ -396,18 +423,19 @@ gpVisual.HeatMap = function(options) {
             rows.values[v-1].push(labelsArr[v]);
         }
 
-        if(hidden !== undefined && !hidden)
+        var labelIndex = gpHeatmap.rows.header.length;
+        gpHeatmap.rows.header.push(labelName);
+        gpHeatmap.rows.decorators[labelIndex] = new jheatmap.decorators.CategoricalRandom();
+        gpHeatmap.rows.annotations.push(labelIndex);
+
+        if(hidden !== undefined && hidden)
         {
-
-            var labelIndex = gpHeatmap.rows.header.length;
-            gpHeatmap.rows.header.push(labelName);
-            gpHeatmap.rows.decorators[labelIndex] = new jheatmap.decorators.CategoricalRandom();
-            gpHeatmap.rows.annotations.push(labelIndex);
-
-            var hRes = new jheatmap.HeatmapDrawer(gpHeatmap);
-            hRes.build();
-            hRes.paint(null, true, true);
+            self.hideRowAnnotations(labelIndex);
         }
+
+        var hRes = new jheatmap.HeatmapDrawer(gpHeatmap);
+        hRes.build();
+        hRes.paint(null, true, true);
     };
 
     this._addFeatureLabelsFromUrl = function(featureLabelsUrl, callback)
@@ -479,7 +507,7 @@ gpVisual.HeatMap = function(options) {
         var labelIndex = $.inArray(labelName, gpHeatmap.rows.header);
         gpHeatmap.rows.sorter = new jheatmap.sorters.AnnotationSorter(labelIndex, false);
         gpHeatmap.rows.sorter.sort(gpHeatmap, "rows");
-        self.drawHeatMap(null, false);
+        self.drawHeatMap();
     };
 
     this.addFeatureLabels = function(featureLabelsUrl, labelsArr, hidden, callback)

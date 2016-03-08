@@ -3860,6 +3860,12 @@ jheatmap.components.RowAnnotationPanel.prototype.paint = function(context, offse
 
         for (var i = 0; i < heatmap.rows.annotations.length; i++) {
 
+            if(heatmap.rows.annotations.hidden !== undefined
+                && $.inArray(heatmap.rows.annotations[i], heatmap.rows.annotations.hidden) !== -1)
+            {
+                continue;
+            }
+
             var value = heatmap.rows.header[heatmap.rows.annotations[i]];
             annRowHeadCtx.save();
             annRowHeadCtx.translate(offset_x + (i * heatmap.rows.annotationSize + (heatmap.rows.annotationSize / 2)), rowLabelOffset);
@@ -3903,6 +3909,11 @@ jheatmap.components.RowAnnotationPanel.prototype.paint = function(context, offse
 
             for (var i = 0; i < heatmap.rows.annotations.length; i++) {
                 var field = heatmap.rows.annotations[i];
+                if(heatmap.rows.annotations.hidden !== undefined
+                    && $.inArray(heatmap.rows.annotations[i], heatmap.rows.annotations.hidden) !== -1)
+                {
+                    continue;
+                }
                 var value = heatmap.rows.getValue(row, field);
 
                 if (value != null) {

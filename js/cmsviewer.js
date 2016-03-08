@@ -1866,13 +1866,13 @@ function initHeatMap()
             }
             else
             {
-               // setUpHeatMap();
+                setUpHeatMap();
             }
         }
     });
 }
 
-/*function setUpHeatMap()
+function setUpHeatMap()
 {
     //change to the sort to be by the value of the test statistic
     var testStatisticName = cmsOdf["Test Statistic"];
@@ -1883,7 +1883,7 @@ function initHeatMap()
     // testStatisticArr.push(w2ui['cmsTable'].records[i][testStatisticName].toString());
     //}
 
-    /*var featureNames = cmsHeatMap.getRowNames();
+    var featureNames = cmsHeatMap.getRowNames();
     for(var i=0;i<featureNames.length;i++)
     {
          var match = w2ui['cmsTable'].find({ Feature: featureNames[i] });
@@ -1895,16 +1895,16 @@ function initHeatMap()
          }
     }
 
-    //cmsHeatMap.addFeatureLabels(null, testStatisticArr, false);
-    //cmsHeatMap.sortByFeatureLabel(testStatisticName);*/
+    cmsHeatMap.addFeatureLabels(null, testStatisticArr, true);
+    cmsHeatMap.sortByFeatureLabel(testStatisticName);
 
     /* lastest calls to sort by annotation
      cmsHeatMap.addDataColumn(testStatisticArr, false);
      cmsHeatMap.sortByColumn(testStatisticName, false);*/
 
-/*    clearView();
+    clearView();
     $("#heatMapMain").show();
-}*/
+}
 
 
 $(function()

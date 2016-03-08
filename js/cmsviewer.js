@@ -1192,6 +1192,13 @@ function initTable()
            var state = event.checkbox.checked ? "Showing" : "Hiding";
            gpLib.logToAppLogger(APPLICATION_NAME, state + " column: " + event.field , "table");
         },
+        onSearch: function(event)
+        {
+            event.onComplete = function (event)
+            {
+                updateNumRecordsInfo(w2ui['cmsTable'].last.searchIds.length, w2ui['cmsTable'].records.length);
+            }
+        },
         "sortData": [
             { "field": cmsOdf["Test Statistic"], "direction": "DESC" }
         ]
@@ -1275,6 +1282,7 @@ function resetRecords()
         records.push(record);
     }
 
+    w2ui['cmsTable'].reset();
     w2ui['cmsTable'].records = records;
     w2ui['cmsTable'].refresh();
 
@@ -1636,18 +1644,24 @@ function initMenu()
             {
                 customPlot();
             }
-            else if(text == "Filter Features")
+            else if(text == "Edit Filters")
             {
                 gpLib.logToAppLogger(APPLICATION_NAME, "filter features", "filter");
                 filterFeatures();
             }
-            else if(text == "Show All Features")
+            else if(text == "Remove All Filters")
             {
-                gpLib.logToAppLogger(APPLICATION_NAME, "show all features", "filter");
+                gpLib.logToAppLogger(APPLICATION_NAME, "remove all filters", "filter");
 
-                //reset the grid in order to show all the features
-                resetRecords();
-                scorePlot(w2ui['cmsTable'].records);
+                //reset the plot and grid in order to show all the features
+                resetViewer();
+
+            }
+            else if(text == "Reset Dataset")
+            {
+                gpLib.logToAppLogger(APPLICATION_NAME, "reset dataset", "display");
+
+                resetViewer();
             }
             else if(text == "Display Options")
             {
@@ -1749,6 +1763,12 @@ function displayLoadError(errorMessage)
     var errorMsg = errorMessage;
     $("#cmsMain").empty();
     $("#cmsMain").append("<h3 style='color:red'>There was an error loading the ComparativeMarkerSelectionViewer: <p>" + errorMsg +"</p></h3>");
+}
+
+function resetViewer()
+{
+    displayHeatMap();
+    resetRecords();
 }
 
 function loadCMSViewer()

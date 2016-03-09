@@ -796,6 +796,7 @@ function applyFilter(filterObj)
     var records = w2ui['cmsTable'].records;
 
     var visibleRecords = [];
+    var visibleFeatureNames = [];
     var subsetIds = [];
     for(var r=0;r<records.length;r++)
     {
@@ -827,6 +828,7 @@ function applyFilter(filterObj)
         //if we made it to the end of the filter object then the row passes all the filters
         if (!stop && f == filterObj.length) {
             visibleRecords.push(record);
+            visibleFeatureNames.push(record["Feature"]);
             subsetIds.push(record.recid);
         }
     }
@@ -835,9 +837,16 @@ function applyFilter(filterObj)
     {
         w2ui['cmsTable'].records = visibleRecords;
         w2ui['cmsTable'].refresh();
-        scorePlot(w2ui['cmsTable'].records);
 
         updateNumRecordsInfo(visibleRecords.length, cmsOdf[cmsOdf.COLUMN_NAMES[0]].length);
+
+        //scorePlot(w2ui['cmsTable'].records);
+
+
+
+        displayHeatMap({
+            filterRow: visibleFeatureNames
+        });
 
         return true;
     }
@@ -1655,6 +1664,9 @@ function initMenu()
 
                 //reset the plot and grid in order to show all the features
                 resetViewer();
+
+                //remove the filters on the plot
+                cmsHeatMap.showAllFeatures();
 
             }
             else if(text == "Reset Dataset")

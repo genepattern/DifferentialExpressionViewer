@@ -477,7 +477,7 @@ gpVisual.HeatMap = function(options) {
         addFLabels.read(gpHeatmap.rows, featureLabelsAdded);
     };
 
-    this.modifyRowSortOrder = function(sortOrderList)
+   /* this.modifyRowSortOrder = function(sortOrderList)
     {
         var rows = gpHeatmap.rows.values;
         var rowOrder = gpHeatmap.rows.order;
@@ -492,15 +492,15 @@ gpVisual.HeatMap = function(options) {
             }
         }
 
-        /*row.order = gpHeatmap.rows.order;
+        row.order = gpHeatmap.rows.order;
         for(var s=0;s<sortOrderList.length;s++)
         {
             if(sortOrderList[s])
             {
 
             }
-        }*/
-    };
+        }
+    };*/
 
     this.sortByFeatureLabel = function(labelName)
     {
@@ -620,6 +620,10 @@ gpVisual.HeatMap = function(options) {
         if(options.reloadData)
         {
             self._init(options);
+        }
+        else if(options.filterRow)
+        {
+            self.filterRowByName(options.filterRow);
         }
         else
         {
@@ -932,4 +936,47 @@ gpVisual.HeatMap = function(options) {
 
         return true;
     };
+
+    this.showAllFeatures = function()
+    {
+        var self = this;
+
+        //reset the zoom level to the default
+        if(!isNaN(self.getDefaultZoomLevel()))
+        {
+            gpHeatmap.rows.zoom = self.getDefaultZoomLevel();
+            gpHeatmap.cols.zoom = self.getDefaultZoomLevel();
+        }
+
+        new jheatmap.actions.ShowHidden(gpHeatmap).rows();
+
+        self.drawHeatMap();
+    };
+
+    this.filterRowByName = function(rowNames)
+    {
+        var self = this;
+        if(rowNames == undefined  || rowNames == null || rowNames.length == 0)
+        {
+            return;
+        }
+
+        var newOrder = [];
+        //only show the rows with the following names
+        var rows = gpHeatmap.rows.values;
+        var currentSortOrder = gpHeatmap.rows.order;
+        for(var r=0;r< currentSortOrder.length;r++)
+        {
+            var rowName = rows[currentSortOrder[r]][0];
+            if(rows[currentSortOrder[r]] !== undefined && rows[currentSortOrder[r]].length > 1
+                && $.inArray(rows[currentSortOrder[r]][0], rowNames) !== -1)
+            {
+                newOrder.push(currentSortOrder[r]);
+            }
+        }
+
+        gpHeatmap.rows.order = newOrder;
+
+        self.drawHeatMap();
+    }
 };

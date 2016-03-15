@@ -11,6 +11,7 @@ var cmsOdfContents = "";
 var datasetContents = "";
 var cmsHeatMap;
 
+
 function loadDataset(data) {
     dataset = gpLib.parseGCTFile(data);
 
@@ -626,6 +627,206 @@ function filterFeatures()
     });
 }
 
+function isHeatMapVisible()
+{
+    return $("#heatMapMain").is(":visible");
+}
+
+function editHeatMapOptions()
+{
+    w2popup.open({
+        title: 'Display Options',
+        width: 470,
+        opacity: 0,
+        height: 345,
+        showMax: true,
+        body: '<div id="displayHeatMapOptionsDialog"></div>',
+        buttons: '<button class="btn" onclick="w2popup.close();">Cancel</button> ' +
+            '<button class="btn" id="updateHeatMapOptions">OK</button>',
+        onOpen: function (event) {
+            event.onComplete = function () {
+                var optionsDialog = $("<div/>").addClass("heatMapOptionsDialog");
+                optionsDialog.append($("<div/>").addClass("space")
+                    .append($("<label>Color Scheme: </label>")
+                        .append($("<input type='radio' id='relativeScheme' name='cScheme' value='relative'>" +
+                            "<label for='relativeScheme'>Row Relative</label>"))
+                        .append($("<input type='radio' id='globalScheme' name='cScheme' value='global'>" +
+                            "<label for='globalScheme'>Global</label>")))
+                    .append($("<div/>").addClass("space")
+                        .append($("<input type='radio' id='gradientColors' name='discreteGradient' value='gradient'>")
+                            .click(function()
+                            {
+                                $("#gradientColorTable").show();
+                                $("#discreteColorsDiv").hide();
+
+                                var hColors = cmsHeatMap.getColors();
+
+                                var index = 0;
+                                while(hColors != undefined && index < hColors.length)
+                                {
+                                    var hexColor = (new jheatmap.utils.RGBColor(hColors[index])).toHex();
+
+                                    $($(".gradientColor").get(index)).spectrum("set", hexColor);
+                                    index++;
+                                }
+                            }))
+                        .append("<label for='gradientColors'>Use Gradient Colors</label>")
+                        .append($("<input type='radio' id='discreteColors' name='discreteGradient' value='discrete'>")
+                            .click(function()
+                            {
+                                $("#discreteColorsDiv").show();
+                                $("#gradientColorTable").hide();
+
+                                $("#discreteColorsList").empty();
+
+                                //Set the discrete colors
+                                var hColors = cmsHeatMap.getColors();
+
+                                var index = 0;
+                                while(hColors != undefined && index < hColors.length)
+                                {
+                                    var hexColor = (new jheatmap.utils.RGBColor(hColors[index])).toHex();
+
+                                    $("#addColor").click();
+                                    $($(".discreteColor").get(index)).spectrum("set", hexColor);
+                                    index++;
+                                }
+                            }))
+                        .append("<label for='discreteColors'>Use Discrete Colors</label>")))
+                    .append($("<table/>").attr("id", "gradientColorTable").hide()
+                        .append($("<tr>")
+                            .append("<td>Minimum Color: </td>")
+                            .append('<td><input id="minColor" type="text" class="gradientColor" title="Minimum' +'"value="#0000FF"/></td>'))
+                        .append($("<tr>")
+                            .append("<td>Midway Color:</td>")
+                            .append('<td><input id="midColor" type="text" class="gradientColor" title="Midway' +'" value="#FFFFFF"/> </td>'))
+                        .append($("<tr>")
+                            .append("<td>Maximum Color:</td>")
+                            .append('<td><input id="maxColor" type="text" class="gradientColor" title="Maximum' +'" value="#FF0000"/></td>')))
+                    .append($("<div/>").attr("id", "discreteColorsDiv").hide()
+                        .append($("<ul/>").attr("id", "discreteColorsList"))
+                        .append($("<button class='btn'>Add Color</button>").attr("id", "addColor").button()
+                            .click(function()
+                            {
+                                var delButton = $("<button>x</button>").addClass("btn");
+                                delButton.button().click(function()
+                                {
+                                    $(this).parent("li").remove();
+                                });
+
+                                var colorInput = $('<input type="text" class="discreteColor" value="#000000"/>');
+                                $("<li/>").append(colorInput).append(delButton).appendTo("#discreteColorsList");
+                                colorInput.spectrum();
+                            })));
+                $("#displayHeatMapOptionsDialog").append(optionsDialog);
+
+                $(".gradientColor").spectrum();
+                if(cmsHeatMap.colorScheme == cmsHeatMap.COLOR_SCHEME.GLOBAL)
+                {
+                    optionsDialog.find("input[name='cScheme'][value='global']").prop('checked', 'checked');
+                }
+                else
+                {
+                    optionsDialog.find("input[name='cScheme'][value='relative']").prop('checked', 'checked');
+                }
+
+                if(cmsHeatMap.isDiscrete)
+                {
+                    optionsDialog.find("input[name='discreteGradient'][value='discrete']").click();
+                    optionsDialog.find("input[name='discreteGradient'][value='discrete']").prop('checked', 'checked');
+                }
+                else
+                {
+                    optionsDialog.find("input[name='discreteGradient'][value='gradient']").click();
+                    optionsDialog.find("input[name='discreteGradient'][value='gradient']").prop('checked', 'checked');
+                }
+            }
+        }
+    });
+
+    $("#updateHeatMapOptions").click(function(event)
+    {
+        var heatMapColors = cmsHeatMap.getColors();
+
+        var isDiscrete = $("input[name='discreteGradient']:checked").val() == "discrete";
+
+        cmsHeatMap.isDiscrete = isDiscrete;
+
+        if(!cmsHeatMap.isDiscrete)
+        {
+            $(".gradientColor").each(function()
+            {
+                var rgbColorObj = $(this).spectrum("get").toRgb() ;
+                var R = Math.round(rgbColorObj.r); //hexToR(hexColor);
+                var G = Math.round(rgbColorObj.g); //hexToG(hexColor);
+                var B = Math.round(rgbColorObj.b); // hexToB(hexColor);
+
+                var rgbColor = [R, G, B];
+
+                var title = $(this).attr('title');
+                if (title == "Minimum") {
+                    if (heatMapColors == undefined || heatMapColors == null || heatMapColors.length < 1) {
+                        heatMapColors.push("");
+                    }
+                    heatMapColors[0] = rgbColor;
+                }
+                if (title == "Midway") {
+                    if (heatMapColors == undefined || heatMapColors == null || heatMapColors.length < 2) {
+                        heatMapColors.push("");
+                    }
+                    heatMapColors[1] = rgbColor;
+                }
+                if (title == "Maximum") {
+                    if (heatMapColors == undefined || heatMapColors == null || heatMapColors.length < 3) {
+                        heatMapColors.push("");
+                    }
+                    heatMapColors[2] = rgbColor;
+                }
+
+                cmsHeatMap.setColors(heatMapColors);
+            });
+        }
+        else
+        {
+            var discreteHeatmapColors = [];
+            $(".discreteColor").each(function()
+            {
+                var rgbColorObj = $(this).spectrum("get").toRgb() ;
+                var R = Math.round(rgbColorObj.r);
+                var G = Math.round(rgbColorObj.g);
+                var B = Math.round(rgbColorObj.b);
+
+                var rgbColor = [R, G, B];
+
+                discreteHeatmapColors.push(rgbColor);
+            });
+
+            cmsHeatMap.setColors(discreteHeatmapColors);
+        }
+
+        //Check that a color is set
+        heatMapColors = cmsHeatMap.getColors();
+        if(heatMapColors == undefined || heatMapColors.length < 1)
+        {
+            var errorMsg = "Error: no colors specified!";
+            w2alert(errorMsg);
+            return;
+        }
+
+        var colorScheme = $("input[name='cScheme']:checked").val();
+
+        if(colorScheme == "global")
+        {
+            cmsHeatMap.updateColorScheme(cmsHeatMap.COLOR_SCHEME.GLOBAL, isDiscrete);
+        }
+        else
+        {
+            cmsHeatMap.updateColorScheme(cmsHeatMap.COLOR_SCHEME.RELATIVE, isDiscrete);
+        }
+
+        w2popup.close();
+    });
+}
 function editPlotOptions()
 {
     w2popup.open({
@@ -692,7 +893,8 @@ function editPlotOptions()
                      .append(colorField)).appendTo(plotColorTable);
                 }
 
-                $(".colorPicker").minicolors({
+                $(".colorPicker").spectrum();
+                /*$(".colorPicker").minicolors({
                     control: $(this).attr('data-control') || 'hue',
                     defaultValue: $(this).attr('data-defaultValue') || '',
                     inline: $(this).attr('data-inline') === 'true',
@@ -718,7 +920,7 @@ function editPlotOptions()
                         $("#displayOptionsDialog").data("seriesColor", colors);
                     },
                     theme: 'default'
-                });
+                });*/
 
                 $('#displayTabs').w2tabs({
                     name: 'tabs',
@@ -1104,6 +1306,8 @@ function displayHeatMap(options)
     clearView();
     $("#heatMapMain").show();
 
+    cmsHeatMap.setColors(null);
+    cmsHeatMap.defaultOrder();
     cmsHeatMap.drawHeatMap(options);
 }
 
@@ -1669,16 +1873,24 @@ function initMenu()
                 cmsHeatMap.showAllFeatures();
 
             }
-            else if(text == "Reset Dataset")
+            else if(text == "Reload Dataset")
             {
                 gpLib.logToAppLogger(APPLICATION_NAME, "reset dataset", "display");
 
-                resetViewer();
+                //reload the heatmap
+                initHeatMap();
             }
             else if(text == "Display Options")
             {
                 gpLib.logToAppLogger(APPLICATION_NAME, "display options", "display");
-                editPlotOptions();
+
+                if(isHeatMapVisible())
+                {
+                    editHeatMapOptions();
+                }
+                else{
+                    editPlotOptions();
+                }
             }
             else if(text == "Save Table")
             {

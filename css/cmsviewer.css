@@ -132,7 +132,9 @@
 {
     height: 55%;
     min-width:  300px;
+    min-height: 200px;
     overflow: auto;
+    resize: both;
 }
 
 #heatMapOptions
@@ -181,4 +183,5 @@
     width: 95px;
     float: left;
 }
+
 

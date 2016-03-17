@@ -18,7 +18,6 @@ gpVisual.HeatMap = function(options) {
     this._setUp = function(options)
     {
         var bodyWidth = hContainer.width();
-        //var totalHeight;
 
         if(options !== undefined && options !== null && options.showLegend !== undefined)
         {
@@ -43,17 +42,28 @@ gpVisual.HeatMap = function(options) {
 
         //heatmap.cols.zoom = 30;
         //heatmap.rows.zoom = 30;
+
         gpHeatmap.size.width = bodyWidth - 300; //1100;
-        gpHeatmap.size.height = 400; //30000; //305;
+
+        if(options.width !== undefined && !isNaN(options.width))
+        {
+            gpHeatmap.size.width = options.width;
+        }
+
+        gpHeatmap.size.height = 400;
+        if(options.height !== undefined && !isNaN(options.height))
+        {
+            gpHeatmap.size.height = options.height;
+        }
+
         //heatmap.cols.labelSize = 330;
 
-        /*heatmap.cells.decorators["Values"] = new jheatmap.decorators.Categorical({
-         values: ["-2","0","2"],
-         colors : ["green","yellow", "yellow"]
-         });*/
-        //totalHeight = 7 * heatmap.rows.zoom;
-
         self.setRelativeColorScheme(false);
+    };
+
+    this.setOptions = function(options)
+    {
+        this._setUp(options);
     };
 
     this._init = function (options)
@@ -829,7 +839,12 @@ gpVisual.HeatMap = function(options) {
         return this.colorScheme;
     };
 
-    this.updateColorScheme = function (colorScheme, isDiscrete)
+    this.isLegendVisible = function()
+    {
+        return gpHeatmap.controls.legend;
+    }
+
+    this.updateColorScheme = function (colorScheme, isDiscrete, options)
     {
         if(colorScheme === this.COLOR_SCHEME.GLOBAL)
         {
@@ -838,6 +853,11 @@ gpVisual.HeatMap = function(options) {
         else
         {
             this.setRelativeColorScheme(isDiscrete);
+        }
+
+        if(options !== undefined && options !== null)
+        {
+            this._setUp(options);
         }
 
         var hRes = new jheatmap.HeatmapDrawer(gpHeatmap);

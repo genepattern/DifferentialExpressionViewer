@@ -123,16 +123,22 @@ function loadDatasetFile(datasetURL)
     });
 }
 
-function blockElement(element, message)
+function blockElement(element, message, showAnimation)
 {
+    var spinner = '<img src="css/images/spin.gif" />';
+    if(showAnimation !== undefined && !showAnimation)
+    {
+        spinner = "";
+    }
+
     element.block(
     {
-        message: '<h2><img src="css/images/spin.gif" />'+ message +'</h2>',
+        message: '<h2>'+ spinner + message +'</h2>',
         css: {
             padding:            0,
             margin:             0,
             width:              '30%',
-            top:                '14%%',
+            top:                '40%',
             left:               '35%',
             textAlign:          'center',
             color:              '#000',
@@ -234,8 +240,6 @@ function displayViewer(data) {
         return;
     }
 
-    $("body").unblock();
-
     console.log("Finished parsing the odf file " + odfFile);
 
     //Rename the Score to the name of the Test Statistic
@@ -261,6 +265,8 @@ function displayViewer(data) {
     initMenu();
     initTable();
     initHeatMap();
+
+    $("body").unblock();
 }
 
 function calculateHistogram(numBins, data)
@@ -646,6 +652,18 @@ function editHeatMapOptions()
         onOpen: function (event) {
             event.onComplete = function () {
                 var optionsDialog = $("<div/>").addClass("heatMapOptionsDialog");
+
+                var legendDiv = $("<div/>");
+                var legendControl = $("<input type='checkbox'/>").attr("id", "legendOption");
+
+                if(cmsHeatMap.isLegendVisible())
+                {
+                    legendControl.prop('checked', 'checked');
+                }
+
+                $("<label>Display Legend</label>").prepend(legendControl).appendTo(legendDiv);
+                optionsDialog.append(legendDiv);
+
                 optionsDialog.append($("<div/>").addClass("space")
                     .append($("<label>Color Scheme: </label>")
                         .append($("<input type='radio' id='relativeScheme' name='cScheme' value='relative'>" +
@@ -746,6 +764,17 @@ function editHeatMapOptions()
 
     $("#updateHeatMapOptions").click(function(event)
     {
+        var showLegend = $("#legendOption").is(":checked");
+        var options =
+        {
+            showLegend: showLegend,
+            poweredByJHeatmap: false,
+            controls : {
+                columnSelector: false,
+                rowSelector: false
+            }
+        };
+
         var heatMapColors = cmsHeatMap.getColors();
 
         var isDiscrete = $("input[name='discreteGradient']:checked").val() == "discrete";
@@ -817,11 +846,11 @@ function editHeatMapOptions()
 
         if(colorScheme == "global")
         {
-            cmsHeatMap.updateColorScheme(cmsHeatMap.COLOR_SCHEME.GLOBAL, isDiscrete);
+            cmsHeatMap.updateColorScheme(cmsHeatMap.COLOR_SCHEME.GLOBAL, isDiscrete, options);
         }
         else
         {
-            cmsHeatMap.updateColorScheme(cmsHeatMap.COLOR_SCHEME.RELATIVE, isDiscrete);
+            cmsHeatMap.updateColorScheme(cmsHeatMap.COLOR_SCHEME.RELATIVE, isDiscrete, options);
         }
 
         w2popup.close();
@@ -1043,8 +1072,6 @@ function applyFilter(filterObj)
         updateNumRecordsInfo(visibleRecords.length, cmsOdf[cmsOdf.COLUMN_NAMES[0]].length);
 
         //scorePlot(w2ui['cmsTable'].records);
-
-
 
         displayHeatMap({
             filterRow: visibleFeatureNames
@@ -1307,7 +1334,6 @@ function displayHeatMap(options)
     $("#heatMapMain").show();
 
     cmsHeatMap.setColors(null);
-    cmsHeatMap.defaultOrder();
     cmsHeatMap.drawHeatMap(options);
 }
 
@@ -1424,8 +1450,33 @@ function initTable()
         searchable: false
     });
 
-    var numVisibleRecords = $("<div/>").attr("id", "numRecordsInfo");
+    //add div to display the number of records visible out of total records
+    var numVisibleRecords = $("<span/>").attr("id", "numRecordsInfo");
     $("#tb_cmsTable_toolbar_right").append(numVisibleRecords);
+
+    //add button to minimize the table
+    var minMaximizeTable = $("<span/>").append($("<img src='css/images/minimize.ico'/>").css("height", "20px").css("width", "20px"));
+    minMaximizeTable.click(function()
+    {
+        var newHeight = $("#heatMapMain").height() + $("#cmsTable").height();
+
+        //hide everything except for the toolbar
+        $('#cmsTable').children("div").each(function()
+        {
+            if($(this).attr("id") !== "grid_cmsTable_toolbar")
+            {
+                $(this).hide();
+            }
+        });
+
+        $("#heatMapMain").css("height", newHeight);
+
+        cmsHeatMap.drawHeatMap({
+            height: newHeight
+        });
+    });
+
+    $("#tb_cmsTable_toolbar_right").append(minMaximizeTable);
 
     for(var c=0;c<cmsOdf.COLUMN_NAMES.length;c++)
     {
@@ -1647,6 +1698,9 @@ function saveImage(defaultFileName)
 
     $("#saveImageBtn").click(function (event)
     {
+        blockElement($("#saveImageDialog"), "Saving...");
+        //$('body').css( 'cursor', 'wait' );
+        //w2popup.lock("", true);
         var fileName = $("#fileName").val();
         var fileType = $("#fileType").val();
         var plot = $('#cmsScorePlot');
@@ -1692,6 +1746,8 @@ function saveImage(defaultFileName)
             });
         }
 
+        //w2popup.unlock();
+        //$('body').css( 'cursor', 'default' );
         w2popup.close();
     });
 }
@@ -2017,6 +2073,7 @@ function loadCMSViewer()
         parser.attr("href", odfFile);
 
         odfFileName = parser[0].pathname.substring(parser[0].pathname.lastIndexOf('/')+1);
+        odfFileName = decodeURIComponent(odfFileName);
         $("#fileLoaded").append("<span>Loaded: <a href='" + odfFile + "' target='_blank'>" + decodeURIComponent(odfFileName) + "</a></span>");
 
         //HACK for the GenePattern protocols
@@ -2054,28 +2111,12 @@ function initHeatMap()
     clearView();
     $("#heatMapMain").show();
 
+    $("<div/>").attr("id", "w2ui-lock").appendTo("#heatMapMain");
+
+
     $("#heatMapOptions").remove();
 
-    var optionsDiv = $("<div/>").attr("id", "heatMapOptions");
-    var legendControl = $("<input type='checkbox'/>");
-    legendControl.click(function()
-    {
-        var showLegend = $(this).is(":checked");
-        var options =
-        {
-            showLegend: showLegend,
-            poweredByJHeatmap: false,
-            controls : {
-                columnSelector: false,
-                rowSelector: false
-            }
-        };
-
-        cmsHeatMap.drawHeatMap(options);
-    });
-    $("<label>Display Legend</label>").prepend(legendControl).appendTo(optionsDiv);
-    $("#heatMapMain").prepend(optionsDiv);
-
+    blockElement($("#heatMapMain"), "loading heatmap...", false);
     cmsHeatMap = new gpVisual.HeatMap(
     {
         dataUrl: datasetFile,
@@ -2092,6 +2133,7 @@ function initHeatMap()
             {
                 setUpHeatMap();
             }
+            $("#heatMapMain").unblock();
         }
     });
 }

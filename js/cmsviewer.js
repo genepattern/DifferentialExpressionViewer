@@ -138,7 +138,7 @@ function blockElement(element, message, showAnimation)
             padding:            0,
             margin:             0,
             width:              '30%',
-            top:                '40%',
+            top:                '30%',
             left:               '35%',
             textAlign:          'center',
             color:              '#000',
@@ -1455,22 +1455,33 @@ function initTable()
     $("#tb_cmsTable_toolbar_right").append(numVisibleRecords);
 
     //add button to minimize the table
-    var minMaximizeTable = $("<span/>").append($("<img src='css/images/minimize.ico'/>").css("height", "20px").css("width", "20px"));
+    var minMaximizeTable = $("<span/>").append($("<img src='css/images/minimize.ico'/>")
+        .css("height", "20px").css("width", "20px"));
     minMaximizeTable.click(function()
     {
         var newHeight = $("#heatMapMain").height() + $("#cmsTable").height();
 
-        //hide everything except for the toolbar
-        $('#cmsTable').children("div").each(function()
-        {
-            if($(this).attr("id") !== "grid_cmsTable_toolbar")
-            {
-                $(this).hide();
-            }
-        });
+        $("#heatMapMain").data("oldHeatMapHeight", $("#heatmap").height());
+        $("#heatMapMain").data("oldHeight", $("#heatMapMain").height());
 
         $("#heatMapMain").css("height", newHeight);
+        var collapseSpan = $("<span/>").append(
+        $("<img src='css/images/maximize.ico'/>").addClass("w2ui-toolbar").click(function()
+            {
+                cmsHeatMap.drawHeatMap({
+                    height: $("#heatMapMain").data("oldHeatMapHeight")
+                });
 
+                $(this).parent().remove();
+                $("#cmsMain").css("overflow", "auto");
+                $("#heatMapMain").css("height", $("#heatMapMain").data("oldHeight"));
+                $("#cmsTable").show();
+            }).css("height", "20px").css("width", "20px").css("float", "right"));
+
+        $("#heatMapMain").prepend(collapseSpan);
+        $("#cmsTable").hide();
+
+        $("#cmsMain").css("overflow", "hidden");
         cmsHeatMap.drawHeatMap({
             height: newHeight
         });

@@ -134,7 +134,6 @@
     min-width:  300px;
     min-height: 200px;
     overflow: auto;
-    resize: both;
 }
 
 #heatMapOptions
@@ -182,6 +181,11 @@
     height: 30px;
     width: 95px;
     float: left;
+}
+
+#cmsMain
+{
+    overflow: hidden;
 }
 
 

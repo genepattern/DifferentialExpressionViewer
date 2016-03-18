@@ -437,9 +437,9 @@ var gpLib = function() {
             }
         };
 
-        var logActivity = function (){
-            var url = "http://vcapplog:3000/usages";
-            /*$.ajax({
+        var logActivity = function (successCallBack, failCallBack){
+            //var url = "http://vcapplog:3000/usages";
+            $.ajax({
                 method: "POST",
                 url: "http://vcapplog:3000/usages",
                 contentType: "application/json",
@@ -455,12 +455,17 @@ var gpLib = function() {
                 if ($.isFunction(failCallBack)) {
                     failCallBack(response);
                 }
-            });*/
+            });
         };
 
         var ipAddress = Cookies.get('ipAddress');
-        if(ipAddress === undefined || ipAddress !== null && ipAddress.length == 0)
+        if(ipAddress === undefined || (ipAddress !== null && ipAddress.length == 0))
         {
+            var failCallBack = function()
+            {
+                Cookies.set("ipAddress", "Not found");
+            };
+
             $.get("http://ipinfo.io", function (response)
             {
                 var ipAddress = "";
@@ -473,12 +478,12 @@ var gpLib = function() {
                 Cookies.set("clientIpAddress", ipAddress);
             }, "jsonp").always(function()
             {
-                logActivity();
+                logActivity(null, failCallBack);
             });
         }
         else
         {
-            logActivity();
+            logActivity(null, failCallBack);
         }
     }
 

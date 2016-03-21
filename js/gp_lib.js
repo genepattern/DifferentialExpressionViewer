@@ -9,6 +9,7 @@ $(function()
     var token = window.location.hash;
     if(token !== undefined && token !== null && token.length > 0)
     {
+        token = token.substring(1);
         gpAuthorizationHeaders = {"Authorization": "Bearer " + token};
         $.ajaxSetup({
             headers: gpAuthorizationHeaders

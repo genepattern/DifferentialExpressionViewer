@@ -38,7 +38,8 @@ function loadOdfFile(odfURL)
         {
             if(acceptRanges)
             {
-                blockElement($("body"), "Loading and parsing ODF file");
+                clearTimeout();
+                setTimeout(blockElement($("body"), "Loading and parsing ODF file...", false), 3000);
 
                 //get the third data row in order to get the sample names
                 getOdfFileContentsUsingByteRequests(odfURL, -1, 0, 1000000, headers);
@@ -84,7 +85,8 @@ function loadDatasetFile(datasetURL)
         {
             if(acceptRanges)
             {
-                blockElement($("body"), "Loading and parsing dataset file");
+                clearTimeout();
+                setTimeout(blockElement($("body"), "Loading and parsing dataset file...", false), 4000);
 
                 //get the third data row in order to get the sample names
                 getDatasetFileContentsUsingByteRequests(datasetURL, -1, 0, 1000000, headers);
@@ -1709,7 +1711,7 @@ function saveImage(defaultFileName)
 
     $("#saveImageBtn").click(function (event)
     {
-        blockElement($("#saveImageDialog"), "Saving...");
+        blockElement($("#saveImageDialog"), "Saving...", false);
         //$('body').css( 'cursor', 'wait' );
         //w2popup.lock("", true);
         var fileName = $("#fileName").val();
@@ -2127,7 +2129,8 @@ function initHeatMap()
 
     $("#heatMapOptions").remove();
 
-    blockElement($("#heatMapMain"), "loading heatmap...", false);
+    clearTimeout();
+    setTimeout(blockElement($("#heatMapMain"), "loading heatmap...", false), 5000);
     cmsHeatMap = new gpVisual.HeatMap(
     {
         dataUrl: datasetFile,

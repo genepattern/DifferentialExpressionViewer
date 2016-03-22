@@ -2113,6 +2113,9 @@ function initHeatMap()
     {
         dataUrl: datasetFile,
         container: $("#heatmap"),
+        controls: {
+            columnSelector: false
+        },
         showLegend: false,
         onLoadData: function(status)
         {

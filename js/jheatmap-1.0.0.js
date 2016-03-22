@@ -4274,6 +4274,12 @@ jheatmap.components.RowSelector = function(drawer, heatmap, container) {
 
     var o;
     for (o = 0; o < heatmap.rows.header.length; o++) {
+        if(heatmap.rows.header.hidden !== undefined
+            && $.inArray(heatmap.rows.header[o], heatmap.rows.header.hidden) !== -1)
+        {
+            continue;
+        }
+
         selectRow.append(new Option(heatmap.rows.header[o], o, o == heatmap.rows.selectedValue));
     }
     selectRow.val(heatmap.rows.selectedValue);

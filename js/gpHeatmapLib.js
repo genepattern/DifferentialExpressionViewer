@@ -19,21 +19,29 @@ gpVisual.HeatMap = function(options) {
     {
         var bodyWidth = hContainer.width();
 
+        gpHeatmap.controls.legend = false;
+
         if(options !== undefined && options !== null && options.showLegend !== undefined)
         {
             gpHeatmap.controls.legend = options.showLegend;
         }
 
         gpHeatmap.controls.shortcuts = false;
-        //gpHeatmap.controls.columnSelector = false;
         gpHeatmap.controls.cellSelector = false;
 
-        gpHeatmap.controls.legend = false;
-
-        if(options !== undefined && options.showLegend !== undefined)
+        if(options !== undefined && options.controls !== undefined)
         {
-            gpHeatmap.controls.legend = options.showLegend;
+            if( options.controls.columnSelector !== undefined)
+            {
+                gpHeatmap.controls.columnSelector = options.controls.columnSelector;
+            }
+
+            if(options.controls.rowSelector !== undefined)
+            {
+                gpHeatmap.controls.rowSelector = options.controls.rowSelector;
+            }
         }
+
         //height of the columns
         gpHeatmap.cols.labelSize = 150;
 
@@ -397,6 +405,19 @@ gpVisual.HeatMap = function(options) {
         }
     };
 
+    this.hideRowHeader = function(rowName)
+    {
+        if(gpHeatmap.rows.header.hidden === undefined)
+        {
+            gpHeatmap.rows.header.hidden = [];
+        }
+
+        if($.inArray(rowName, gpHeatmap.rows.header.hidden) === -1)
+        {
+            gpHeatmap.rows.header.hidden.push(rowName);
+        }
+    };
+
     this._addFeatureLabelsFromArr = function(labelsArr, hidden, callback)
     {
         var self = this;
@@ -441,6 +462,7 @@ gpVisual.HeatMap = function(options) {
         if(hidden !== undefined && hidden)
         {
             self.hideRowAnnotations(labelIndex);
+            self.hideRowHeader(labelName);
         }
 
         var hRes = new jheatmap.HeatmapDrawer(gpHeatmap);

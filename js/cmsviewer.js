@@ -909,6 +909,13 @@ function editPlotOptions()
                     currentChart = $("#plot").highcharts();
                 }
 
+
+                if(currentChart.options.title.text !== undefined
+                    && currentChart.options.title.text !== null)
+                {
+                    titleField.val(currentChart.options.title.text);
+                }
+
                 var series = currentChart.series;
 
                 var plotColorTable = $("<table id='plotColorTable'>");
@@ -925,33 +932,6 @@ function editPlotOptions()
                 }
 
                 $(".colorPicker").spectrum();
-                /*$(".colorPicker").minicolors({
-                    control: $(this).attr('data-control') || 'hue',
-                    defaultValue: $(this).attr('data-defaultValue') || '',
-                    inline: $(this).attr('data-inline') === 'true',
-                    letterCase: $(this).attr('data-letterCase') || 'lowercase',
-                    opacity: $(this).attr('data-opacity'),
-                    position: $(this).attr('data-position') || 'bottom left',
-                    change: function(hex, opacity) {
-                        var log;
-                        try {
-                            log = hex ? hex : 'transparent';
-                            if( opacity ) log += ', ' + opacity;
-                            console.log(log);
-                        } catch(e) {}
-
-                        var colors = $("#displayOptionsDialog").data("seriesColor");
-                        if(colors === undefined)
-                        {
-                            colors = [];
-                        }
-
-                        var index = $(this).data("seriesIndex");
-                        colors[index] = $(this).val();
-                        $("#displayOptionsDialog").data("seriesColor", colors);
-                    },
-                    theme: 'default'
-                });*/
 
                 $('#displayTabs').w2tabs({
                     name: 'tabs',

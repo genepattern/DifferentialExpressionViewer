@@ -992,21 +992,15 @@ function editPlotOptions()
                         chart.setTitle({}, {text: plotSubTitle});
                     }
 
-                    var seriesColors = $("#displayOptionsDialog").data("seriesColor");
-                    if(seriesColors !== undefined)
-                    {
-                        var seriesChart = chart.series;
+                    var seriesChart = chart.series;
 
-                        for(var c=0;c<seriesColors.length;c++)
-                        {
-                            if(seriesColors[c] !== undefined)
-                            {
-                                seriesChart[c].color = seriesColors[c];
-                                seriesChart[c].options.color = seriesColors[c];
-                                seriesChart[c].update(seriesChart[c].options);
-                            }
-                        }
-                    }
+                    $(".colorPicker").each(function(index)
+                    {
+                        var color =  $(this).spectrum("get").toHexString();
+                        seriesChart[index].color = color;
+                        seriesChart[index].options.color = color;
+                        seriesChart[index].update(seriesChart[index].options);
+                    });
 
                     w2ui['tabs'].destroy();
                     w2popup.close();
@@ -1765,18 +1759,18 @@ function saveImage(defaultFileName)
     });
 }
 
-function mmPlot()
+function customPlot()
 {
     //prompt the user for the x and y axes
     w2popup.open({
         title   : 'Custom Plot',
-        width   : 300,
+        width   : 280,
         opacity: 0,
-        height  : 220,
+        height  : 300,
         showMax : true,
         body    : '<div id="customPlotDialog" style="padding-top: 20px;width: 100px"></div>',
         buttons   : '<button class="btn" onclick="w2popup.close();">Cancel</button> '+
-            '<button class="btn" id="l">OK</button>',
+            '<button class="btn" id="displayCustomPlot">OK</button>',
         onOpen  : function (event) {
             event.onComplete = function () {
                  var div = $("<div/>");
@@ -1834,6 +1828,8 @@ function mmPlot()
 
                     gpLib.logToAppLogger(APPLICATION_NAME, "custom plot: " + seriesName + " - " + chartType, "plot");
 
+                    clearView();
+                    $("#plot").show();
                     if(chartType === "Scatter")
                     {
                         series = [
@@ -1842,6 +1838,7 @@ function mmPlot()
                             data: customData,
                             color: '#FF0000'
                         }];
+
                         updateScatterPlot($("#plot"), xAxisName + " vs. " + yAxisName, xAxisName, yAxisName, series);
                     }
                     else
@@ -1853,6 +1850,7 @@ function mmPlot()
                             lineWidth: 3,
                             color: '#FF0000'
                         }];
+
                         updateLinePlot($("#plot"), xAxisName + " vs. " + yAxisName, xAxisName, yAxisName, series);
                     }
 

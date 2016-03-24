@@ -8,6 +8,8 @@ gpVisual.HeatMap = function(options) {
     var colorScheme = null;
     var isDiscrete = false;
     var defaultZoomLevel = null;
+    var currentRowSortOrder = null;
+    var currentColumnSortOrder = null;
 
     this.COLOR_SCHEME = {
         RELATIVE : 0,
@@ -93,6 +95,8 @@ gpVisual.HeatMap = function(options) {
             init: function (heatmap)
             {
                 gpHeatmap = heatmap;
+                currentRowSortOrder = gpHeatmap.rows.order;
+                currentColumnSortOrder = gpHeatmap.cols.order;
                 self._setUp(options);
 
                 if(options.onLoadData !== undefined && typeof options.onLoadData === 'function')
@@ -539,6 +543,9 @@ gpVisual.HeatMap = function(options) {
         var labelIndex = $.inArray(labelName, gpHeatmap.rows.header);
         gpHeatmap.rows.sorter = new jheatmap.sorters.AnnotationSorter(labelIndex, false);
         gpHeatmap.rows.sorter.sort(gpHeatmap, "rows");
+
+        currentRowSortOrder = gpHeatmap.rows.order;
+
         self.drawHeatMap();
     };
 
@@ -640,11 +647,12 @@ gpVisual.HeatMap = function(options) {
     {
         if(options === undefined || options === null)
         {
-            options =
-            {
-                showScrollBars: true,
-                reloadData: false
-            }
+            options = {};
+        }
+
+        if(options.showScrollBars === undefined)
+        {
+            options.showScrollBars = true;
         }
 
         self._setUp(options);
@@ -653,21 +661,11 @@ gpVisual.HeatMap = function(options) {
         {
             self._init(options);
         }
-        else if(options.filterRow)
-        {
-            self.filterRowByName(options.filterRow);
-        }
         else
         {
             //just rebuild the heatmap
             var hRes = new jheatmap.HeatmapDrawer(gpHeatmap);
             hRes.build();
-
-            if(options.showScrollBars === undefined)
-            {
-                options.showScrollBars = true;
-            }
-
             hRes.paint(null, options.showScrollBars);
         }
     };
@@ -995,10 +993,11 @@ gpVisual.HeatMap = function(options) {
         self.drawHeatMap();
     };
 
-    this.filterRowByName = function(rowNames)
+    this.filterRowByName = function(rowNames, options)
     {
         var self = this;
-        if(rowNames == undefined  || rowNames == null || rowNames.length == 0)
+        if(rowNames == undefined  || rowNames == null || rowNames.length == 0
+            || currentRowSortOrder == undefined || currentRowSortOrder == null)
         {
             return;
         }
@@ -1006,19 +1005,18 @@ gpVisual.HeatMap = function(options) {
         var newOrder = [];
         //only show the rows with the following names
         var rows = gpHeatmap.rows.values;
-        var currentSortOrder = gpHeatmap.rows.order;
-        for(var r=0;r< currentSortOrder.length;r++)
+        for(var r=0;r< currentRowSortOrder.length;r++)
         {
-            var rowName = rows[currentSortOrder[r]][0];
-            if(rows[currentSortOrder[r]] !== undefined && rows[currentSortOrder[r]].length > 1
-                && $.inArray(rows[currentSortOrder[r]][0], rowNames) !== -1)
+            var rowName = rows[currentRowSortOrder[r]][0];
+            if(rows[currentRowSortOrder[r]] !== undefined && rows[currentRowSortOrder[r]].length > 1
+                && $.inArray(rowName, rowNames) !== -1)
             {
-                newOrder.push(currentSortOrder[r]);
+                newOrder.push(currentRowSortOrder[r]);
             }
         }
 
         gpHeatmap.rows.order = newOrder;
 
-        self.drawHeatMap();
+        self.drawHeatMap(options);
     }
 };

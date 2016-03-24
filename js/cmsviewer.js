@@ -14,15 +14,15 @@ var cmsHeatMap;
 //names of subset of features that are displayed in table
 var visibleFeatureNames = [];
 
-var currentView = {
-    viewType: "",
-    options: []
-};
-
 var ViewType =
 {
     ChartView: 0,
     HeatmapView: 1
+};
+
+var currentView = {
+    viewType: ViewType.HeatmapView,
+    options: []
 };
 
 var ChartType =
@@ -33,6 +33,8 @@ var ChartType =
     Line: 3,
     Scatter: 4
 };
+
+var appliedFilters = [];
 
 function loadDataset(data) {
     dataset = gpLib.parseGCTFile(data);
@@ -319,22 +321,22 @@ function plotChart(options)
 
 function updateView(viewType, options)
 {
-    currentView = {
-        viewType: viewType,
-        options: options
-    };
-
     switch (viewType) {
         case ViewType.ChartView:
             plotChart(options);
             break;
-
         case ViewType.HeatmapView:
             displayHeatMap();
             break;
         default:
+            console.log("No view type found for " + viewType);
             break;
     }
+
+    currentView = {
+        viewType: viewType,
+        options: options
+    };
 }
 function calculateHistogram(numBins, data)
 {
@@ -573,7 +575,7 @@ function filterFeatures()
 {
     w2popup.open({
         title   : 'Filter Features',
-        width   : 620,
+        width   : 640,
         opacity : 0,
         height  : 300,
         showMax : true,
@@ -593,6 +595,15 @@ function filterFeatures()
                     div.append(list);
                     div.append("<span> >= " +
                         "<input type='text' class='greaterThanFilter'> and <= <input type='text' class='lessThanFilter'></span>");
+
+                    var filterCount = $("#filterDialog").find(".filterRow").length;
+
+                    if(filterCount > 0)
+                    {
+                        div.append($("<button>x</button>").addClass(".btn").css("margin-left", "7px").click(function () {
+                            $(this).parents(".filterRow").remove();
+                        }));
+                    }
 
                     $("#filterOptions").append(div);
 
@@ -614,27 +625,57 @@ function filterFeatures()
 
                 $("<div/>").append(addFilterBtn).appendTo("#filterDialog");
 
-                addFilterBtn.click();
+                if(appliedFilters.length > 0)
+                {
+                    for(var i=0;i<appliedFilters.length;i++)
+                    {
+                        addFilterBtn.click();
+
+                        var currentItems = $("#filterDialog").find(".filterScore").last().w2field().options.items;
+                        $("#filterDialog").find(".filterScore").last().w2field('list',
+                         {
+                            items: currentItems,
+                            selected: appliedFilters[i].columnName
+                         });
+
+                        $("#filterDialog").find(".greaterThanFilter").last().val(appliedFilters[i].greater);
+                        $("#filterDialog").find(".lessThanFilter").last().val(appliedFilters[i].less);
+                    }
+                }
+                else{
+                    addFilterBtn.click();
+                }
 
                 $("#applyFilter").click(function()
                 {
-                    var filterObj = [];
+                    var filterList = [];
                     $(".filterRow").each(function(){
                         var columnName = $(this).find(".filterScore").val();
                         var greater = parseFloat($(this).find(".greaterThanFilter").val());
                         var less = parseFloat($(this).find(".lessThanFilter").val());
 
-                        filterObj.push({
+                        if(isNaN(greater))
+                        {
+                            greater = "";
+                        }
+
+                        if(isNaN(less))
+                        {
+                            less = "";
+                        }
+
+                        filterList.push({
                             columnName: columnName,
                             greater: greater,
                             less: less
                         })
                     });
 
-                    var filterApplied = applyFilter(filterObj);
+                    var filterApplied = applyFilter(filterList);
 
                     if(filterApplied)
                     {
+                        appliedFilters = filterList;
                         w2popup.close()
                     }
                 })
@@ -1013,9 +1054,12 @@ filterObj: an object containing the fields columnName, greater, and less
  */
 function applyFilter(filterObj)
 {
+    resetRecords();
+
     var records = w2ui['cmsTable'].records;
 
     var visibleRecords = [];
+    visibleFeatureNames = [];
     var subsetIds = [];
     for(var r=0;r<records.length;r++)
     {
@@ -1058,12 +1102,6 @@ function applyFilter(filterObj)
         w2ui['cmsTable'].refresh();
 
         updateNumRecordsInfo(visibleRecords.length, cmsOdf[cmsOdf.COLUMN_NAMES[0]].length);
-
-        //scorePlot(w2ui['cmsTable'].records);
-
-        //displayHeatMap({
-        //    filterRow: visibleFeatureNames
-        //});
 
         //redraw the same plot
         updateView(currentView.viewType, currentView.options);
@@ -1362,18 +1400,21 @@ function updateScatterPlot(chartContainer, plotTitle, xDataName, yDataName, seri
     }, zoomAnnotation);
 }
 
-function displayHeatMap()
+function displayHeatMap(options)
 {
     clearView();
     $("#heatMapMain").show();
 
-    var options = {};
+    cmsHeatMap.setColors(null);
+
     if(visibleFeatureNames && visibleFeatureNames.length > 0)
     {
-        options["filterRow"] = visibleFeatureNames;
+        cmsHeatMap.filterRowByName(visibleFeatureNames, options);
     }
-    cmsHeatMap.setColors(null);
-    cmsHeatMap.drawHeatMap(options);
+    else
+    {
+        cmsHeatMap.drawHeatMap(options);
+    }
 }
 
 
@@ -1571,6 +1612,16 @@ function updateNumRecordsInfo(visibleRecords, maxRecords)
 {
     var numVisibleRecords = $("#numRecordsInfo");
     numVisibleRecords.empty();
+
+    if(visibleRecords < maxRecords)
+    {
+        //provide a way to see the applied filters
+        numVisibleRecords.append($("<a href='#'>(View Filters)</a>").css("margin-right", "6px").click(function(event)
+        {
+            event.preventDefault();
+            doAction("Create/Edit Filters");
+        }));
+    }
     numVisibleRecords.append("Showing " + visibleRecords + " of " + maxRecords + " features");
 }
 
@@ -1941,12 +1992,15 @@ function doAction(action, actionDetails)
     {
         gpLib.logToAppLogger(APPLICATION_NAME, "remove all filters", "filter");
 
+        //remove al filters
+        appliedFilters = [];
+
         //reset the plot and grid in order to show all the features
-        resetViewer();
+        resetRecords();
 
         //remove the filters on the plot
-        cmsHeatMap.showAllFeatures();
-
+        updateView(currentView.viewType, currentView.options);
+        //cmsHeatMap.showAllFeatures();
     }
     else if(action == "Reload Dataset")
     {

@@ -11,6 +11,28 @@ var cmsOdfContents = "";
 var datasetContents = "";
 var cmsHeatMap;
 
+//names of subset of features that are displayed in table
+var visibleFeatureNames = [];
+
+var currentView = {
+    viewType: "",
+    options: []
+};
+
+var ViewType =
+{
+    ChartView: 0,
+    HeatmapView: 1
+};
+
+var ChartType =
+{
+    CMS: 0,
+    Profile: 1,
+    Histogram: 2,
+    Line: 3,
+    Scatter: 4
+};
 
 function loadDataset(data) {
     dataset = gpLib.parseGCTFile(data);
@@ -271,6 +293,49 @@ function displayViewer(data) {
     $("body").unblock();
 }
 
+function plotChart(options)
+{
+    switch (options.chartType) {
+        case ChartType.CMS:
+            scorePlot.apply(this, options.args);
+            break;
+        case ChartType.Histogram:
+            plotHistogram.apply(this, options.args);
+            break;
+        case ChartType.Profile:
+            expressionProfile.apply(this, options.args);
+            break;
+        case ChartType.Line:
+            updateLinePlot.apply(this, options.args);
+            break;
+        case ChartType.Scatter:
+            updateScatterPlot.apply(this, options.args);
+            break;
+        default:
+            //do nothing
+            break;
+    }
+}
+
+function updateView(viewType, options)
+{
+    currentView = {
+        viewType: viewType,
+        options: options
+    };
+
+    switch (viewType) {
+        case ViewType.ChartView:
+            plotChart(options);
+            break;
+
+        case ViewType.HeatmapView:
+            displayHeatMap();
+            break;
+        default:
+            break;
+    }
+}
 function calculateHistogram(numBins, data)
 {
     //calculate the histogram
@@ -300,7 +365,7 @@ function getDataInColumn(columnName)
 function clearView()
 {
     $("#plot").hide();
-    $("#histogramBins").hide();
+    $("#histogramBins").remove();
     $("#cmsScorePlot").hide();
     $("#heatMapMain").hide();
 }
@@ -380,9 +445,6 @@ function plotHistogram(plotTitle, dataColumnName, numBins)
         ]
     }, zoomAnnotation);
 
-    //remove any existing histogram divs
-    $("#histogramBins").remove();
-
     var numBinsDiv = $("<div id='histogramBins'/>");
     //var numBins = $("<input id='numBins' type='text' />");
     var numBinsButton = $("<button id='updateNumBins'>Update</button>").click(function()
@@ -418,58 +480,9 @@ function plotHistogram(plotTitle, dataColumnName, numBins)
     $('#numBins').w2field('int', { autoFormat: false });
 }
 
-function plotHeatmap()
+function displayExpressionProfile(plotTitle, yDataName, samples, series)
 {
-    $("#cmsScorePlot").hide();
-    $("#histogramBins").remove();
-
-    $('#plot').highcharts({
-        /*data: {
-            csv: document.getElementById('csv').innerHTML
-        },*/
-        chart: {
-            type: 'heatmap',
-            inverted: true,
-            backgroundColor: "#E6E6E6"
-        },
-        navigation: {
-            buttonOptions: {
-                enabled: false
-            }
-        },
-        title: {
-            text: 'Heatmap',
-            align: 'left'
-        },
-        yAxis: {
-            title: {
-                text: null
-            },
-            minPadding: 0,
-            maxPadding: 0,
-            startOnTick: false,
-            endOnTick: false
-        },
-
-        colorAxis: {
-            stops: [
-                [-20000, '#3060cf'],
-                [0.5, '#ffffff'],
-                [20000, '#c4463a']
-            ],
-            min: -20000
-        },
-        series: [{
-            data: dataset.matrix.slice(1, 1),
-            borderWidth: 0
-        }]
-    }, zoomAnnotation);
-}
-
-function displayExpressionProfile(plotTitle, xDataName, yDataName, samples, series)
-{
-    $("#cmsScorePlot").hide();
-    $("#histogramBins").remove();
+    clearView();
 
     $('#plot').show();
 
@@ -516,11 +529,11 @@ function displayExpressionProfile(plotTitle, xDataName, yDataName, samples, seri
     }, zoomAnnotation);
 }
 
-function expressionProfile()
+function expressionProfile(featuresToPlot)
 {
     $("#histogramBins").remove();
 
-    var selectedRecordsList = w2ui['cmsTable'].getSelection();
+    var selectedRecordsList = featuresToPlot;
 
     if(selectedRecordsList.length == 0)
     {
@@ -547,7 +560,7 @@ function expressionProfile()
             }
 
         }
-        displayExpressionProfile("Expression Profile", "Sample", "Value", dataset.sampleNames, series);
+        displayExpressionProfile("Expression Profile", "Value", dataset.sampleNames, series);
 
     }
     else
@@ -1003,7 +1016,6 @@ function applyFilter(filterObj)
     var records = w2ui['cmsTable'].records;
 
     var visibleRecords = [];
-    var visibleFeatureNames = [];
     var subsetIds = [];
     for(var r=0;r<records.length;r++)
     {
@@ -1049,10 +1061,12 @@ function applyFilter(filterObj)
 
         //scorePlot(w2ui['cmsTable'].records);
 
-        displayHeatMap({
-            filterRow: visibleFeatureNames
-        });
+        //displayHeatMap({
+        //    filterRow: visibleFeatureNames
+        //});
 
+        //redraw the same plot
+        updateView(currentView.viewType, currentView.options);
         return true;
     }
     else
@@ -1176,6 +1190,28 @@ function zoomAnnotation(chart)
 
 function updateLinePlot(chartContainer, plotTitle, xDataName, yDataName, series)
 {
+    if(series == undefined)
+    {
+        var customData = [];
+
+        var records = w2ui['cmsTable'].records;
+        for(var x=0;x<records.length;x++)
+        {
+            var xValue = records[x][xDataName];
+            var yValue = records[x][yDataName];
+            customData.push([xValue, yValue]);
+        }
+
+        var seriesName = xDataName + " vs. " + yDataName;
+
+        series = [{
+            name: seriesName,
+            data: customData,
+            lineWidth: 3,
+            color: '#FF0000'
+        }];
+    }
+
     $("#histogramBins").remove();
 
     chartContainer.highcharts({
@@ -1250,6 +1286,28 @@ function updateScatterPlot(chartContainer, plotTitle, xDataName, yDataName, seri
 {
     $("#histogramBins").remove();
 
+    if(series == undefined)
+    {
+        var customData = [];
+
+        var records = w2ui['cmsTable'].records;
+        for(var x=0;x<records.length;x++)
+        {
+            var xValue = records[x][xDataName];
+            var yValue = records[x][yDataName];
+            customData.push([xValue, yValue]);
+        }
+
+        var seriesName = xDataName + " vs. " + yDataName;
+
+        series = [
+        {
+            name: seriesName,
+            data: customData,
+            color: '#FF0000'
+        }];
+    }
+
     chartContainer.highcharts({
         chart: {
             borderWidth: 2,
@@ -1304,18 +1362,24 @@ function updateScatterPlot(chartContainer, plotTitle, xDataName, yDataName, seri
     }, zoomAnnotation);
 }
 
-function displayHeatMap(options)
+function displayHeatMap()
 {
     clearView();
     $("#heatMapMain").show();
 
+    var options = {};
+    if(visibleFeatureNames && visibleFeatureNames.length > 0)
+    {
+        options["filterRow"] = visibleFeatureNames;
+    }
     cmsHeatMap.setColors(null);
     cmsHeatMap.drawHeatMap(options);
 }
 
 
-function scorePlot(records, subsetIds)
+function scorePlot()
 {
+    var records = w2ui['cmsTable'].records;
     if(records == undefined || records.length < 1)
     {
         console.log("No data found to plot scores");
@@ -1338,28 +1402,25 @@ function scorePlot(records, subsetIds)
     var recordCount = 0;
     for(var x=0;x<records.length;x++)
     {
-        if(subsetIds == undefined || subsetIds.length == 0
-            || $.inArray(records[x].recid, subsetIds) !== -1) {
-            var yValue = records[x][yData];
-            if (isNaN(yValue)) {
-                yValue = 0;
-            }
-
-            if (isFinite(yValue))
-            {
-                if (yValue > 0) {
-                    upRegulatedClassZero.push([recordCount, yValue]);
-                }
-                else if (yValue < 0) {
-                    upRegulatedClassOne.push([recordCount, yValue]);
-                }
-                else {
-
-                    equal.push([recordCount, yValue]);
-                }
-            }
-            recordCount++;
+        var yValue = records[x][yData];
+        if (isNaN(yValue)) {
+            yValue = 0;
         }
+
+        if (isFinite(yValue))
+        {
+            if (yValue > 0) {
+                upRegulatedClassZero.push([recordCount, yValue]);
+            }
+            else if (yValue < 0) {
+                upRegulatedClassOne.push([recordCount, yValue]);
+            }
+            else {
+
+                equal.push([recordCount, yValue]);
+            }
+        }
+        recordCount++;
     }
 
     var series = [
@@ -1788,15 +1849,7 @@ function customPlot()
                     var xAxisName = $("#customXAxis").val();
                     var yAxisName = $("#customYAxis").val();
 
-                    var customData = [];
 
-                    var records = w2ui['cmsTable'].records;
-                    for(var x=0;x<records.length;x++)
-                    {
-                        var xValue = records[x][xAxisName];
-                        var yValue = records[x][yAxisName];
-                        customData.push([xValue, yValue]);
-                    }
 
                     var seriesName = xAxisName + " vs. " + yAxisName;
 
@@ -1812,26 +1865,19 @@ function customPlot()
                     $("#plot").show();
                     if(chartType === "Scatter")
                     {
-                        series = [
+                        updateView(ViewType.ChartView,
                         {
-                            name: seriesName,
-                            data: customData,
-                            color: '#FF0000'
-                        }];
-
-                        updateScatterPlot($("#plot"), xAxisName + " vs. " + yAxisName, xAxisName, yAxisName, series);
+                            chartType: ChartType.Scatter,
+                            args: [$("#plot"), xAxisName + " vs. " + yAxisName, xAxisName, yAxisName]
+                        });
                     }
                     else
                     {
-                        series = [
+                        updateView(ViewType.ChartView,
                         {
-                            name: seriesName,
-                            data: customData,
-                            lineWidth: 3,
-                            color: '#FF0000'
-                        }];
-
-                        updateLinePlot($("#plot"), xAxisName + " vs. " + yAxisName, xAxisName, yAxisName, series);
+                            chartType: ChartType.Line,
+                            args: [$("#plot"), xAxisName + " vs. " + yAxisName, xAxisName, yAxisName]
+                        });
                     }
 
                     w2popup.close();
@@ -1845,6 +1891,172 @@ function customPlot()
         }
     });
 }
+
+function doAction(action, actionDetails)
+{
+    if (actionDetails === "Histogram") {
+        gpLib.logToAppLogger(APPLICATION_NAME, "histogram: " + action, "plot");
+
+        $("#plot").data("dataColName", actionDetails);
+        updateView(ViewType.ChartView,
+        {
+            chartType: ChartType.Histogram,
+            args: [action + " Histogram", action]
+        });
+    }
+    else if(action == "Heatmap")
+    {
+        updateView(ViewType.HeatmapView);
+    }
+    else if(action == "Upregulated Features")
+    {
+        gpLib.logToAppLogger(APPLICATION_NAME, "upregulated features", "plot");
+
+        updateView(ViewType.ChartView,
+        {
+            chartType: ChartType.CMS,
+            args: []
+        });
+    }
+    else if(action == "Profile")
+    {
+        gpLib.logToAppLogger(APPLICATION_NAME, "expression profile", "plot");
+
+        updateView(ViewType.ChartView,
+        {
+            chartType: ChartType.Profile,
+            args: [w2ui['cmsTable'].getSelection()]
+        });
+    }
+    else if(action == "Custom Plot")
+    {
+        customPlot();
+    }
+    else if(action == "Create/Edit Filters")
+    {
+        gpLib.logToAppLogger(APPLICATION_NAME, "filter features", "filter");
+        filterFeatures();
+    }
+    else if(action == "Remove All Filters")
+    {
+        gpLib.logToAppLogger(APPLICATION_NAME, "remove all filters", "filter");
+
+        //reset the plot and grid in order to show all the features
+        resetViewer();
+
+        //remove the filters on the plot
+        cmsHeatMap.showAllFeatures();
+
+    }
+    else if(action == "Reload Dataset")
+    {
+        gpLib.logToAppLogger(APPLICATION_NAME, "reset dataset", "display");
+
+        //reload the heatmap
+        initHeatMap();
+    }
+    else if(action == "Display Options")
+    {
+        gpLib.logToAppLogger(APPLICATION_NAME, "display options", "display");
+
+        if(isHeatMapVisible())
+        {
+            editHeatMapOptions();
+        }
+        else{
+            editPlotOptions();
+        }
+    }
+    else if(action == "Save Table")
+    {
+        gpLib.logToAppLogger(APPLICATION_NAME, "save table", "save");
+
+        var content = exportTable();
+        if(content != undefined && content.length > 0)
+        {
+            var defaultFileName = odfFileName.replace(/\.odf$/i, '') + "_table.txt";
+            gpLib.saveFileDialog(content, ".txt", defaultFileName);
+        }
+    }
+    else if(action == "Save Feature List")
+    {
+        gpLib.logToAppLogger(APPLICATION_NAME, "save feature list", "save");
+        /*var selectedOnly = null;
+         //prompt the user whether to save all the features or a subset
+         w2popup.open({
+         title: 'Save Feature List',
+         width: 600,
+         height: 320,
+         showMax: true,
+         modal: true,
+         body: '<div id="gpDialog"><div/><input type="radio" name="selected"/>' +
+         '<label><input type="radio" name="selected"/>All Features</label></div>',
+         buttons: '<button class="btn" onclick="w2popup.close();">Cancel</button> <button class="btn" onclick="w2popup.close();">OK</button>',
+         onOpen: function (event) {
+         event.onComplete = function () {
+
+         };
+         },
+         onClose: function (event) {
+
+         }
+         });*/
+
+        var selectedRecordsList = w2ui['cmsTable'].getSelection();
+
+        if(selectedRecordsList.length == 0)
+        {
+            w2alert("Please select rows from the table!", "Save Feature List Error");
+        }
+        else
+        {
+            content = createFeatureList(true);
+            if(content != undefined && content.length > 0)
+            {
+                var defaultFileName = odfFileName.replace(/\.odf$/i, '') + "_features.txt";
+
+                gpLib.saveFileDialog(content, ".txt", defaultFileName);
+            }
+        }
+    }
+    else if(action == "Save Dataset")
+    {
+        gpLib.logToAppLogger(APPLICATION_NAME, "save dataset", "save");
+
+        var selectedRecordsList = w2ui['cmsTable'].getSelection();
+
+        if(selectedRecordsList.length == 0)
+        {
+            w2alert(
+                "Please select rows from the table!",
+                "Save Feature List Error");
+        }
+        else
+        {
+            content = createDataset();
+            if(content != undefined && content.length > 0)
+            {
+                var defaultFileName = odfFileName.replace(/\.odf$/i, '') + "_cms.gct";
+
+                gpLib.saveFileDialog(content, ".gct", defaultFileName);
+            }
+        }
+    }
+    else if(action == "Save Image")
+    {
+        gpLib.logToAppLogger(APPLICATION_NAME, "save image: " + actionDetails.toLowerCase(), "save");
+
+        var defaultFileName = odfFileName.replace(/\.odf$/i, '') + "_img";
+
+        saveImage(defaultFileName);
+    }
+    else
+    {
+        lastAction = { action: "", actionDetails: ""};
+    }
+}
+
+
 function initMenu()
 {
     var columnNames = cmsOdf["COLUMN_NAMES"];
@@ -1874,153 +2086,7 @@ function initMenu()
         {
             var text = $(item).contents()[0].textContent;
 
-            if (highlightedParent === "Histogram") {
-                gpLib.logToAppLogger(APPLICATION_NAME, "histogram: " + text, "plot");
-
-                $("#plot").data("dataColName", text);
-                plotHistogram(text + " Histogram", text);
-            }
-            else if(text == "Heatmap")
-            {
-                displayHeatMap();
-            }
-            else if(text == "Upregulated Features") {
-                gpLib.logToAppLogger(APPLICATION_NAME, "upregulated features", "plot");
-
-                if ($("#cmsScorePlot").children().length == 0) {
-                    scorePlot(w2ui['cmsTable'].records);
-                }
-                else {
-                    clearView();
-                    $("#cmsScorePlot").show();
-                }
-            }
-            else if(text == "Profile")
-            {
-                gpLib.logToAppLogger(APPLICATION_NAME, "expression profile", "plot");
-                expressionProfile();
-            }
-            else if(text == "Custom Plot")
-            {
-                customPlot();
-            }
-            else if(text == "Edit Filters")
-            {
-                gpLib.logToAppLogger(APPLICATION_NAME, "filter features", "filter");
-                filterFeatures();
-            }
-            else if(text == "Remove All Filters")
-            {
-                gpLib.logToAppLogger(APPLICATION_NAME, "remove all filters", "filter");
-
-                //reset the plot and grid in order to show all the features
-                resetViewer();
-
-                //remove the filters on the plot
-                cmsHeatMap.showAllFeatures();
-
-            }
-            else if(text == "Reload Dataset")
-            {
-                gpLib.logToAppLogger(APPLICATION_NAME, "reset dataset", "display");
-
-                //reload the heatmap
-                initHeatMap();
-            }
-            else if(text == "Display Options")
-            {
-                gpLib.logToAppLogger(APPLICATION_NAME, "display options", "display");
-
-                if(isHeatMapVisible())
-                {
-                    editHeatMapOptions();
-                }
-                else{
-                    editPlotOptions();
-                }
-            }
-            else if(text == "Save Table")
-            {
-                gpLib.logToAppLogger(APPLICATION_NAME, "save table", "save");
-
-                var content = exportTable();
-                if(content != undefined && content.length > 0)
-                {
-                    var defaultFileName = odfFileName.replace(/\.odf$/i, '') + "_table.txt";
-                    gpLib.saveFileDialog(content, ".txt", defaultFileName);
-                }
-            }
-            else if(text == "Save Feature List")
-            {
-                gpLib.logToAppLogger(APPLICATION_NAME, "save feature list", "save");
-
-                /*var selectedOnly = null;
-                //prompt the user whether to save all the features or a subset
-                w2popup.open({
-                    title: 'Save Feature List',
-                    width: 600,
-                    height: 320,
-                    showMax: true,
-                    modal: true,
-                    body: '<div id="gpDialog"><div/><input type="radio" name="selected"/>' +
-                        '<label><input type="radio" name="selected"/>All Features</label></div>',
-                    buttons: '<button class="btn" onclick="w2popup.close();">Cancel</button> <button class="btn" onclick="w2popup.close();">OK</button>',
-                    onOpen: function (event) {
-                        event.onComplete = function () {
-
-                        };
-                    },
-                    onClose: function (event) {
-
-                    }
-                });*/
-
-                var selectedRecordsList = w2ui['cmsTable'].getSelection();
-
-                if(selectedRecordsList.length == 0)
-                {
-                    w2alert("Please select rows from the table!", "Save Feature List Error");
-                }
-                else
-                {
-                    content = createFeatureList(true);
-                    if(content != undefined && content.length > 0)
-                    {
-                        var defaultFileName = odfFileName.replace(/\.odf$/i, '') + "_features.txt";
-
-                        gpLib.saveFileDialog(content, ".txt", defaultFileName);
-                    }
-                }
-            }
-            else if(text == "Save Dataset")
-            {
-                gpLib.logToAppLogger(APPLICATION_NAME, "save dataset", "save");
-
-                var selectedRecordsList = w2ui['cmsTable'].getSelection();
-
-                if(selectedRecordsList.length == 0)
-                {
-                    w2alert("Please select rows from the table!", "Save Feature List Error");
-                }
-                else
-                {
-                    content = createDataset();
-                    if(content != undefined && content.length > 0)
-                    {
-                        var defaultFileName = odfFileName.replace(/\.odf$/i, '') + "_cms.gct";
-
-                        gpLib.saveFileDialog(content, ".gct", defaultFileName);
-                    }
-                }
-            }
-            else if(text == "Save Image")
-            {
-                gpLib.logToAppLogger(APPLICATION_NAME, "save image: " + text.toLowerCase(), "save");
-
-                var defaultFileName = odfFileName.replace(/\.odf$/i, '') + "_img";
-
-                saveImage(defaultFileName);
-            }
+            doAction(text, highlightedParent);
         }
         else
         {

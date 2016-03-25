@@ -194,4 +194,9 @@
     font-size: 14px;
 }
 
+.greaterThanFilter, .lessThanFilter, .filterScore
+{
+    max-width: 150px;
+}
+
 

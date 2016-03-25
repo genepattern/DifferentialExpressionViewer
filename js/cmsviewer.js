@@ -575,9 +575,9 @@ function filterFeatures()
 {
     w2popup.open({
         title   : 'Filter Features',
-        width   : 640,
+        width   : 655,
         opacity : 0,
-        height  : 300,
+        height  : 310,
         showMax : true,
         body    : '<div id="filterDialog"></div>',
         buttons : '<button class="btn" onclick="w2popup.close();">Cancel</button> '+
@@ -600,7 +600,7 @@ function filterFeatures()
 
                     if(filterCount > 0)
                     {
-                        div.append($("<button>x</button>").addClass(".btn").css("margin-left", "7px").click(function () {
+                        div.append($("<button>x</button>").addClass("btn").css("min-width", "10px").css("margin-left", "7px").click(function () {
                             $(this).parents(".filterRow").remove();
                         }));
                     }
@@ -1764,7 +1764,7 @@ function saveImage(defaultFileName)
                 }
 
                 //add the save formats that are supported for all images
-                var saveFormats = $('<label>File type: <br/> <input type="list" id="fileType"/></label>');
+                var saveFormats = $('<label>File type: <br/> <input type="list" id="fileType"/></label>').css("margin-top", "8px");
 
                 $("<div/>").append(saveFormats).appendTo("#saveImageDialog");
 
@@ -2002,7 +2002,7 @@ function doAction(action, actionDetails)
         updateView(currentView.viewType, currentView.options);
         //cmsHeatMap.showAllFeatures();
     }
-    else if(action == "Reload Dataset")
+    else if(action == "Reset")
     {
         gpLib.logToAppLogger(APPLICATION_NAME, "reset dataset", "display");
 
@@ -2073,7 +2073,7 @@ function doAction(action, actionDetails)
             }
         }
     }
-    else if(action == "Save Dataset")
+    else if(action == "Save Dataset (.gct)")
     {
         gpLib.logToAppLogger(APPLICATION_NAME, "save dataset", "save");
 
@@ -2100,7 +2100,35 @@ function doAction(action, actionDetails)
     {
         gpLib.logToAppLogger(APPLICATION_NAME, "save image: " + actionDetails.toLowerCase(), "save");
 
-        var defaultFileName = odfFileName.replace(/\.odf$/i, '') + "_img";
+        var imageInfo = "_image";
+
+        if(currentView.viewType == ViewType.ChartView)
+        {
+            switch(currentView.options.chartType)
+            {
+                case ChartType.CMS:
+                    imageInfo = "_upregulated";
+                    break;
+                case ChartType.Histogram:
+                    imageInfo = "_histogram";
+                    break;
+                case ChartType.Profile:
+                    imageInfo = "_profile";
+                    break;
+                case ChartType.Line:
+                    imageInfo = "_line";
+                    break;
+                case ChartType.Scatter:
+                    imageInfo = "_scatter";
+                    break;
+            }
+        }
+        else if(currentView.viewType == ViewType.HeatmapView)
+        {
+            imageInfo = "_heatmap";
+        }
+
+        var defaultFileName = odfFileName.replace(/\.odf$/i, '') + imageInfo;
 
         saveImage(defaultFileName);
     }

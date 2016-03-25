@@ -1943,6 +1943,15 @@ function customPlot()
     });
 }
 
+function removeFilters() {
+    //remove all filters
+    appliedFilters = [];
+
+    visibleFeatureNames = [];
+    //reset the plot and grid in order to show all the features
+    resetRecords();
+}
+
 function doAction(action, actionDetails)
 {
     if (actionDetails === "Histogram") {
@@ -1992,15 +2001,11 @@ function doAction(action, actionDetails)
     {
         gpLib.logToAppLogger(APPLICATION_NAME, "remove all filters", "filter");
 
-        //remove al filters
-        appliedFilters = [];
-
-        //reset the plot and grid in order to show all the features
-        resetRecords();
+        removeFilters();
 
         //remove the filters on the plot
         updateView(currentView.viewType, currentView.options);
-        //cmsHeatMap.showAllFeatures();
+        cmsHeatMap.showAllFeatures();
     }
     else if(action == "Reset")
     {
@@ -2021,7 +2026,7 @@ function doAction(action, actionDetails)
             editPlotOptions();
         }
     }
-    else if(action == "Save Table")
+    else if(action == "Save Table (.txt)")
     {
         gpLib.logToAppLogger(APPLICATION_NAME, "save table", "save");
 
@@ -2032,7 +2037,7 @@ function doAction(action, actionDetails)
             gpLib.saveFileDialog(content, ".txt", defaultFileName);
         }
     }
-    else if(action == "Save Feature List")
+    else if(action == "Save Feature List (.txt)")
     {
         gpLib.logToAppLogger(APPLICATION_NAME, "save feature list", "save");
         /*var selectedOnly = null;
@@ -2081,8 +2086,7 @@ function doAction(action, actionDetails)
 
         if(selectedRecordsList.length == 0)
         {
-            w2alert(
-                "Please select rows from the table!",
+            w2alert("Please select rows from the table!",
                 "Save Feature List Error");
         }
         else

@@ -1740,10 +1740,10 @@ function saveImage(defaultFileName)
     w2popup.open({
         title: 'Save Image',
         width: 350,
-        height: 240,
+        height: 269,
         showMax: true,
         modal: true,
-        body: '<div id="saveImageDialog" style="margin: 30px 15px 2px 25px;"><label>File name: <input type="text" id="fileName" value="'+ defaultFileName +'"/></label></div>',
+        body: '<div id="saveImageDialog" style="margin: 29px 15px 2px 25px;"><label>File name: <input type="text" id="fileName" value="'+ defaultFileName +'"/></label></div>',
         buttons: '<button class="btn" onclick="w2popup.close();">Cancel</button> ' +
             '<button id="saveImageBtn" class="btn">OK</button>',
         onOpen: function (event)
@@ -1764,9 +1764,18 @@ function saveImage(defaultFileName)
                 }
 
                 //add the save formats that are supported for all images
-                var saveFormats = $('<label>File type: <br/> <input type="list" id="fileType"/></label>').css("margin-top", "8px");
+                var saveFormats = $('<label>File type: <br/> <input type="list" id="fileType"/></label>');
 
-                $("<div/>").append(saveFormats).appendTo("#saveImageDialog");
+
+                $("<div/>").css("margin-top", "10px").append(saveFormats).appendTo("#saveImageDialog");
+
+                if($("#heatmap").is(":visible"))
+                {
+                    $("<div/>").css("margin-top", "10px").css("margin-bottom", "10px")
+                        .append($("<input type='checkbox'/>").attr("id", "allFeatures"))
+                        .append("<label>Include all features and samples</label>")
+                        .appendTo("#saveImageDialog");
+                }
 
                 $("#fileType").w2field('list',
                 {
@@ -1813,41 +1822,46 @@ function saveImage(defaultFileName)
             fileName += "." + fileType;
         }
 
+        var saved = false;
         if($("#heatmap").is(":visible"))
         {
-            cmsHeatMap.saveImage(fileName, fileType);
+            var allFeatures = $("#allFeatures").is(":checked");
+            saved = cmsHeatMap.saveImage(fileName, fileType, allFeatures);
+            $("#saveImageDialog").unblock();
         }
         else
         {
             var chart = plot.highcharts();
 
-
             if (fileType.toLowerCase() === "jpeg") {
                 fileType = "image/jpeg";
-
             }
             else if (fileType.toLowerCase() === "svg") {
                 fileType = "image/svg+xml";
-
             }
             else if (type.toLowerCase() === "pdf") {
                 fileType = "application/pdf";
-
             }
             else {
                 fileType = "image/png";
-
             }
 
             chart.exportChart({
                 type: type,
                 filename: fileName
             });
+
+            saved = true;
+        }
+
+        if(saved)
+        {
+            w2popup.close();
         }
 
         //w2popup.unlock();
         //$('body').css( 'cursor', 'default' );
-        w2popup.close();
+        //w2popup.close();
     });
 }
 

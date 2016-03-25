@@ -896,20 +896,24 @@ gpVisual.HeatMap = function(options) {
         hRes.paint(null, false);
     };
 
-    this.saveImage = function (fileName, fileFormat)
+    this.saveImage = function (fileName, fileFormat, allFeatures)
     {
         var originalWidth = gpHeatmap.size.width;
         var originalHeight = gpHeatmap.size.height;
 
-        var fullHeight = gpHeatmap.rows.values.length * gpHeatmap.rows.zoom + 100;
-        var fullWidth = gpHeatmap.cols.values.length * gpHeatmap.cols.zoom;
+        var imageWidth = gpHeatmap.size.width;
+        var imageHeight = gpHeatmap.size.height;
 
+        if(allFeatures) {
+            imageHeight = gpHeatmap.rows.values.length * gpHeatmap.rows.zoom + 100;
+            imageWidth = gpHeatmap.cols.values.length * gpHeatmap.cols.zoom;
+        }
         //gpHeatmap.size.height = 12 * ;//30000;
-        gpHeatmap.size.height = fullHeight;
+        gpHeatmap.size.height = imageHeight;
 
         if (fileFormat === "png") {
             //limit on size of heatmap if saving as PNG
-            if (fullHeight * fullWidth > 43000000) {
+            if (imageHeight * imageWidth > 43000000) {
                 alert("Image is too large to save as png. Please save as SVG instead.");
                 //throw new Error("Image is too large to save as png. Please save as SVG instead.");
 
@@ -919,8 +923,8 @@ gpVisual.HeatMap = function(options) {
 
             //the default is to save as svg
             //gpHeatmap.size.height = 12 * ;//30000;  // ---> 12 is the default zoom size
-            gpHeatmap.size.height = fullHeight; // / 2;
-            gpHeatmap.size.width = fullWidth;
+            gpHeatmap.size.height = imageHeight; // / 2;
+            gpHeatmap.size.width = imageWidth;
 
             context = new C2S(gpHeatmap.size.width + 300, gpHeatmap.size.height + 350);
 
@@ -950,8 +954,8 @@ gpVisual.HeatMap = function(options) {
         else {
             //the default is to save as svg
             //gpHeatmap.size.height = 12 * ;//30000;  // ---> 12 is the default zoom size
-            gpHeatmap.size.height = fullHeight; // / 2;
-            gpHeatmap.size.width = fullWidth;
+            gpHeatmap.size.height = imageHeight; // / 2;
+            gpHeatmap.size.width = imageWidth;
 
             var context = new C2S(gpHeatmap.size.width + 360, gpHeatmap.size.height + 350);
 

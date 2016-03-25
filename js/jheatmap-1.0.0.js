@@ -3345,12 +3345,13 @@ jheatmap.components.ColumnHeaderPanel = function(drawer, heatmap) {
               drawer.paint();
      });*/
 
+     /*Removed by Marc-Danie 3-25-16 to prevent page scrolling
      this.canvas.bind('mouseover', function(e) {
          drawer.handleFocus(e);
      });
      this.canvas.bind('mouseout', function(e) {
          drawer.handleFocus(e);
-     });
+     });*/
 
      this.canvas.bind('keypress', function (e) {
          onKeyPress(e);
@@ -4159,12 +4160,13 @@ jheatmap.components.RowHeaderPanel = function(drawer, heatmap) {
          drawer.paint();
     });*/
 
+    /*Removed by Marc-Danie 3-25-16 to prevent page scrolling
     this.canvas.bind('mouseover', function(e) {
         drawer.handleFocus(e);
     });
     this.canvas.bind('mouseout', function(e) {
         drawer.handleFocus(e);
-    });
+    });*/
 
     this.canvas.bind('keypress', function (e) {
         var charCode = e.which || e.keyCode;

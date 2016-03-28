@@ -3768,7 +3768,15 @@ jheatmap.components.RowAnnotationPanel = function(drawer, heatmap) {
 
         var boxHtml = "<dl class='dl-horizontal'>";
 
+        var visibleAnnFound = false;
         for (var i = 0; i < heatmap.rows.annotations.length; i++) {
+            if(heatmap.rows.annotations.hidden !== undefined
+                && $.inArray(heatmap.rows.annotations[i], heatmap.rows.annotations.hidden) !== -1)
+            {
+                continue;
+            }
+
+            visibleAnnFound = true;
             var field = heatmap.rows.annotations[i];
             boxHtml += "<dt>" + heatmap.rows.header[field] + ":</dt><dd>";
             var val = heatmap.rows.getValue(row, field);
@@ -3779,6 +3787,11 @@ jheatmap.components.RowAnnotationPanel = function(drawer, heatmap) {
             boxHtml += "</dd>";
         }
         boxHtml += "</dl>";
+
+        if(!visibleAnnFound)
+        {
+            return;
+        }
 
         details.html(boxHtml);
         boxWidth = 300;

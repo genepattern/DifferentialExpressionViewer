@@ -276,11 +276,14 @@ function displayViewer(data) {
     var columnIndex = $.inArray("Score", cmsOdf.COLUMN_NAMES);
     cmsOdf.COLUMN_NAMES[columnIndex] = testStatisticLabel;
 
+   //Add the Upregulated In column as the second column
+    cmsOdf.COLUMN_NAMES.splice(1, 0, "Upregulated In");
+
     computedStatsColumnNames = [];
     for (var i = 0; i < cmsOdf["COLUMN_NAMES"].length; i++)
     {
         var columnName = cmsOdf["COLUMN_NAMES"][i];
-        if(columnName !== "Description" && columnName !== "Feature")
+        if(columnName !== "Description" && columnName !== "Feature" && columnName !== "Upregulated In")
         {
             computedStatsColumnNames.push(columnName);
         }
@@ -1572,23 +1575,29 @@ function initTable()
         var columnName = cmsOdf.COLUMN_NAMES[c];
 
         var isHidden = false;
-        if(columnName !== "Rank" && columnName !== "Description" && columnName !== "Feature"
+        if(columnName !== "Rank" && columnName !== "Description" && columnName !== "Upregulated In" && columnName !== "Feature"
             && columnName !== cmsOdf["Test Statistic"] //this is the Score column
             && columnName !== "FDR(BH)" && columnName !== "Fold Change")
         {
             isHidden = true;
         }
 
-        var size = '19%';
+        var size = '17%';
         if(columnName === "Rank")
         {
             size = '45px';
+        }
+
+        if(columnName === "Upregulated In")
+        {
+            size = '12%';
         }
 
         if(columnName === "Description")
         {
             size = '25%';
         }
+
 
         w2ui['cmsTable'].addColumn({
             field: columnName,
@@ -1638,8 +1647,24 @@ function resetRecords()
         {
             var columnName = cmsOdf.COLUMN_NAMES[c];
 
-            var columnData = cmsOdf[columnName];
-            record[columnName] = columnData[r];
+            if(columnName == "Upregulated In")
+            {
+                var score = parseFloat(cmsOdf[cmsOdf["Test Statistic"]][r]);
+                if(score > 0)
+                {
+                    record[columnName] = cmsOdf["Class 0"];
+                }
+                else if(score < 0)
+                {
+                    record[columnName] = cmsOdf["Class 1"];
+                }
+                else
+                    record[columnName] = "Equal";
+            }
+            else{
+                var columnData = cmsOdf[columnName];
+                record[columnName] = columnData[r];
+            }
         }
 
         records.push(record);

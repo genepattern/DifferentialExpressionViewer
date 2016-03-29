@@ -63,7 +63,7 @@ function loadOdfFile(odfURL)
             if(acceptRanges)
             {
                 clearTimeout();
-                setTimeout(blockElement($("body"), "Loading and parsing ODF file...", false), 3000);
+                //setTimeout(blockElement($("body"), "Loading and parsing ODF file...", false), 3000);
 
                 //get the third data row in order to get the sample names
                 getOdfFileContentsUsingByteRequests(odfURL, -1, 0, 1000000, headers);
@@ -109,9 +109,6 @@ function loadDatasetFile(datasetURL)
         {
             if(acceptRanges)
             {
-                clearTimeout();
-                setTimeout(blockElement($("body"), "Loading and parsing dataset file...", false), 4000);
-
                 //get the third data row in order to get the sample names
                 getDatasetFileContentsUsingByteRequests(datasetURL, -1, 0, 1000000, headers);
             }
@@ -2298,6 +2295,7 @@ function loadCMSViewer()
             || requestParams["dataset.filename"].length < 1)
         {
             console.log("The dataset file was not found");
+            alert("No dataset file was found");
         }
         else
         {
@@ -2311,6 +2309,10 @@ function loadCMSViewer()
 
             loadDatasetFile(datasetFile);
         }
+
+        clearTimeout();
+        $("body").unblock();
+        setTimeout(blockElement($("body"), "Loading and parsing files...", false), 5000);
     }
 }
 
@@ -2325,7 +2327,15 @@ function initHeatMap()
     $("#heatMapOptions").remove();
 
     clearTimeout();
-    setTimeout(blockElement($("#heatMapMain"), "loading heatmap...", false), 5000);
+    setTimeout(function(){
+        $("body").unblock();
+
+        if(cmsHeatMap == undefined)
+        {
+            blockElement($("#heatMapMain"), "loading heatmap...", false);
+        }
+    }, 4000 );
+
     cmsHeatMap = new gpVisual.HeatMap(
     {
         dataUrl: datasetFile,
@@ -2346,6 +2356,8 @@ function initHeatMap()
             {
                 setUpHeatMap();
             }
+
+            clearTimeout();
             $("#heatMapMain").unblock();
         }
     });

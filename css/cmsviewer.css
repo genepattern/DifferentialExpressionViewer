@@ -129,12 +129,11 @@
     width: 280px;
 }
 
-#heatmapMain
+
+#heatMapMain
 {
     height: 55%;
-    min-width:  300px;
-    min-height: 200px;
-    overflow: auto;
+    overflow: hidden;
 }
 
 #heatMapOptions

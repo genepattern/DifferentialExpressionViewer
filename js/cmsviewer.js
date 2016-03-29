@@ -2331,11 +2331,11 @@ function initHeatMap()
     setTimeout(function(){
         $("body").unblock();
 
-        if(cmsHeatMap == undefined)
+        if(cmsHeatMap === undefined)
         {
             blockElement($("#heatMapMain"), "loading heatmap...", false);
         }
-    }, 4000 );
+    }, 4000);
 
     cmsHeatMap = new gpVisual.HeatMap(
     {
@@ -2356,6 +2356,21 @@ function initHeatMap()
             else
             {
                 setUpHeatMap();
+
+                cmsHeatMap.drawHeatMap({
+                    height: $("#heatMapMain").height() - 167
+                });
+
+                //listen for window resize events so we can resize the heatmap
+                $( window ).resize(function()
+                {
+                    if(currentView.viewType == ViewType.HeatmapView)
+                    {
+                        cmsHeatMap.drawHeatMap({
+                            height: $("#heatMapMain").height() - 167
+                        });
+                    }
+                });
             }
 
             clearTimeout();

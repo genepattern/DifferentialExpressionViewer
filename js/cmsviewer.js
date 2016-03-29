@@ -1497,6 +1497,8 @@ function initTable()
     var btn = w2obj.grid.prototype.buttons;
     delete btn['reload'];
 
+    w2utils.settings.phrases["All Fields"] = "Search All Fields";
+
     $('#cmsTable').w2grid({
         name   : 'cmsTable',
         show: {
@@ -1622,7 +1624,7 @@ function updateNumRecordsInfo(visibleRecords, maxRecords)
     var numVisibleRecords = $("#numRecordsInfo");
     numVisibleRecords.empty();
 
-    if(visibleRecords < maxRecords)
+    if(visibleRecords < maxRecords && appliedFilters.length > 0)
     {
         //provide a way to see the applied filters
         numVisibleRecords.append($("<a href='#'>(View Filters)</a>").css("margin-right", "6px").click(function(event)
@@ -1739,11 +1741,35 @@ function exportTable()
 {
     var records = w2ui['cmsTable'].records;
     var content = "";
+
+
+    if(records == undefined || records.length === 0)
+    {
+        alert("Error: No rows found in table.");
+        return;
+    }
+
+    var columnNames = Object.keys(records[0]);
+
+    for(var cIndex=0;cIndex < columnNames.length;cIndex++)
+    {
+        if(columnNames[cIndex] == "recid")
+        {
+            continue;
+        }
+        content += columnNames[cIndex];
+        content += "\t";
+    }
+
     for(var r=0;r<records.length;r++)
     {
-        var columnNames = Object.keys(records[r]);
         for(var c=0;c<columnNames.length;c++)
         {
+            if(columnNames[c] == "recid")
+            {
+                continue;
+            }
+
             content += records[r][columnNames[c]];
             content += "\t";
         }

@@ -1556,6 +1556,7 @@ function initTable()
                 $("#cmsMain").css("overflow", "auto");
                 $("#heatMapMain").css("height", $("#heatMapMain").data("oldHeight"));
                 $("#cmsTable").show();
+                w2ui['cmsTable'].resize();
             }).css("height", "20px").css("width", "20px").css("float", "right"));
 
         $("#heatMapMain").prepend(collapseSpan);

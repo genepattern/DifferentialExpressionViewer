@@ -439,7 +439,6 @@ var gpLib = function() {
         };
 
         var logActivity = function (successCallBack, failCallBack){
-            //var url = "http://vcapplog:3000/usages";
             $.ajax({
                 method: "POST",
                 url: "http://vcapplog:3000/usages",
@@ -467,7 +466,10 @@ var gpLib = function() {
                 Cookies.set("ipAddress", "Not found");
             };
 
-            $.get("http://ipinfo.io", function (response)
+            logActivity(null, failCallBack);
+
+            //disabling for now
+            /*$.get("http://ipinfo.io", function (response)
             {
                 var ipAddress = "";
                 if (response !== undefined && response.ip !== undefined)
@@ -480,7 +482,7 @@ var gpLib = function() {
             }, "jsonp").always(function()
             {
                 logActivity(null, failCallBack);
-            });
+            });*/
         }
         else
         {

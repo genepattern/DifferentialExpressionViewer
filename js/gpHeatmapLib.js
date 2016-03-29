@@ -7,7 +7,8 @@ gpVisual.HeatMap = function(options) {
     var colors = null;
     var colorScheme = null;
     var isDiscrete = false;
-    var defaultZoomLevel = null;
+    var defaultRowZoomLevel = null;
+    var defaultColZoomLevel = null;
     var currentRowSortOrder = null;
     var currentColumnSortOrder = null;
 
@@ -20,12 +21,18 @@ gpVisual.HeatMap = function(options) {
     this._setUp = function(options)
     {
         var bodyWidth = hContainer.width();
+        var bodyHeight = hContainer.height();
 
         gpHeatmap.controls.legend = false;
 
         if(options !== undefined && options !== null && options.showLegend !== undefined)
         {
             gpHeatmap.controls.legend = options.showLegend;
+        }
+
+        if(options !== undefined && options !== null && options.showLegend !== undefined)
+        {
+            gpHeatmap.controls.rowAnnotations = options.showRowAnnotations;
         }
 
         gpHeatmap.controls.shortcuts = false;
@@ -44,23 +51,17 @@ gpVisual.HeatMap = function(options) {
             }
         }
 
-        //height of the columns
+        //height of the column labels
         gpHeatmap.cols.labelSize = 150;
 
-        //cols and rows zoom level should be the same
-        self.defaultZoomLevel = gpHeatmap.cols.zoom;
-
-        //heatmap.cols.zoom = 30;
-        //heatmap.rows.zoom = 30;
-
-        gpHeatmap.size.width = bodyWidth - 300; //1100;
+        gpHeatmap.size.width = bodyWidth - 265; //- 300; //1100;
 
         if(options.width !== undefined && !isNaN(options.width))
         {
             gpHeatmap.size.width = options.width;
         }
 
-        gpHeatmap.size.height = 400;
+        //gpHeatmap.size.height = bodyHeight - 230;
         if(options.height !== undefined && !isNaN(options.height))
         {
             gpHeatmap.size.height = options.height;
@@ -97,6 +98,11 @@ gpVisual.HeatMap = function(options) {
                 gpHeatmap = heatmap;
                 currentRowSortOrder = gpHeatmap.rows.order;
                 currentColumnSortOrder = gpHeatmap.cols.order;
+
+                //cols and rows zoom level should be the same
+                self.defaultRowZoomLevel = gpHeatmap.rows.zoom;
+                self.defaultColZoomLevel = gpHeatmap.cols.zoom;
+
                 self._setUp(options);
 
                 if(options.onLoadData !== undefined && typeof options.onLoadData === 'function')
@@ -666,7 +672,7 @@ gpVisual.HeatMap = function(options) {
             //just rebuild the heatmap
             var hRes = new jheatmap.HeatmapDrawer(gpHeatmap);
             hRes.build();
-            hRes.paint(null, options.showScrollBars);
+            hRes.paint(null, !options.showScrollBars);
         }
     };
 
@@ -733,9 +739,14 @@ gpVisual.HeatMap = function(options) {
         }
     };
 
-    this.getDefaultZoomLevel = function()
+    this.getDefaultRowZoomLevel = function()
     {
-        return self.defaultZoomLevel;
+        return self.defaultRowZoomLevel;
+    };
+
+    this.getDefaultColZoomLevel = function()
+    {
+        return self.defaultColZoomLevel;
     };
 
     this.getZoomLevel = function()
@@ -986,15 +997,23 @@ gpVisual.HeatMap = function(options) {
         var self = this;
 
         //reset the zoom level to the default
-        if(!isNaN(self.getDefaultZoomLevel()))
+        if(!isNaN(self.getDefaultRowZoomLevel()))
         {
-            gpHeatmap.rows.zoom = self.getDefaultZoomLevel();
-            gpHeatmap.cols.zoom = self.getDefaultZoomLevel();
+            gpHeatmap.rows.zoom = self.getDefaultRowZoomLevel();
+        }
+
+        //reset the zoom level to the default
+        if(!isNaN(self.getDefaultColZoomLevel()))
+        {
+            gpHeatmap.cols.zoom = self.getDefaultColZoomLevel();
         }
 
         new jheatmap.actions.ShowHidden(gpHeatmap).rows();
 
         self.drawHeatMap();
+
+        self.zoom(self.getDefaultRowZoomLevel());
+
     };
 
     this.filterRowByName = function(rowNames, options)

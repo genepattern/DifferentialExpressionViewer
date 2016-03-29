@@ -2308,6 +2308,7 @@ function initHeatMap()
             columnSelector: false
         },
         showLegend: false,
+        showRowAnnotations: false,
         onLoadData: function(status)
         {
             if(status !== undefined && status.error !== undefined)

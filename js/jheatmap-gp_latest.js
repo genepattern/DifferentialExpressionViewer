@@ -3934,7 +3934,6 @@ jheatmap.components.RowAnnotationPanel.prototype.paint = function(context, offse
                     rowsAnnValuesCtx.fillStyle = heatmap.rows.decorators[field].toColor(value);
                     rowsAnnValuesCtx.fillRect(offset_x + (i * heatmap.rows.annotationSize), offset_y + ((row - startRow) * rz), heatmap.rows.annotationSize, rz);
                 }
-
             }
 
             if ($.inArray(heatmap.rows.order[row], heatmap.rows.selected) > -1) {
@@ -3965,16 +3964,18 @@ jheatmap.components.RowHeaderPanel = function(drawer, heatmap) {
               }
           },
           items: {}
-    }
-    for (var key=0; key < heatmap.actions.length; key++) {
-            var action = heatmap.actions[key];
-            if (action.rows != undefined) {
-                menu.items[key] = { name: action.title, icon: action.icon };
-            }
+    };
 
-            if (action instanceof jheatmap.actions.Separator) {
-                menu.items[key] = "---------";
-            }
+    for (var key=0; key < heatmap.actions.length; key++)
+    {
+        var action = heatmap.actions[key];
+        if (action.rows != undefined) {
+            menu.items[key] = { name: action.title, icon: action.icon };
+        }
+
+        if (action instanceof jheatmap.actions.Separator) {
+            menu.items[key] = "---------";
+        }
     }
     this.markup.contextMenu(menu);
     this.canvas.bind('hold', function(e){
@@ -4628,11 +4629,11 @@ jheatmap.Heatmap = function (options) {
                 left = e.gesture.center.pageX;
             });
 
-            details.bind('drag', function (e) {
+            /*details.bind('drag', function (e) {
                 e.gesture.preventDefault();
                 details.css('left', boxLeft + (e.gesture.center.pageX - left));
                 details.css('top', boxTop + (e.gesture.center.pageY - top));
-            });
+            });*/
         } else {
             details.css('display', 'none');
         }
@@ -4938,7 +4939,7 @@ jheatmap.HeatmapDrawer = function (heatmap) {
 
         firstRow.append(columnHeaderPanel.markup);
 
-        if (rowAnnotationPanel.visible) {
+        if (heatmap.controls.showRowAnnotations && rowAnnotationPanel.visible) {
             firstRow.append(rowAnnotationPanel.header);
         }
         firstRow.append($("<th>", {'class': 'border', 'rowspan': rowAnnotationPanel.span }));
@@ -4948,23 +4949,10 @@ jheatmap.HeatmapDrawer = function (heatmap) {
             table.append(columnAnnotationPanel.markup);
         }
 
-        // Add left border
-        var tableRow = $('<tr>');
-        tableRow.append(rowHeaderPanel.markup);
-        tableRow.append(cellsBodyPanel.markup);
-
-        if (rowAnnotationPanel.visible) {
-            tableRow.append(rowAnnotationPanel.body);
+        var poweredBy = "";
+        if (heatmap.controls.poweredByJHeatmap) {
+            poweredBy = "<span>powered by <a href='http://jheatmap.github.io/jheatmap' target='_blank'>jHeatmap</a></span>";
         }
-
-        tableRow.append(verticalScrollBar.markup);
-        tableRow.append("<td class='borderL'>&nbsp;</td>");
-        table.append(tableRow);
-
-	    var poweredBy = "";
-	    if (heatmap.controls.poweredByJHeatmap) {
-	        poweredBy = "<span>powered by <a href='http://jheatmap.github.io/jheatmap' target='_blank'>jHeatmap</a></span>";
-	    }
 
         var scrollRow = $("<tr class='horizontalScroll'>");
         scrollRow.append("<td class='border' style='font-size: 9px; vertical-align: right; padding-left: 10px; padding-top: 6px;'>" + poweredBy + "</td>");
@@ -4978,6 +4966,22 @@ jheatmap.HeatmapDrawer = function (heatmap) {
 
         scrollRow.append("<td class='border'></td>");
         table.append(scrollRow);
+
+        // Add left border
+        var tableRow = $('<tr>');
+
+        tableRow.append(rowHeaderPanel.markup);
+
+
+        tableRow.append(cellsBodyPanel.markup);
+
+        if (heatmap.controls.showRowAnnotations && rowAnnotationPanel.visible) {
+            tableRow.append(rowAnnotationPanel.body);
+        }
+
+        tableRow.append(verticalScrollBar.markup);
+        tableRow.append("<td class='borderL'>&nbsp;</td>");
+        table.append(tableRow);
 
         // Last border row
         var lastRow = $('<tr>');

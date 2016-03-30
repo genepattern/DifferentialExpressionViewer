@@ -4577,7 +4577,7 @@ jheatmap.Heatmap = function (options) {
                 if (heatmap.cells.header[i] == undefined) {
                     continue;
                 }
-                boxHtml += "<tr><td style='font-size: 12px; font-weight: bold'>" + heatmap.cells.header[i] + ":</td><td style='font-size: 12px; padding: 2px;'>";
+                boxHtml += "<tr><td style='font-size: 12px; font-weight: bold; padding: 2px'>" + heatmap.cells.header[i] + ":</td><td style='font-size: 12px; padding: 2px;'>";
                 var val = value[i];
                 if (!isNaN(val) && (val % 1 != 0)) {
                     val = Number(val).toFixed(3);
@@ -4589,7 +4589,7 @@ jheatmap.Heatmap = function (options) {
 
             details.html(boxHtml);
             boxWidth = 300;
-            boxHeight = 68 + (heatmap.cells.header.length * 25);
+            //boxHeight = 68 + (heatmap.cells.header.length * 25);
 
 
             var wHeight = $(document).height();

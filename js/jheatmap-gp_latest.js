@@ -3267,8 +3267,12 @@ jheatmap.components.ColumnHeaderPanel = function(drawer, heatmap) {
         if (center.y > (heatmap.cols.labelSize - 10))
         {
             // Sort the col
-            heatmap.rows.sorter = new jheatmap.sorters.AggregationValueSorter(heatmap.cells.selectedValue, !(heatmap.rows.sorter.asc), true, [ heatmap.cols.order[center.col] ]);
-            heatmap.rows.sorter.sort(heatmap, "rows");
+            //only if col sort is enabled
+            if(heatmap.controls.allowColSort)
+            {
+                heatmap.rows.sorter = new jheatmap.sorters.AggregationValueSorter(heatmap.cells.selectedValue, !(heatmap.rows.sorter.asc), true, [ heatmap.cols.order[center.col] ]);
+                heatmap.rows.sorter.sort(heatmap, "rows");
+            }
         }
         else if (!isSelected(center.col))
         {
@@ -4103,8 +4107,12 @@ jheatmap.components.RowHeaderPanel = function(drawer, heatmap) {
        if (center.x > (heatmap.rows.labelSize - 10))
        {
            // Sort the row
-           heatmap.cols.sorter = new jheatmap.sorters.AggregationValueSorter(heatmap.cells.selectedValue, !(heatmap.cols.sorter.asc), true, [heatmap.rows.order[center.row]])
-           heatmap.cols.sorter.sort(heatmap, "columns");
+           //check if sorting is enabled first
+           if(heatmap.controls.allowRowSort)
+           {
+                heatmap.cols.sorter = new jheatmap.sorters.AggregationValueSorter(heatmap.cells.selectedValue, !(heatmap.cols.sorter.asc), true, [heatmap.rows.order[center.row]])
+                heatmap.cols.sorter.sort(heatmap, "columns");
+           }
        }
        else if (!isSelected(center.row))
        {

@@ -593,12 +593,12 @@ function filterFeatures()
 
                     var filterCount = $("#filterDialog").find(".filterRow").length;
 
-                    if(filterCount > 0)
-                    {
+                    //if(filterCount > 0)
+                    //{
                         div.append($("<button>x</button>").addClass("btn").css("min-width", "10px").css("margin-left", "7px").click(function () {
                             $(this).parents(".filterRow").remove();
                         }));
-                    }
+                    //}
 
                     $("#filterOptions").append(div);
 
@@ -822,7 +822,9 @@ function editHeatMapOptions()
             poweredByJHeatmap: false,
             controls : {
                 columnSelector: false,
-                rowSelector: false
+                rowSelector: false,
+                allowRowSort: false,
+                allowColSort: false
             }
         };
 

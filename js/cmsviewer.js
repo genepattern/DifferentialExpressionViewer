@@ -2385,13 +2385,8 @@ function setUpHeatMap()
     var testStatisticName = cmsOdf["Test Statistic"];
     var testStatisticArr = [testStatisticName];
 
-    //for(var i=0; i<w2ui['cmsTable'].records.length;i++)
-    // {
-    // testStatisticArr.push(w2ui['cmsTable'].records[i][testStatisticName].toString());
-    //}
-
     var featureNames = cmsHeatMap.getRowNames();
-    for(var i=0;i<featureNames.length;i++)
+    /*for(var i=0;i<featureNames.length;i++)
     {
          var match = w2ui['cmsTable'].find({ Feature: featureNames[i] });
          if(match !==undefined && match.length == 1)
@@ -2400,6 +2395,19 @@ function setUpHeatMap()
              var record = w2ui['cmsTable'].get(recid);
              testStatisticArr.push(record[testStatisticName].toString());
          }
+    }*/
+
+    var records = w2ui['cmsTable'].records;
+
+    for(var j=0;j<records.length;j++)
+    {
+        testStatisticArr.push(null);
+    }
+
+    for(var i=0;i<records.length;i++)
+    {
+        var matchIndex = $.inArray(records[i]["Feature"], featureNames);
+        testStatisticArr[matchIndex+1] = records[i][testStatisticName].toString();
     }
 
     cmsHeatMap.addFeatureLabels(null, testStatisticArr, true);

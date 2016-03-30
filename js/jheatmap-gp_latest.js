@@ -3409,7 +3409,9 @@ jheatmap.components.ColumnHeaderPanel.prototype.paint = function(context, offset
         if(value.length > heatmap.cols.labelSize / 8 )
         {
             var limit = heatmap.cols.labelSize / 8;
-            value = value.substring(0, Math.floor(limit/2)) + "..." + value.substring(Math.floor(limit/2), limit);
+
+            var lastHalfStart = value.length - Math.floor(limit/2);
+            value = value.substring(0, Math.floor(limit/2)) + "..." + value.substring(lastHalfStart);
         }
         colCtx.fillText(value, -textSpacing, 0);
         colCtx.restore();

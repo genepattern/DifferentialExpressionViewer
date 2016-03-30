@@ -2358,22 +2358,31 @@ function initHeatMap()
             }
             else
             {
-                setUpHeatMap();
+                try {
+                    setUpHeatMap();
 
-                cmsHeatMap.drawHeatMap({
-                    height: $("#heatMapMain").height() - 175
-                });
+                    cmsHeatMap.drawHeatMap({
+                        height: $("#heatMapMain").height() - 175
+                    });
 
-                //listen for window resize events so we can resize the heatmap
-                $( window ).resize(function()
+                    //listen for window resize events so we can resize the heatmap
+                    $(window).resize(function () {
+                        if (currentView.viewType == ViewType.HeatmapView) {
+                            cmsHeatMap.drawHeatMap({
+                                height: $("#heatMapMain").height() - 175
+                            });
+                        }
+                    });
+                }
+                catch(err)
                 {
-                    if(currentView.viewType == ViewType.HeatmapView)
-                    {
-                        cmsHeatMap.drawHeatMap({
-                            height: $("#heatMapMain").height() - 175
-                        });
-                    }
-                });
+                    alert("Unable to load heatmap. Loading Upregulated plot instead");
+                    //now disable the heatmap
+                    $("#heatMapMenuItem").addClass("disabled");
+                    updateView(ViewType.ChartView, {
+                        chartType: ChartType.CMS
+                    })
+                }
             }
 
             $.unblockUI();
@@ -2387,7 +2396,7 @@ function setUpHeatMap()
     var testStatisticName = cmsOdf["Test Statistic"];
     var testStatisticArr = [testStatisticName];
 
-    var featureNames = cmsHeatMap.getRowNames();
+    //var featureNames = cmsHeatMap.getRowNames();
     /*for(var i=0;i<featureNames.length;i++)
     {
          var match = w2ui['cmsTable'].find({ Feature: featureNames[i] });
@@ -2408,7 +2417,12 @@ function setUpHeatMap()
 
     for(var i=0;i<records.length;i++)
     {
-        var matchIndex = $.inArray(records[i]["Feature"], featureNames);
+        //var matchIndex = $.inArray(records[i]["Feature"], featureNames);
+        var matchIndex = cmsHeatMap.getFeatureIndexFromGCTReader(records[i]["Feature"]);
+        if(matchIndex === -1)
+        {
+            throw new Error("Error: Unable to sort the data. Cannot find index of feature " + records[i]["Feature"]);
+        }
         testStatisticArr[matchIndex+1] = records[i][testStatisticName].toString();
     }
 

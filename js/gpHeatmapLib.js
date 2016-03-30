@@ -343,6 +343,16 @@ gpVisual.HeatMap = function(options) {
         return rowNames;
     };
 
+    this.getFeatureIndexFromGCTReader = function(featureName)
+    {
+        if(gpHeatmap.rows !== undefined && gpHeatmap.rows.valueIndexMap !== undefined)
+        {
+            return gpHeatmap.rows.valueIndexMap[featureName];
+        }
+
+        return -1;
+    };
+
     this.getFeatureLabels = function()
     {
         return  gpHeatmap.rows.header.length > 1 ? gpHeatmap.rows.header.slice(2) : [];

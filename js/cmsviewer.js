@@ -62,9 +62,6 @@ function loadOdfFile(odfURL)
         {
             if(acceptRanges)
             {
-                clearTimeout();
-                //setTimeout(blockElement($("body"), "Loading and parsing ODF file...", false), 3000);
-
                 //get the third data row in order to get the sample names
                 getOdfFileContentsUsingByteRequests(odfURL, -1, 0, 1000000, headers);
             }
@@ -258,7 +255,7 @@ function displayViewer(data) {
         cmsOdf = gpLib.parseODF(data, "Comparative Marker Selection");
     }
     catch(err) {
-        $("body").unblock();
+        $.unblockUI();
         displayLoadError(err);
         return;
     }
@@ -291,8 +288,6 @@ function displayViewer(data) {
     initMenu();
     initTable();
     initHeatMap();
-
-    $("body").unblock();
 }
 
 function plotChart(options)
@@ -2311,9 +2306,25 @@ function loadCMSViewer()
             loadDatasetFile(datasetFile);
         }
 
-        clearTimeout();
-        $("body").unblock();
-        setTimeout(blockElement($("body"), "Loading and parsing files...", false), 5000);
+        $.unblockUI();
+        $.blockUI({
+            message: '<b>Parsing files and generating heatmap...</b>',
+            css: {
+                padding:            11,
+               /* margin:             0,
+                width:              '30%',
+                top:                '30%',
+                left:               '35%',
+                textAlign:          'center',
+                color:              '#000',
+                border:             '2px solid #aaa',*/
+                "font-size":        '20px'
+            },
+            overlayCSS:  {
+                backgroundColor: '#000',
+                opacity:         0.2
+            }
+        });
     }
 }
 
@@ -2326,16 +2337,6 @@ function initHeatMap()
 
 
     $("#heatMapOptions").remove();
-
-    clearTimeout();
-    setTimeout(function(){
-        $("body").unblock();
-
-        if(cmsHeatMap === undefined)
-        {
-            blockElement($("#heatMapMain"), "loading heatmap...", false);
-        }
-    }, 4000);
 
     cmsHeatMap = new gpVisual.HeatMap(
     {
@@ -2358,7 +2359,7 @@ function initHeatMap()
                 setUpHeatMap();
 
                 cmsHeatMap.drawHeatMap({
-                    height: $("#heatMapMain").height() - 167
+                    height: $("#heatMapMain").height() - 175
                 });
 
                 //listen for window resize events so we can resize the heatmap
@@ -2367,14 +2368,13 @@ function initHeatMap()
                     if(currentView.viewType == ViewType.HeatmapView)
                     {
                         cmsHeatMap.drawHeatMap({
-                            height: $("#heatMapMain").height() - 167
+                            height: $("#heatMapMain").height() - 175
                         });
                     }
                 });
             }
 
-            clearTimeout();
-            $("#heatMapMain").unblock();
+            $.unblockUI();
         }
     });
 }

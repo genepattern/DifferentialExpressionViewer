@@ -3404,6 +3404,13 @@ jheatmap.components.ColumnHeaderPanel.prototype.paint = function(context, offset
         colCtx.save();
         colCtx.translate((c - startCol) * cz + (cz / 2) + offset_x, (heatmap.cols.labelSize - 5) + offset_y);
         colCtx.rotate(Math.PI / 2);
+
+        //Truncate the text of necessary
+        if(value.length > heatmap.cols.labelSize / 8 )
+        {
+            var limit = heatmap.cols.labelSize / 8;
+            value = value.substring(0, Math.floor(limit/2)) + "..." + value.substring(Math.floor(limit/2), limit);
+        }
         colCtx.fillText(value, -textSpacing, 0);
         colCtx.restore();
 

@@ -507,7 +507,7 @@ table.heatmap div.detailsbox {
     font-size: 12px;
     padding-left: 10px;
     color: #000;
-    height: 125px;
+    max-height: 125px;
 }
 
 table.heatmap td.borderRL, table.heatmap th.borderRL {

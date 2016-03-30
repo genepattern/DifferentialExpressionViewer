@@ -4569,27 +4569,27 @@ jheatmap.Heatmap = function (options) {
             var boxWidth;
             var boxHeight;
 
-            var boxHtml = "<dl class='dl-horizontal'>";
-            boxHtml += "<dt>Column</dt><dd>" + heatmap.cols.getValue(col, heatmap.cols.selectedValue) + "</dd>";
-            boxHtml += "<dt>Row</dt><dd>" + heatmap.rows.getValue(row, heatmap.rows.selectedValue) + "</dd>";
-            boxHtml += "<hr />";
+            var boxHtml = "<table style='margin-top: 8px;overflow: auto;'>";
+            boxHtml += "<tr><td style='font-size: 12px; font-weight: bold; padding: 2px;'>Column</td><td style='font-size: 12px; padding: 2px;'>" + heatmap.cols.getValue(col, heatmap.cols.selectedValue) + "</td></tr>";
+            boxHtml += "<tr><td style='font-size: 12px; font-weight: bold; padding: 2px;'>Row</td><td style='font-size: 12px; padding: 2px;'>" + heatmap.rows.getValue(row, heatmap.rows.selectedValue) + "</td></tr>";
+            boxHtml += "<tr><td colspan='2'><hr /></td></tr>";
             for (var i = 0; i < heatmap.cells.header.length; i++) {
                 if (heatmap.cells.header[i] == undefined) {
                     continue;
                 }
-                boxHtml += "<dt>" + heatmap.cells.header[i] + ":</dt><dd>";
+                boxHtml += "<tr><td style='font-size: 12px; font-weight: bold'>" + heatmap.cells.header[i] + ":</td><td style='font-size: 12px; padding: 2px;'>";
                 var val = value[i];
                 if (!isNaN(val) && (val % 1 != 0)) {
                     val = Number(val).toFixed(3);
                 }
                 boxHtml += val;
-                boxHtml += "</dd>";
+                boxHtml += "</td></tr>";
             }
-            boxHtml += "</dl>";
+            boxHtml += "</table>";
 
             details.html(boxHtml);
             boxWidth = 300;
-            boxHeight = 70 + (heatmap.cells.header.length * 25);
+            boxHeight = 68 + (heatmap.cells.header.length * 25);
 
 
             var wHeight = $(document).height();
@@ -4949,6 +4949,22 @@ jheatmap.HeatmapDrawer = function (heatmap) {
             table.append(columnAnnotationPanel.markup);
         }
 
+        // Add left border
+        var tableRow = $('<tr>');
+
+        tableRow.append(rowHeaderPanel.markup);
+
+
+        tableRow.append(cellsBodyPanel.markup);
+
+        if (heatmap.controls.showRowAnnotations && rowAnnotationPanel.visible) {
+            tableRow.append(rowAnnotationPanel.body);
+        }
+
+        tableRow.append(verticalScrollBar.markup);
+        tableRow.append("<td class='borderL'>&nbsp;</td>");
+        table.append(tableRow);
+
         var poweredBy = "";
         if (heatmap.controls.poweredByJHeatmap) {
             poweredBy = "<span>powered by <a href='http://jheatmap.github.io/jheatmap' target='_blank'>jHeatmap</a></span>";
@@ -4966,22 +4982,6 @@ jheatmap.HeatmapDrawer = function (heatmap) {
 
         scrollRow.append("<td class='border'></td>");
         table.append(scrollRow);
-
-        // Add left border
-        var tableRow = $('<tr>');
-
-        tableRow.append(rowHeaderPanel.markup);
-
-
-        tableRow.append(cellsBodyPanel.markup);
-
-        if (heatmap.controls.showRowAnnotations && rowAnnotationPanel.visible) {
-            tableRow.append(rowAnnotationPanel.body);
-        }
-
-        tableRow.append(verticalScrollBar.markup);
-        tableRow.append("<td class='borderL'>&nbsp;</td>");
-        table.append(tableRow);
 
         // Last border row
         var lastRow = $('<tr>');

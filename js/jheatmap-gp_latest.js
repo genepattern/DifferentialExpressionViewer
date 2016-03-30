@@ -4414,7 +4414,7 @@ jheatmap.components.VerticalScrollBar.prototype.paint = function(context) {
     var heatmap = this.heatmap;
     var maxHeight = (heatmap.offset.bottom - heatmap.offset.top) * heatmap.rows.zoom;
     var iniY = Math.round(maxHeight * (heatmap.offset.top / heatmap.rows.order.length));
-    var endY = Math.round(maxHeight * (heatmap.offset.bottom / heatmap.rows.order.length));
+    var endY = Math.max(Math.round(maxHeight * (heatmap.offset.bottom / heatmap.rows.order.length)), iniY + 1);
 
     var scrollVertCtx = this.canvas.get()[0].getContext('2d');
     if(context !== undefined && context !== null)

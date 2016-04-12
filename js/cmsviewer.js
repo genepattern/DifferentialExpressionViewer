@@ -2388,6 +2388,41 @@ function initHeatMap()
             $.unblockUI();
         }
     });
+
+    var MAX_ZOOM = 80;
+    var ZOOM_STEP = 4;
+
+    $("#zoom-in").button().click(function (event) {
+        var newZoomLevel = cmsHeatMap.getZoomLevel() + ZOOM_STEP;
+
+        if(newZoomLevel <= MAX_ZOOM) {
+            cmsHeatMap.zoom(newZoomLevel);
+
+            $("#zoom-out").button( "option", "disabled", false );
+        }
+
+        //disable zooming in if limit has been reached
+        var nextZoomLevel = cmsHeatMap.getZoomLevel() + ZOOM_STEP;
+        if(nextZoomLevel > MAX_ZOOM) {
+            $(this).button( "option", "disabled", true);
+        }
+    });
+
+    $("#zoom-out").button().click(function (event) {
+        var newZoomLevel = cmsHeatMap.getZoomLevel() - ZOOM_STEP;
+
+        if(newZoomLevel > 0 && (newZoomLevel <= MAX_ZOOM)) {
+            cmsHeatMap.zoom(newZoomLevel);
+
+            $("#zoomIn").button( "option", "disabled", false);
+        }
+
+        //disable zooming out if limit has been reached
+        var nextZoomLevel = cmsHeatMap.getZoomLevel() - ZOOM_STEP;
+        if(nextZoomLevel <= 0 && (nextZoomLevel > MAX_ZOOM)) {
+            $(this).button( "option", "disabled", true);
+        }
+    });
 }
 
 function setUpHeatMap()

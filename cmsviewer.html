@@ -1,83 +1,94 @@
 <html>
 <head>
 
-    <link href="css/sm-core-css.css" rel="stylesheet" type="text/css" />
-    <link href="css/sm-clean.css" rel="stylesheet" type="text/css" />
-
-    <link rel="stylesheet" type="text/css" href="css/cmsviewer.css"/>
+    <link rel="stylesheet" type="text/css" href="css/sm-core-css.css"/>
+    <link rel="stylesheet" type="text/css" href="css/sm-clean.css"/>
+    <link rel="stylesheet" type="text/css" href="css/spectrum.css"/>
     <link rel="stylesheet" type="text/css" href="css/w2ui-1.4.2.css"/>
-
+    <link rel="stylesheet" type="text/css" href="css/jheatmap-gp_latest.css" />
+    <link rel="stylesheet" type="text/css" href="css/cmsviewer.css"/>
 
     <!-- jQuery JS-->
-    <script src="//code.jquery.com/jquery-2.1.4.min.js"></script>
-    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
-    <script src="js/highcharts.js"></script>
-    <script src="js/map.js"></script>
-    <script src="js/exporting.js"></script>
-    <script src="js/gp_lib.js"></script>
-    <script src="js/gpUtil.js"></script>
-    <script src="js/d3.js"></script>
-    <script src="js/FileSaver.js"></script>
-    <script type="text/javascript" src="js/jquery.smartmenus.js"></script>
-    <script src="js/w2ui-1.4.2.js"></script>
-    <script src="js/cmsviewer.js"></script>
+    <script type="text/javascript" src="//code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script type="text/javascript" src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="js/highcharts.js"></script>
+    <script type="text/javascript" src="js/exporting.js"></script>
+    <script type="text/javascript" src="js/gp_lib.js"></script>
+    <script type="text/javascript" src="js/gpUtil.js"></script>
+    <script type="text/javascript" src="js/d3.min.js"></script>
+    <script type="text/javascript" src="js/spectrum.js"></script>
+
+    <script type="text/javascript" src="js/FileSaver.js"></script>
+    <script type="text/javascript" src="js/jquery.smartmenus.js" type="text/javascript" ></script>
+    <script type="text/javascript" src="js/w2ui-1.4.2.js"></script>
+    <script type="text/javascript" src="js/jheatmap-gp_latest.js"></script>
+    <script type="text/javascript" src="js/js.cookie.js"></script>
+    <script type="text/javascript" src="js/jquery.blockUI.js"></script>
+    <script type="text/javascript" src="js/rgbcolor.js"></script>
+    <script type="text/javascript" src="js/canvg.js"></script>
+    <script type="text/javascript" src="js/canvas2svg.js"></script>
+    <script type="text/javascript" src="js/canvas-to-blob.js"></script>
+    <script type="text/javascript" src="js/gpHeatmapLib.js"></script>
+    <script type="text/javascript" src="js/cmsviewer.js"></script>
 
 </head>
 <body>
     <div id="fileLoaded"></div>
 
-    <div id="cmsNavBar">
-        <ul id="cmsMenu" class="sm sm-clean">
-            <li>
-                <a href="#">File</a>
-                <ul>
-                    <li>
-                        <a href="#">Save Image</a>
-                        <ul>
-                            <li>
-                                <a href="#">PNG</a>
-                            </li>
-                            <li>
-                                <a href="#">JPEG</a>
-                            </li>
-                            <li>
-                                <a href="#">SVG</a>
-                            </li>
-                            <li>
-                                <a href="#">PDF</a>
-                            </li>
-                        </ul>
-                    </li>
-                    <li>
-                        <a href="#">Save Table</a>
-                    </li>
-                    <li>
-                        <a href="#">Save Feature List</a>
-                    </li>
-                    <li>
-                        <a href="#" id="saveDataset">Save Dataset</a>
-                    </li>
-                </ul>
-            </li>
-            <li>
-                <a href="#">Edit</a>
-                <ul>
-                    <li><a href="#">Filter Features</a></li>
-                </ul>
-            </li>
-            <li>
-                <a href="#">View</a>
-                <ul>
-                    <li><a href="#">Upregulated Features</a></li>
-                    <li><a href="#" id="profile">Profile</a></li>
-                    <li id="histMenu"><a href="#">Histogram</a></li>
-                    <li><a href="#">Custom Plot</a></li>
-                </ul>
-            </li>
-        </ul>
+    <div id="cmsMain">
+        <div id="cmsNavBar">
+            <ul id="cmsMenu" class="sm sm-clean">
+                <li>
+                    <a href="#">File</a>
+                    <ul>
+                        <li>
+                            <a href="#">Save Image</a>
+                        </li>
+                        <li>
+                            <a href="#">Save Table (.txt)</a>
+                        </li>
+                        <li>
+                            <a href="#">Save Feature List (.txt)</a>
+                        </li>
+                        <li>
+                            <a href="#" id="saveDataset">Save Dataset (.gct)</a>
+                        </li>
+                        <li>
+                            <a href="#" id="reloadDataset">Reset</a>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#">Edit</a>
+                    <ul>
+                        <li>
+                            <a href="#">Filter Features</a>
+                            <ul>
+                                <li><a href="#">Create/Edit Filters</a></li>
+                                <li><a href="#">Remove All Filters</a></li>
+                            </ul>
+                        </li>
+                        <li><a href="#">Display Options</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#">View</a>
+                    <ul>
+                        <li><a href="#" id="heatMapMenuItem">Heatmap</a></li>
+                        <li><a href="#">Upregulated Features</a></li>
+                        <li><a href="#" id="profile">Profile</a></li>
+                        <li id="histMenu"><a href="#">Histogram</a></li>
+                        <li><a href="#">Custom Plot</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+        <div id="plot"></div>
+        <div id="heatMapMain">
+            <div id="heatmap"></div>
+        </div>
+        <div id="cmsScorePlot"></div>
+        <div id="cmsTable"></div>
     </div>
-    <div id="plot"></div>
-    <div id="cmsScorePlot"></div>
-    <div id="cmsTable"></div>
 </body>
 </html>

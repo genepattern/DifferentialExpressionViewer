@@ -1,6 +1,11 @@
-#cmsPlot
+#cmsScorePlot
 {
-    height: 450px;
+ height: 55%;
+}
+
+#plot
+{
+    height: 55%;
 }
 
 #cmsTable
@@ -76,10 +81,11 @@
     padding-left: 20px;
 }
 
-#customPlotDialog span
+#customPlotDialog div
 {
-    margin-left: 11px;
+    margin-top: 9px;
 }
+
 
 .sm-clean ul .disabled, .sm-clean ul .disabled:hover, .sm-clean ul .disabled:focus, .sm-clean ul .disabled:active
 {
@@ -93,5 +99,103 @@
     margin-bottom: 3px;
 }
 
+#displayOptionsTable
+{
+    min-width: 350px;
+    width: 50%;
+    margin: 30px auto 5px auto;
+}
+
+#plotColorTable
+{
+    min-width: 350px;
+    width: 50%;
+    margin: 30px auto 5px auto;
+}
+
+#displayOptionsDialog input
+{
+    height: 25px;
+    width: 180px;
+}
+
+#numRecordsInfo
+{
+    margin-right: 10px;
+}
+
+#fileName
+{
+    width: 280px;
+}
+
+
+#heatMapMain
+{
+    height: 55%;
+    overflow: hidden;
+}
+
+#heatMapOptions
+{
+    width: 100%;
+}
+
+#displayCustomPlot div
+{
+    margin-top: 4px;
+}
+
+.heatMapOptionsDialog
+{
+    margin-top: 25px;
+    margin-left: 15px;
+    font-size: 14px;
+}
+
+.space
+{
+    margin: 20px 14px 8px 0;
+}
+
+#discreteColorsList
+{
+    list-style-type: none;
+    overflow: auto;
+    max-height: 180px;
+    padding-left: 8px;
+}
+
+#discreteColorsList button
+{
+    margin-left: 10px;
+    min-width: 20px;
+    max-width: 20px;
+    padding: 5px 6px !important;
+}
+
+#discreteColorsList li
+{
+    margin: 4px 3px 5px 3px;
+    font-size: 11px;
+    height: 30px;
+    width: 95px;
+    float: left;
+}
+
+#cmsMain
+{
+    overflow: hidden;
+}
+
+#gradientColorTable
+{
+    font-size: 14px;
+}
+
+.greaterThanFilter, .lessThanFilter, .filterScore
+{
+    max-width: 150px;
+}
 
 

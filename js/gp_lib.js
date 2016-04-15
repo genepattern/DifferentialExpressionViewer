@@ -1,5 +1,23 @@
-var gpLib = function() {
+/*
+ * Depends on the jQuery, jQuery UI, and the Javascript Cookie plugins
+ */
+var gpAuthorizationHeaders = {};
 
+$(function()
+{
+    //setup the global Authorization token
+    var token = window.location.hash;
+    if(token !== undefined && token !== null && token.length > 0)
+    {
+        token = token.substring(1);
+        gpAuthorizationHeaders = {"Authorization": "Bearer " + token};
+        $.ajaxSetup({
+            headers: gpAuthorizationHeaders
+        });
+    }
+});
+
+var gpLib = function() {
     /**
      * Uploads a file to the GP Files Tab
      * @param url - the url of the file on the GP server
@@ -42,7 +60,13 @@ var gpLib = function() {
      * This function displays a dialog displaying the directories in the Files Tab for the current GP user
      * @param callBack - a callback function if a directory in the Files Tab was selected
      */
-    function saveFileDialog(contents, extension, callBack) {
+    function saveFileDialog(contents, extension, defaultFileName, callBack)
+    {
+        if(defaultFileName === undefined || defaultFileName === null)
+        {
+            defaultFileName = "";
+        }
+
         //create dialog
         w2popup.open({
             title: 'Save File',
@@ -50,12 +74,12 @@ var gpLib = function() {
             height: 380,
             showMax: true,
             modal: true,
-            body: '<div id="gpDialog" style="margin: 14px 15px 2px 15px;"><label>File name: <input type="text" id="fileName"/>' +
+            body: '<div id="gpDialog" style="margin: 14px 15px 2px 15px;"><label>File name: <input type="text" value="' + defaultFileName + '"id="fileName" style="width: 250px;"/>' +
                 '</label><div style="margin: 8px 8px 8px 2px;"><input name="saveMethod" value="gp" type="radio" checked="checked" style="margin-right: 5px"/>Save To GenePattern' +
                 '<input name="saveMethod" type="radio" value="download"/>Download</div>' +
                 '<div id="gpSave">Select save location:<br/><div id="fileTree" style="height: 200px;border:2px solid white"/></div> </div>',
-            buttons: '<button class="btn" onclick="w2popup.close();">Cancel</button> ' +
-                '<button id="closePopup" class="btn" onclick="w2popup.close();" disabled="disabled">OK</button>',
+            buttons: '<button id="cancelSaveToGPBtn" class="btn" onclick="w2popup.close();">Cancel</button> ' +
+                '<button id="saveToGPBtn" class="btn" disabled="disabled">OK</button>',
             onOpen: function (event) {
                 event.onComplete = function () {
                     $("input[name='saveMethod']").click(function()
@@ -64,11 +88,11 @@ var gpLib = function() {
                         if(checkedValue == "gp")
                         {
                             $("#gpSave").show();
-                            $("#closePopup").prop( "disabled", true );
+                            $("#saveToGPBtn").prop( "disabled", true );
                         }
                         else
                         {
-                            $("#closePopup").prop( "disabled", false );
+                            $("#saveToGPBtn").prop( "disabled", false );
 
                             $("#gpSave").hide();
                         }
@@ -82,57 +106,58 @@ var gpLib = function() {
                             //enable the OK button if a directory was selected
                             if(directory != undefined && directory.url.length > 0)
                             {
-                                $("#closePopup").prop( "disabled", false );
+                                $("#saveToGPBtn").prop( "disabled", false );
                             }
                         }
                     });
                 };
-            },
-            onClose: function (event) {
-                var selectedGpDirObj = $("#fileTree").gpUploadsTree("selectedDir");
-                var saveMethod = $("input[name='saveMethod']:checked").val();
-                var fileName = $("#fileName").val();
+            }
+        });
 
-                if(extension != undefined && !gpUtil.endsWith(fileName, extension))
+        $("#saveToGPBtn").click(function(event)
+        {
+            var selectedGpDirObj = $("#fileTree").gpUploadsTree("selectedDir");
+            var saveMethod = $("input[name='saveMethod']:checked").val();
+            var fileName = $("#fileName").val();
+
+            if(extension != undefined && !gpUtil.endsWith(fileName, extension))
+            {
+                fileName += extension;
+            }
+            var result = "success";
+            $("#fileTree").gpUploadsTree("destroy");
+
+            //save the file either to GenePattern or locally
+            if(saveMethod == "gp")
+            {
+                var text = [];
+                text.push(contents);
+
+                var saveLocation = selectedGpDirObj.url + fileName;
+                console.log("save location: " + saveLocation);
+                uploadDataToFilesTab(saveLocation, text, function(result)
                 {
-                    fileName += extension;
-                }
-                event.onComplete = function () {
-                    var result = "success";
-                    $("#fileTree").gpUploadsTree("destroy");
-
-                    //save the file either to GenePattern or locally
-                    if(saveMethod == "gp")
+                    if(result !== "success")
                     {
-                        var text = [];
-                        text.push(contents);
-
-                        var saveLocation = selectedGpDirObj.url + fileName;
-                        console.log("save location: " + saveLocation);
-                        uploadDataToFilesTab(saveLocation, text, function(result)
-                        {
-                            if(result !== "success")
-                            {
-                                w2alert("Error saving file. " + result, 'File Save Error');
-                            }
-                            else
-                            {
-                                w2alert("File " + fileName + " saved.", 'File Save' );
-                            }
-                        });
+                        w2alert("Error saving file. " + result, 'File Save Error');
                     }
                     else
                     {
-                        downloadFile(fileName, contents);
+                        w2alert("File " + fileName + " saved.", 'File Save' );
                     }
-
-                    if($.isFunction(callBack))
-                    {
-                        callBack(result);
-                    }
-
-                }
+                });
             }
+            else
+            {
+                downloadFile(fileName, contents);
+            }
+
+            if($.isFunction(callBack))
+            {
+                callBack(result);
+            }
+
+            w2popup.close();
         });
     }
 
@@ -180,7 +205,7 @@ var gpLib = function() {
             rowDescriptions: [],
             matrix: [[]]
         };
-        var lines = fileContents.split(/\n/);
+        var lines = fileContents.split(/\r\n|\r|\n/); //fileContents.split(/\r|\n/);
 
         if(lines.length >= 4 && lines[0].indexOf("#1.2") != -1)
         {
@@ -195,12 +220,13 @@ var gpLib = function() {
             {
                 var rowData = lines[r].split(/\t/);
                 data.rowNames.push(rowData[0]);
+                data.rowDescriptions.push(rowData[1]);
                 data.matrix[r-3] = rowData.slice(2).map(Number);
             }
         }
         else
         {
-            console.log("Error parsing data: Unexpected number of lines " + lines.length);
+            throw new Error("Error parsing data: Unexpected number of lines " + lines.length + ".");
         }
 
         return data;
@@ -210,13 +236,12 @@ var gpLib = function() {
     {
         var data = {};
 
-        var lines = fileContents.split(/\n/);
+        var lines = fileContents.split(/\r|\n/);
 
         if(lines.length < 2)
         {
-            console.log("Error parsing ODF file. Unexpected number " +
+            throw new Error("Error parsing ODF file. Unexpected number " +
                 "of lines: " + lines.length);
-            return;
         }
 
         //get the number of header lines
@@ -224,8 +249,7 @@ var gpLib = function() {
 
         if(headerLine.length < 2)
         {
-            console.log("Error parsing header line : " + lines[1]);
-            return;
+            throw new Error("Error parsing header line : " + lines[1]);
         }
 
         var numHeaderLines = parseInt(headerLine[1]);
@@ -250,14 +274,12 @@ var gpLib = function() {
                     data[headerRow[0]] = list;
                 }
             }
-
         }
 
         //Now check that this is a CMS ODF file
         if(data["Model"].length === 0 || data["Model"] !== modelType)
         {
-            alert("Invalid ODF model. Found " + data["Model"] + " but expected " + modelType);
-            return;
+            throw new Error("Invalid ODF model. Found " + data["Model"] + " but expected " + modelType);
         }
 
         //Now parse the data lines
@@ -274,16 +296,14 @@ var gpLib = function() {
 
                 if(numColumns !== data["COLUMN_NAMES"].length)
                 {
-                    alert("Unexpected number of data columns found. Expected "
-                    +   dataRow.length + " but found " +data["COLUMN_NAMES"].length);
-                    return;
+                    throw new Error("Unexpected number of data columns found on line " + n+". Expected "
+                    +   data["COLUMN_NAMES"].length + " but found " +  + dataRow.length  + ".");
                 }
 
                 if(numColumns !== data["COLUMN_TYPES"].length)
                 {
-                    alert("Unexpected number of data column types found. Expected "
-                        +  numColumns + " but found " + data["COLUMN_TYPES"].length);
-                    return;
+                    throw new Error("Unexpected number of data column types found. Expected "
+                     + data["COLUMN_TYPES"].length +  " but found " + numColumns + ".");
                 }
 
                 for(var c=0;c < numColumns; c++)
@@ -333,23 +353,42 @@ var gpLib = function() {
     /**
      * Retrieves the contents of a file from a URL
      * @param fileURL
-     * @param callBack
+     * @param options - can contain request headers, a success callback function
+     *                  and a failure callback function
      */
     function getDataAtUrl(fileURL, options)
     {
+        //if the URL is an ftp url then fail
+        if(fileURL.indexOf("ftp://") ===0)
+        {
+            var errorMsg = "FTP files are not supported.";
+            if($.isFunction(options.failCallBack)) {
+                options.failCallBack(errorMsg);
+            }
+            throw new Error(errorMsg);
+        }
+
+        var credentials = false;
+        if(fileURL.indexOf("https://") === 0)
+        {
+            credentials = true;
+        }
+
         if(options == undefined)
         {
             options = {
-                header: {}
+                headers: {}
             };
         }
 
+        $.extend(options.headers, gpAuthorizationHeaders);
 
         $.ajax({
             contentType: null,
             url: fileURL,
+            headers: options.headers,
             xhrFields: {
-                withCredentials: true
+                withCredentials: credentials
             },
             crossDomain: true
         }).done(function (response, status, xhr) {
@@ -362,7 +401,7 @@ var gpLib = function() {
             console.log(response.statusText);
             if($.isFunction(options.failCallBack))
             {
-                options.failCallBack(response);
+                options.failCallBack(response.statusText, response);
             }
         });
     }
@@ -370,27 +409,22 @@ var gpLib = function() {
     /*
      * Logs an action the Broad Institute AppLogger REST Service
      */
-    function logToAppLogger(application, action, entity, user, successCallBack, failCallBack)
-    {
-        if(user == undefined || user.length == 0)
-        {
+    function logToAppLogger(application, action, entity, user, successCallBack, failCallBack) {
+        if (user == undefined || user.length == 0) {
             user = "anonymous";
         }
 
-        if(application == undefined || application.length == 0)
-        {
+        if (application == undefined || application.length == 0) {
             w2alert("An application must be specified");
             return;
         }
 
-        if(entity == undefined || entity.length == 0)
-        {
+        if (entity == undefined || entity.length == 0) {
             w2alert("An entity must be specified");
             return;
         }
 
-        if(action == undefined || action.length == 0)
-        {
+        if (action == undefined || action.length == 0) {
             w2alert("An action must be specified");
             return;
         }
@@ -404,16 +438,7 @@ var gpLib = function() {
             }
         };
 
-        $.get("http://ipinfo.io", function (response)
-        {
-            if (response !== undefined && response.ip !== undefined)
-            {
-                usageObj.usage["ip_address"]  = response.ip;
-            }
-
-        }, "jsonp").always(function()
-        {
-            var url = "http://vcapplog:3000/usages";
+        var logActivity = function (successCallBack, failCallBack){
             $.ajax({
                 method: "POST",
                 url: "http://vcapplog:3000/usages",
@@ -421,20 +446,215 @@ var gpLib = function() {
                 data: JSON.stringify(usageObj),
                 dataType: "json",
                 crossDomain: true
-                //accepts: "application/json"
             }).done(function (response, status, xhr) {
-                if($.isFunction(successCallBack))
-                {
+                if ($.isFunction(successCallBack)) {
                     successCallBack(response);
                 }
-            }).fail(function (response, status, xhr)
-            {
+            }).fail(function (response, status, xhr) {
                 console.log(response.statusText);
-                if($.isFunction(failCallBack))
-                {
+                if ($.isFunction(failCallBack)) {
                     failCallBack(response);
                 }
             });
+        };
+
+        var ipAddress = Cookies.get('ipAddress');
+        if(ipAddress === undefined || (ipAddress !== null && ipAddress.length == 0))
+        {
+            var failCallBack = function()
+            {
+                Cookies.set("ipAddress", "Not found");
+            };
+
+            logActivity(null, failCallBack);
+
+            //disabling for now
+            /*$.get("http://ipinfo.io", function (response)
+            {
+                var ipAddress = "";
+                if (response !== undefined && response.ip !== undefined)
+                {
+                    usageObj.usage["ip_address"]  = response.ip;
+                    ipAddress = response.ip;
+                }
+
+                Cookies.set("clientIpAddress", ipAddress);
+            }, "jsonp").always(function()
+            {
+                logActivity(null, failCallBack);
+            });*/
+        }
+        else
+        {
+            logActivity(null, failCallBack);
+        }
+    }
+
+    function rangeRequestsAllowed(fileURL, options)
+    {
+        //if the URL is an ftp url then fail
+        if(fileURL.indexOf("ftp://") === 0)
+        {
+            var errorMsg = "FTP files are not supported.";
+            if($.isFunction(options.failCallBack)) {
+                options.failCallBack(errorMsg);
+            }
+            throw new Error(errorMsg);
+        }
+        var credentials = false;
+        if(fileURL.indexOf("https://") === 0)
+        {
+            credentials = true;
+        }
+
+        if(options === undefined)
+        {
+            options = {};
+        }
+
+        if(options.headers === undefined)
+        {
+            options.headers =  {}
+        }
+
+        $.extend(options.headers, gpAuthorizationHeaders);
+
+        $.ajax({
+            contentType: null,
+            method: "HEAD",
+            url: fileURL,
+            headers: options.headers,
+            xhrFields: {
+                withCredentials: credentials
+            },
+            crossDomain: true
+        }).done(function (response, status, xhr)
+        {
+            var allowRangeRequests = false;
+            var acceptRanges = xhr.getResponseHeader("Accept-Ranges");
+            if(acceptRanges === "bytes")
+            {
+                allowRangeRequests = true;
+            }
+
+            if($.isFunction(options.successCallBack))
+            {
+                options.successCallBack(allowRangeRequests, response);
+            }
+        }).fail(function (response, status, xhr)
+        {
+            if($.isFunction(options.failCallBack))
+            {
+                options.failCallBack(response.statusText, response);
+            }
+        });
+    }
+
+    function readBytesFromURL(fileURL, maxNumLines, byteStart, byteIncrement, options)
+    {
+        if(byteStart === undefined || byteStart === null || byteStart === "")
+        {
+            throw Error("No starting byte specified for range request");
+        }
+
+        if(byteStart < 0)
+        {
+            throw Error("Invalid starting byte specified for range request: " + byteStart);
+        }
+
+        //if the URL is an ftp url then fail
+        if(fileURL.indexOf("ftp://") === 0)
+        {
+            var errorMsg = "FTP files are not supported.";
+            if($.isFunction(options.failCallBack)) {
+                options.failCallBack(errorMsg);
+            }
+            throw new Error(errorMsg);
+        }
+
+        var credentials = false;
+        if(fileURL.indexOf("https://") === 0)
+        {
+            credentials = true;
+        }
+
+        if(options === undefined)
+        {
+            options = {};
+        }
+
+        if(options.headers === undefined)
+        {
+            options.headers =  {};
+        }
+
+        var byteEnd = "";
+        //if no byte increment is specified then default to +1000000 bytes from start
+        if(byteIncrement === undefined || byteIncrement === null)
+        {
+            byteIncrement = 1000000;
+        }
+
+        //byteIncrement is empty then do not set an ending byte range
+        if(byteIncrement != "")
+        {
+            byteEnd = byteStart + byteIncrement;
+        }
+
+        //get all bytes since max is not specified
+        if(byteEnd == -1)
+        {
+            byteEnd = "";
+        }
+
+        //Just in case byte range requests are allowed
+        if(options.headers.Range == undefined)
+        {
+            $.extend(options.headers, {"Range" : "bytes=" + byteStart + "-" + byteEnd});
+        }
+
+        $.extend(options.headers, gpAuthorizationHeaders);
+
+        $.ajax({
+            contentType: null,
+            url: fileURL,
+            headers: options.headers,
+            xhrFields: {
+                withCredentials: credentials
+            },
+            crossDomain: true
+        }).done(function (response, status, xhr) {
+            if($.isFunction(options.successCallBack))
+            {
+                byteStart = byteEnd + 1;
+
+                var contentRange = xhr.getResponseHeader("Content-Range");
+                var result = contentRange.split("/");
+
+                byteEnd = byteStart + byteIncrement;
+                if(result.length >= 2)
+                {
+                    var length = parseInt(result[1]);
+                    if(byteEnd > length)
+                    {
+                        byteEnd = length-1;
+                    }
+
+                    if(byteStart > length)
+                    {
+                        byteStart = -1;
+                        byteEnd = -1;
+                    }
+                }
+                options.successCallBack(fileURL, maxNumLines, byteStart, byteIncrement, response);
+            }
+        }).fail(function (response, status, xhr)
+        {
+            console.log(response.statusText);
+            if($.isFunction(options.failCallBack))
+            {
+                options.failCallBack(response.statusText, response);
+            }
         });
     }
 
@@ -447,7 +667,9 @@ var gpLib = function() {
         parseGCTFile: parseGCTFile,
         parseODF: parseODF,
         isGenomeSpaceFile: isGenomeSpaceFile,
-        logToAppLogger: logToAppLogger
+        logToAppLogger: logToAppLogger,
+        rangeRequestsAllowed: rangeRequestsAllowed,
+        readBytesFromURL: readBytesFromURL
     };
 }
 

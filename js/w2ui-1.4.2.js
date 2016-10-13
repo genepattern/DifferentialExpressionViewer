@@ -6532,54 +6532,55 @@ w2utils.keyboard = (function (obj) {
         },
 
         stateSave: function (returnOnly) {
-            if (!localStorage) return null;
-            var state = {
-                columns     : [],
-                show        : $.extend({}, this.show),
-                last        : {
-                    search      : this.last.search,
-                    multi       : this.last.multi,
-                    logic       : this.last.logic,
-                    caption     : this.last.caption,
-                    field       : this.last.field,
-                    scrollTop   : this.last.scrollTop,
-                    scrollLeft  : this.last.scrollLeft
-                },
-                sortData    : [],
-                searchData  : []
-            };
-            for (var i in this.columns) {
-                var col = this.columns[i];
-                state.columns.push({
-                    field           : col.field,
-                    hidden          : col.hidden,
-                    size            : col.size,
-                    sizeCalculated  : col.sizeCalculated,
-                    sizeOriginal    : col.sizeOriginal,
-                    sizeType        : col.sizeType
-                });
-            }
-            for (var i in this.sortData) state.sortData.push($.extend({}, this.sortData[i]));
-            for (var i in this.searchData) state.searchData.push($.extend({}, this.searchData[i]));
-            // save into local storage
-            if (returnOnly !== true) {
-                // event before
-                var eventData = this.trigger({ phase: 'before', type: 'stateSave', target: this.name, state: state });
-                if (eventData.isCancelled === true) { if (typeof callBack == 'function') callBack({ status: 'error', message: 'Request aborted.' }); return; }
-                try {
-                    var savedState = $.parseJSON(localStorage.w2ui || '{}');
-                    if (!savedState) savedState = {};
-                    if (!savedState.states) savedState.states = {};
-                    savedState.states[this.name] = state;
-                    localStorage.w2ui = JSON.stringify(savedState);
-                } catch (e) {
-                    delete localStorage.w2ui;
-                    return null;
-                }
-                // event after
-                this.trigger($.extend(eventData, { phase: 'after' }));
-            }
-            return state;
+            return null;
+            // if (!localStorage) return null;
+            // var state = {
+            //     columns     : [],
+            //     show        : $.extend({}, this.show),
+            //     last        : {
+            //         search      : this.last.search,
+            //         multi       : this.last.multi,
+            //         logic       : this.last.logic,
+            //         caption     : this.last.caption,
+            //         field       : this.last.field,
+            //         scrollTop   : this.last.scrollTop,
+            //         scrollLeft  : this.last.scrollLeft
+            //     },
+            //     sortData    : [],
+            //     searchData  : []
+            // };
+            // for (var i in this.columns) {
+            //     var col = this.columns[i];
+            //     state.columns.push({
+            //         field           : col.field,
+            //         hidden          : col.hidden,
+            //         size            : col.size,
+            //         sizeCalculated  : col.sizeCalculated,
+            //         sizeOriginal    : col.sizeOriginal,
+            //         sizeType        : col.sizeType
+            //     });
+            // }
+            // for (var i in this.sortData) state.sortData.push($.extend({}, this.sortData[i]));
+            // for (var i in this.searchData) state.searchData.push($.extend({}, this.searchData[i]));
+            // // save into local storage
+            // if (returnOnly !== true) {
+            //     // event before
+            //     var eventData = this.trigger({ phase: 'before', type: 'stateSave', target: this.name, state: state });
+            //     if (eventData.isCancelled === true) { if (typeof callBack == 'function') callBack({ status: 'error', message: 'Request aborted.' }); return; }
+            //     try {
+            //         var savedState = $.parseJSON(localStorage.w2ui || '{}');
+            //         if (!savedState) savedState = {};
+            //         if (!savedState.states) savedState.states = {};
+            //         savedState.states[this.name] = state;
+            //         localStorage.w2ui = JSON.stringify(savedState);
+            //     } catch (e) {
+            //         delete localStorage.w2ui;
+            //         return null;
+            //     }
+            //     // event after
+            //     this.trigger($.extend(eventData, { phase: 'after' }));
+            // }
+            // return state;
         },
 
         stateRestore: function (newState) {
@@ -6587,13 +6588,14 @@ w2utils.keyboard = (function (obj) {
             if (!newState) {
                 // read it from local storage
                 try {
-                    if (!localStorage) return false;
-                    var tmp = $.parseJSON(localStorage.w2ui || '{}');
-                    if (!tmp) tmp = {};
-                    if (!tmp.states) tmp.states = {};
-                    newState = tmp.states[this.name];
+                    return false;
+                    // if (!localStorage) return false;
+                    // var tmp = $.parseJSON(localStorage.w2ui || '{}');
+                    // if (!tmp) tmp = {};
+                    // if (!tmp.states) tmp.states = {};
+                    // newState = tmp.states[this.name];
                 } catch (e) {
-                    delete localStorage.w2ui;
+                    // delete localStorage.w2ui;
                     return null;
                 }
             }
@@ -6633,18 +6635,19 @@ w2utils.keyboard = (function (obj) {
         stateReset: function () {
             this.stateRestore(this.last.state);
             // remove from local storage
-            if (localStorage) {
-                try {
-                    var tmp = $.parseJSON(localStorage.w2ui || '{}');
-                    if (tmp.states && tmp.states[this.name]) {
-                        delete tmp.states[this.name];
-                    }
-                    localStorage.w2ui = JSON.stringify(tmp);
-                } catch (e) {
-                    delete localStorage.w2ui;
-                    return null;
-                }
-            }
+            return null;
+            // if (localStorage) {
+            //     try {
+            //         var tmp = $.parseJSON(localStorage.w2ui || '{}');
+            //         if (tmp.states && tmp.states[this.name]) {
+            //             delete tmp.states[this.name];
+            //         }
+            //         localStorage.w2ui = JSON.stringify(tmp);
+            //     } catch (e) {
+            //         delete localStorage.w2ui;
+            //         return null;
+            //     }
+            // }
         },
 
         parseField: function (obj, field) {

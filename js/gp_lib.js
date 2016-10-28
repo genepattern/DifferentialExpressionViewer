@@ -10,7 +10,7 @@ $(function()
     if(token !== undefined && token !== null && token.length > 0)
     {
         token = token.substring(1);
-        gpAuthorizationHeaders = {"Authorization": "Bearer " + token};
+        gpAuthorizationHeaders = {"Authorization": "Bearer " + token, "X-Requested-With": "XMLHttpRequest"};
         $.ajaxSetup({
             headers: gpAuthorizationHeaders
         });

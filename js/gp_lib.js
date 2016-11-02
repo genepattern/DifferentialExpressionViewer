@@ -10,7 +10,7 @@ $(function()
     if(token !== undefined && token !== null && token.length > 0)
     {
         token = token.substring(1);
-        gpAuthorizationHeaders = {"Authorization": "Bearer " + token};
+        gpAuthorizationHeaders = {"Authorization": "Bearer " + token, "X-Requested-With": "XMLHttpRequest"};
         $.ajaxSetup({
             headers: gpAuthorizationHeaders
         });
@@ -537,6 +537,9 @@ var gpLib = function() {
                 allowRangeRequests = true;
             }
 
+            // Hack for range requests failing in Chrome
+            if (isChrome()) allowRangeRequests = false;
+
             if($.isFunction(options.successCallBack))
             {
                 options.successCallBack(allowRangeRequests, response);
@@ -548,6 +551,34 @@ var gpLib = function() {
                 options.failCallBack(response.statusText, response);
             }
         });
+    }
+
+    function isChrome() {
+        // please note,
+        // that IE11 now returns undefined again for window.chrome
+        // and new Opera 30 outputs true for window.chrome
+        // and new IE Edge outputs to true now for window.chrome
+        // and if not iOS Chrome check
+        // so use the below updated condition
+        var isChromium = window.chrome,
+            winNav = window.navigator,
+            vendorName = winNav.vendor,
+            isOpera = winNav.userAgent.indexOf("OPR") > -1,
+            isIEedge = winNav.userAgent.indexOf("Edge") > -1,
+            isIOSChrome = winNav.userAgent.match("CriOS");
+
+        if(isIOSChrome){
+           // is Google Chrome on IOS - actually Safari wrapped in a Chrome skin
+            return false;
+        }
+        else if(isChromium !== null && isChromium !== undefined && vendorName === "Google Inc." && isOpera == false && isIEedge == false) {
+           // is Google Chrome
+            return true;
+        }
+        else {
+           // not Google Chrome
+            return false;
+        }
     }
 
     function readBytesFromURL(fileURL, maxNumLines, byteStart, byteIncrement, options)

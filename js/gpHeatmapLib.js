@@ -989,7 +989,7 @@ gpVisual.HeatMap = function(options) {
                 type: "text/plain;charset=utf-8"
             });
 
-            var file = fileName + ".svg";
+            var file = fileName.endsWith(".svg") ? fileName : fileName + ".svg";
             saveAs(blob, file);
 
             gpHeatmap.size.height = originalHeight;

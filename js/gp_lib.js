@@ -441,7 +441,7 @@ var gpLib = function() {
         var logActivity = function (successCallBack, failCallBack){
             // Dummy call
             // TODO: Fix this. The old call stopped working.
-            successCallBack({});
+            if (successCallBack) successCallBack({});
             // $.ajax({
             //     method: "POST",
             //     url: "http://vcapplog:3000/usages",

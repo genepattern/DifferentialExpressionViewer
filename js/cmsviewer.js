@@ -1563,6 +1563,27 @@ function initTable()
         cmsHeatMap.drawHeatMap({
             height: newHeight
         });
+
+        // Add maximize button to cmsScorePlot
+        var collapseSpan = $("<span/>")
+            .css("position", "absolute")
+            .css("right", "8px")
+            .css("z-index", "64000")
+            .append(
+                $("<img src='css/images/maximize.ico'/>").addClass("w2ui-toolbar").click(function()
+                    {
+                        cmsHeatMap.drawHeatMap({
+                            height: $("#heatMapMain").data("oldHeatMapHeight")
+                        });
+
+                        $(this).parent().remove();
+                        $("#cmsMain").css("overflow", "auto");
+                        $("#cmsScorePlot").css("height", $("#cmsScorePlot").data("oldHeight"));
+                        $("#cmsTable").show();
+                        w2ui['cmsTable'].resize();
+                    }).css("height", "20px").css("width", "20px").css("float", "right"));
+
+        $("#cmsScorePlot").prepend(collapseSpan);
     });
 
     $("#tb_cmsTable_toolbar_right").append(minMaximizeTable);

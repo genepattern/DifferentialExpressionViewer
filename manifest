@@ -5,12 +5,12 @@ description=Views the results from ComparativeMarkerSelection
 language=HTML, JQuery
 name=ComparativeMarkerSelectionViewer
 privacy=public
-quality=preproduction
+quality=production
 requiredPatchLSIDs=urn\:lsid\:broadinstitute.org\:plugin\:GenePattern_3_9_3\:1,
 requiredPatchURLs=http\://www.broadinstitute.org/webservices/gpModuleRepository/download/prod/patch/?file\=/GenePattern_3_9_3/broadinstitute.org\:plugin/GenePattern_3_9_3/1/GenePattern_3_9_3.zip
 taskType=javascript
 userid=GenePattern
-version=Updated for new security restrictions in Chrome
+version=New Java Script module - replaces previous Java Applet visualizer
 taskDoc=doc.html
 
 p1_default_value=

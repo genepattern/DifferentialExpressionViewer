@@ -1695,8 +1695,19 @@ function resetRecords()
     updateNumRecordsInfo(records.length, numRows);
 }
 
-function createDataset()
-{
+function get_matrix_row(feature_name) {
+    var index = dataset.rowNames.indexOf(feature_name);
+
+    // Check for errors
+    if (index === -1) {
+        w2alert("Error: Invalid feature name.", "Save Dataset Error");
+        return;
+    }
+
+    return index;
+}
+
+function createDataset() {
     if(dataset == undefined || dataset.length == 0)
     {
         w2alert("Error: The dataset was not loaded.", "Save Dataset Error");
@@ -1714,11 +1725,14 @@ function createDataset()
     //add the header with the column and sample names
     content += "Name\t" + "Description\t" + dataset.sampleNames.join("\t") + "\n";
 
-    for(var s=0;s<selectedRecidsArr.length;s++)
-    {
-        var row = dataMatrix[w2ui['cmsTable'].get(selectedRecidsArr[s]).recid];
-        content += dataset.rowNames[selectedRecidsArr[s]] + '\t';
-        content += dataset.rowDescriptions[selectedRecidsArr[s]] + '\t';
+    for(var s=0;s<selectedRecidsArr.length;s++) {
+        var record_number = selectedRecidsArr[s];
+        var record = w2ui['cmsTable'].get(record_number);
+        var matrix_row = get_matrix_row(record.Feature);
+        var row = dataMatrix[matrix_row];
+
+        content += record.Feature + '\t';
+        content += record.Description + '\t';
         content += row.join("\t");
         content += "\n";
     }
@@ -2247,11 +2261,11 @@ function initMenu()
 
     $('#cmsMenu').bind('select.smapi', function(e, item)
     {
-        var highlightedParent = $(".highlighted").last().contents()[1].textContent;
+        var highlightedParent = $(".highlighted").last().contents().last().text();
 
         if($(item).contents().length == 1)
         {
-            var text = $(item).contents()[0].textContent;
+            var text = $(item).contents().first().text();
 
             doAction(text, highlightedParent);
         }

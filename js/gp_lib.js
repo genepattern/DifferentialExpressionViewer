@@ -439,23 +439,26 @@ var gpLib = function() {
         };
 
         var logActivity = function (successCallBack, failCallBack){
-            $.ajax({
-                method: "POST",
-                url: "http://vcapplog:3000/usages",
-                contentType: "application/json",
-                data: JSON.stringify(usageObj),
-                dataType: "json",
-                crossDomain: true
-            }).done(function (response, status, xhr) {
-                if ($.isFunction(successCallBack)) {
-                    successCallBack(response);
-                }
-            }).fail(function (response, status, xhr) {
-                console.log(response.statusText);
-                if ($.isFunction(failCallBack)) {
-                    failCallBack(response);
-                }
-            });
+            // Dummy call
+            // TODO: Fix this. The old call stopped working.
+            if (successCallBack) successCallBack({});
+            // $.ajax({
+            //     method: "POST",
+            //     url: "http://vcapplog:3000/usages",
+            //     contentType: "application/json",
+            //     data: JSON.stringify(usageObj),
+            //     dataType: "json",
+            //     crossDomain: true
+            // }).done(function (response, status, xhr) {
+            //     if ($.isFunction(successCallBack)) {
+            //         successCallBack(response);
+            //     }
+            // }).fail(function (response, status, xhr) {
+            //     console.log(response.statusText);
+            //     if ($.isFunction(failCallBack)) {
+            //         failCallBack(response);
+            //     }
+            // });
         };
 
         var ipAddress = Cookies.get('ipAddress');

@@ -1534,56 +1534,43 @@ function initTable()
     //add button to minimize the table
     var minMaximizeTable = $("<span/>").append($("<img src='css/images/minimize.ico'/>")
         .css("height", "20px").css("width", "20px"));
-    minMaximizeTable.click(function()
-    {
+    minMaximizeTable.click(function() {
         var newHeight = $("#heatMapMain").height() + $("#cmsTable").height();
 
         $("#heatMapMain").data("oldHeatMapHeight", $("#heatmap").height());
         $("#heatMapMain").data("oldHeight", $("#heatMapMain").height());
 
         $("#heatMapMain").css("height", newHeight);
-        var collapseSpan = $("<span/>").append(
-        $("<img src='css/images/maximize.ico'/>").addClass("w2ui-toolbar").click(function()
-            {
+        var collapseLI = $("<li/>")
+            .css("float", "right")
+            .css("margin-top", "2px")
+            .append(
+        $("<img src='css/images/maximize.ico'/>")
+            .addClass("w2ui-toolbar")
+            .click(function() {
+                var oldHeight = $("#heatMapMain").data("oldHeatMapHeight");
+
                 cmsHeatMap.drawHeatMap({
-                    height: $("#heatMapMain").data("oldHeatMapHeight")
+                    height: $(window).height() - $("#cmsTable").height() - 230
+                    //height: oldHeight
                 });
 
                 $(this).parent().remove();
                 $("#cmsMain").css("overflow", "auto");
                 $("#heatMapMain").css("height", $("#heatMapMain").data("oldHeight"));
+                $("#cmsScorePlot").css("height", $("#cmsScorePlot").data("oldHeight"));
                 $("#cmsTable").show();
                 w2ui['cmsTable'].resize();
-            }).css("height", "20px").css("width", "20px").css("float", "right"));
+            }).css("height", "25px").css("width", "25px").css("float", "right"));
 
-        $("#heatMapMain").prepend(collapseSpan);
+        $("#cmsMenu").append(collapseLI);
         $("#cmsTable").hide();
 
         $("#cmsMain").css("overflow", "hidden");
         cmsHeatMap.drawHeatMap({
-            height: newHeight
+            height: $(window).height() - 360
+            //height: newHeight
         });
-
-        // Add maximize button to cmsScorePlot
-        var collapseSpan = $("<span/>")
-            .css("position", "absolute")
-            .css("right", "8px")
-            .css("z-index", "64000")
-            .append(
-                $("<img src='css/images/maximize.ico'/>").addClass("w2ui-toolbar").click(function()
-                    {
-                        cmsHeatMap.drawHeatMap({
-                            height: $("#heatMapMain").data("oldHeatMapHeight")
-                        });
-
-                        $(this).parent().remove();
-                        $("#cmsMain").css("overflow", "auto");
-                        $("#cmsScorePlot").css("height", $("#cmsScorePlot").data("oldHeight"));
-                        $("#cmsTable").show();
-                        w2ui['cmsTable'].resize();
-                    }).css("height", "20px").css("width", "20px").css("float", "right"));
-
-        $("#cmsScorePlot").prepend(collapseSpan);
     });
 
     $("#tb_cmsTable_toolbar_right").append(minMaximizeTable);
@@ -1665,7 +1652,7 @@ function resetRecords()
         {
             var columnName = cmsOdf.COLUMN_NAMES[c];
 
-            if(columnName == "Upregulated In")
+            if(columnName === "Upregulated In")
             {
                 var score = parseFloat(cmsOdf[cmsOdf["Test Statistic"]][r]);
                 if(score > 0)
@@ -2062,6 +2049,14 @@ function doAction(action, actionDetails)
     else if(action == "Heatmap")
     {
         updateView(ViewType.HeatmapView);
+
+        var height = null;
+        var cmsVisible = $("#cmsTable").is(":visible");
+        if (cmsVisible) height = $(window).height() - $("#cmsTable").height() - 230;
+        else height = $(window).height() - 360;
+        cmsHeatMap.drawHeatMap({
+            height: height
+        });
     }
     else if(action == "Upregulated Features")
     {

@@ -1,3 +1,5 @@
+#updated after building 8.2
+#Thu, 28 Sep 2017 15:44:45 -0400
 #updated after building 9.2
 #Fri, 15 Sep 2017 16:32:15 -0400
 #updated after building 8.1
@@ -72,4 +74,4 @@
 #Tue, 10 Sep 2013 16:03:48 -0400
 #updated after building 4.13
 #Fri Sep 17 16:32:40 EDT 2010
-prerelease.number=2
+prerelease.number=3

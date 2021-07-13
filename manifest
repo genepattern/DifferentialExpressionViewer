@@ -1,4 +1,4 @@
-author=Marc-Danie Nazaire
+author=Marc-Danie Nazaire, Thorin Tabor
 commandLine=cmsviewer.html ? <comparative.marker.selection.filename> <dataset.filename>
 cpuType=any
 description=Views the results from ComparativeMarkerSelection
@@ -10,8 +10,9 @@ requiredPatchLSIDs=urn\:lsid\:broadinstitute.org\:plugin\:GenePattern_3_9_3\:1,
 requiredPatchURLs=http\://www.broadinstitute.org/webservices/gpModuleRepository/download/prod/patch/?file\=/GenePattern_3_9_3/broadinstitute.org\:plugin/GenePattern_3_9_3/1/GenePattern_3_9_3.zip
 taskType=javascript
 userid=GenePattern
-version=New Java Script module - replaces previous Java Applet visualizer
+version=Bug fix to support S3 files
 taskDoc=doc.html
+src.repo=https://github.com/genepattern/ComparativeMarkerSelectionViewer.git
 
 p1_default_value=
 p1_description=The output from ComparativeMarkerSelection

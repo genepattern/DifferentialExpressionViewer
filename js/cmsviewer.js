@@ -1534,34 +1534,42 @@ function initTable()
     //add button to minimize the table
     var minMaximizeTable = $("<span/>").append($("<img src='css/images/minimize.ico'/>")
         .css("height", "20px").css("width", "20px"));
-    minMaximizeTable.click(function()
-    {
+    minMaximizeTable.click(function() {
         var newHeight = $("#heatMapMain").height() + $("#cmsTable").height();
 
         $("#heatMapMain").data("oldHeatMapHeight", $("#heatmap").height());
         $("#heatMapMain").data("oldHeight", $("#heatMapMain").height());
 
         $("#heatMapMain").css("height", newHeight);
-        var collapseSpan = $("<span/>").append(
-        $("<img src='css/images/maximize.ico'/>").addClass("w2ui-toolbar").click(function()
-            {
+        var collapseLI = $("<li/>")
+            .css("float", "right")
+            .css("margin-top", "2px")
+            .append(
+        $("<img src='css/images/maximize.ico'/>")
+            .addClass("w2ui-toolbar")
+            .click(function() {
+                var oldHeight = $("#heatMapMain").data("oldHeatMapHeight");
+
                 cmsHeatMap.drawHeatMap({
-                    height: $("#heatMapMain").data("oldHeatMapHeight")
+                    height: $(window).height() - $("#cmsTable").height() - 230
+                    //height: oldHeight
                 });
 
                 $(this).parent().remove();
                 $("#cmsMain").css("overflow", "auto");
                 $("#heatMapMain").css("height", $("#heatMapMain").data("oldHeight"));
+                $("#cmsScorePlot").css("height", $("#cmsScorePlot").data("oldHeight"));
                 $("#cmsTable").show();
                 w2ui['cmsTable'].resize();
-            }).css("height", "20px").css("width", "20px").css("float", "right"));
+            }).css("height", "25px").css("width", "25px").css("float", "right"));
 
-        $("#heatMapMain").prepend(collapseSpan);
+        $("#cmsMenu").append(collapseLI);
         $("#cmsTable").hide();
 
         $("#cmsMain").css("overflow", "hidden");
         cmsHeatMap.drawHeatMap({
-            height: newHeight
+            height: $(window).height() - 360
+            //height: newHeight
         });
     });
 
@@ -1644,7 +1652,7 @@ function resetRecords()
         {
             var columnName = cmsOdf.COLUMN_NAMES[c];
 
-            if(columnName == "Upregulated In")
+            if(columnName === "Upregulated In")
             {
                 var score = parseFloat(cmsOdf[cmsOdf["Test Statistic"]][r]);
                 if(score > 0)
@@ -1674,8 +1682,19 @@ function resetRecords()
     updateNumRecordsInfo(records.length, numRows);
 }
 
-function createDataset()
-{
+function get_matrix_row(feature_name) {
+    var index = dataset.rowNames.indexOf(feature_name);
+
+    // Check for errors
+    if (index === -1) {
+        w2alert("Error: Invalid feature name.", "Save Dataset Error");
+        return;
+    }
+
+    return index;
+}
+
+function createDataset() {
     if(dataset == undefined || dataset.length == 0)
     {
         w2alert("Error: The dataset was not loaded.", "Save Dataset Error");
@@ -1693,11 +1712,14 @@ function createDataset()
     //add the header with the column and sample names
     content += "Name\t" + "Description\t" + dataset.sampleNames.join("\t") + "\n";
 
-    for(var s=0;s<selectedRecidsArr.length;s++)
-    {
-        var row = dataMatrix[w2ui['cmsTable'].get(selectedRecidsArr[s]).recid];
-        content += dataset.rowNames[selectedRecidsArr[s]] + '\t';
-        content += dataset.rowDescriptions[selectedRecidsArr[s]] + '\t';
+    for(var s=0;s<selectedRecidsArr.length;s++) {
+        var record_number = selectedRecidsArr[s];
+        var record = w2ui['cmsTable'].get(record_number);
+        var matrix_row = get_matrix_row(record.Feature);
+        var row = dataMatrix[matrix_row];
+
+        content += record.Feature + '\t';
+        content += record.Description + '\t';
         content += row.join("\t");
         content += "\n";
     }
@@ -2027,6 +2049,14 @@ function doAction(action, actionDetails)
     else if(action == "Heatmap")
     {
         updateView(ViewType.HeatmapView);
+
+        var height = null;
+        var cmsVisible = $("#cmsTable").is(":visible");
+        if (cmsVisible) height = $(window).height() - $("#cmsTable").height() - 230;
+        else height = $(window).height() - 360;
+        cmsHeatMap.drawHeatMap({
+            height: height
+        });
     }
     else if(action == "Upregulated Features")
     {
@@ -2226,11 +2256,11 @@ function initMenu()
 
     $('#cmsMenu').bind('select.smapi', function(e, item)
     {
-        var highlightedParent = $(".highlighted").last().contents()[1].textContent;
+        var highlightedParent = $(".highlighted").last().contents().last().text();
 
         if($(item).contents().length == 1)
         {
-            var text = $(item).contents()[0].textContent;
+            var text = $(item).contents().first().text();
 
             doAction(text, highlightedParent);
         }

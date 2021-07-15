@@ -3,16 +3,31 @@
  */
 var gpAuthorizationHeaders = {};
 
-$(function()
-{
+$(function() {
     //setup the global Authorization token
     var token = window.location.hash;
     if(token !== undefined && token !== null && token.length > 0)
     {
         token = token.substring(1);
-        gpAuthorizationHeaders = {"Authorization": "Bearer " + token, "X-Requested-With": "XMLHttpRequest"};
         $.ajaxSetup({
-            headers: gpAuthorizationHeaders
+            headers: {},
+            beforeSend: async function(xhr, settings) {
+                if (!!window.location.hash) {
+                    const response = await fetch(settings.url, {
+                        method: 'HEAD',
+                        cache: 'no-cache',
+                        mode: 'cors',
+                        credentials: 'include',
+                        headers: {
+                            'Authorization': 'Bearer ' + token
+                        },
+                        redirect: 'follow'
+                    });
+
+                    if (!response.headers.has('x-amz-request-id')) // If not an S3 redirect, attach the authorization header
+                        xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+                }
+            }
         });
     }
 });
@@ -270,7 +285,7 @@ var gpLib = function() {
 
                 if(headerRow.length > 1)
                 {
-                    var list = headerRow[1].split(/\t/);
+                    var list = headerRow[1].trim().split(/\t/);
                     data[headerRow[0]] = list;
                 }
             }
@@ -439,23 +454,26 @@ var gpLib = function() {
         };
 
         var logActivity = function (successCallBack, failCallBack){
-            $.ajax({
-                method: "POST",
-                url: "http://vcapplog:3000/usages",
-                contentType: "application/json",
-                data: JSON.stringify(usageObj),
-                dataType: "json",
-                crossDomain: true
-            }).done(function (response, status, xhr) {
-                if ($.isFunction(successCallBack)) {
-                    successCallBack(response);
-                }
-            }).fail(function (response, status, xhr) {
-                console.log(response.statusText);
-                if ($.isFunction(failCallBack)) {
-                    failCallBack(response);
-                }
-            });
+            // Dummy call
+            // TODO: Fix this. The old call stopped working.
+            if (successCallBack) successCallBack({});
+            // $.ajax({
+            //     method: "POST",
+            //     url: "http://vcapplog:3000/usages",
+            //     contentType: "application/json",
+            //     data: JSON.stringify(usageObj),
+            //     dataType: "json",
+            //     crossDomain: true
+            // }).done(function (response, status, xhr) {
+            //     if ($.isFunction(successCallBack)) {
+            //         successCallBack(response);
+            //     }
+            // }).fail(function (response, status, xhr) {
+            //     console.log(response.statusText);
+            //     if ($.isFunction(failCallBack)) {
+            //         failCallBack(response);
+            //     }
+            // });
         };
 
         var ipAddress = Cookies.get('ipAddress');

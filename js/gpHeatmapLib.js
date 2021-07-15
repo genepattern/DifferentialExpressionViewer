@@ -554,10 +554,12 @@ gpVisual.HeatMap = function(options) {
         }
     };*/
 
-    this.sortByFeatureLabel = function(labelName)
-    {
+    this.sortByFeatureLabel = function(labelName, ascending) {
+        // Ascending if false by default
+        if (ascending === undefined) ascending = false;
+
         var labelIndex = $.inArray(labelName, gpHeatmap.rows.header);
-        gpHeatmap.rows.sorter = new jheatmap.sorters.AnnotationSorter(labelIndex, false);
+        gpHeatmap.rows.sorter = new jheatmap.sorters.AnnotationSorter(labelIndex, ascending);
         gpHeatmap.rows.sorter.sort(gpHeatmap, "rows");
 
         currentRowSortOrder = gpHeatmap.rows.order;
@@ -883,7 +885,7 @@ gpVisual.HeatMap = function(options) {
     this.isLegendVisible = function()
     {
         return gpHeatmap.controls.legend;
-    }
+    };
 
     this.updateColorScheme = function (colorScheme, isDiscrete, options)
     {
@@ -989,7 +991,7 @@ gpVisual.HeatMap = function(options) {
                 type: "text/plain;charset=utf-8"
             });
 
-            var file = fileName + ".svg";
+            var file = fileName.endsWith(".svg") ? fileName : fileName + ".svg";
             saveAs(blob, file);
 
             gpHeatmap.size.height = originalHeight;

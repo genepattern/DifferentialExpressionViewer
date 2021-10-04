@@ -1,7 +1,7 @@
 author=Marc-Danie Nazaire, Thorin Tabor
 commandLine=cmsviewer.html ? <differential.expression.filename> <dataset.filename>
 cpuType=any
-description=Views differential expression results such as from the ComparativeMarkerSelection module.
+description=Views differential expression results such as from the ComparativeMarkerSelection module. Formerly known as ComparativeMarkerSelectionViewer.
 language=HTML, JQuery
 name=DifferentialExpressionViewer
 privacy=public
@@ -10,12 +10,12 @@ requiredPatchLSIDs=urn\:lsid\:broadinstitute.org\:plugin\:GenePattern_3_9_3\:1,
 requiredPatchURLs=http\://www.broadinstitute.org/webservices/gpModuleRepository/download/prod/patch/?file\=/GenePattern_3_9_3/broadinstitute.org\:plugin/GenePattern_3_9_3/1/GenePattern_3_9_3.zip
 taskType=javascript
 userid=GenePattern
-version=Bug fix to support S3 files
+version=Renamed from ComparativeMarkerSelectionViewer
 taskDoc=doc.html
 src.repo=https://github.com/genepattern/ComparativeMarkerSelectionViewer.git
 
 p1_default_value=
-p1_description=An odf output from ComparativeMarkerSelection
+p1_description=An odf output from the ComparativeMarkerSelection module.
 p1_fileFormat=odf;Comparative Marker Selection;Differential Expression
 p1_MODE=IN
 p1_name=differential.expression.filename

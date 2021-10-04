@@ -1,4 +1,4 @@
-var APPLICATION_NAME= "ComparativeMarkerSelectionViewer version 8";
+var APPLICATION_NAME= "DifferentialExpressionViewer version 9";
 var requestParams;
 var jobResultNumber;
 var dataset;
@@ -2275,7 +2275,7 @@ function displayLoadError(errorMessage)
 {
     var errorMsg = errorMessage;
     $("#cmsMain").empty();
-    $("#cmsMain").append("<h3 style='color:red'>There was an error loading the ComparativeMarkerSelectionViewer: <p>" + errorMsg +"</p></h3>");
+    $("#cmsMain").append("<h3 style='color:red'>There was an error loading the DifferentialExpressionViewer: <p>" + errorMsg +"</p></h3>");
 }
 
 function resetViewer()
@@ -2290,16 +2290,16 @@ function loadCMSViewer()
 
     jobResultNumber = requestParams["job.number"];
 
-    if(requestParams["comparative.marker.selection.filename"] === undefined
-        ||requestParams["comparative.marker.selection.filename"] === null
-        || requestParams["comparative.marker.selection.filename"].length < 1)
+    if(requestParams["differential.expression.filename"] === undefined
+        ||requestParams["differential.expression.filename"] === null
+        || requestParams["differential.expression.filename"].length < 1)
     {
-        displayLoadError("Comparative marker selection filename was not found");
-        console.log("Comparative marker selection filename was not found");
+        displayLoadError("Differential expression filename was not found");
+        console.log("Differential expression filename was not found");
     }
     else
     {
-        odfFile = requestParams["comparative.marker.selection.filename"][0];
+        odfFile = requestParams["differential.expression.filename"][0];
         //Set the loaded odf file
         //set the name of the gct file
         var parser = $('<a/>');

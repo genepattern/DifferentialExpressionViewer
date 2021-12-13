@@ -107,6 +107,7 @@ HTML, JQuery
 ## Version Comments
 | Version |	Release Date | Description |
 | ------- | ------------ | ----------- |
+
 | 10 | 2021-12-13 | Renamed as DifferentialExpressionViewer |
 | 9	| 2017-09-15 | Update to fix data table in upregulated graph, when used in the GenePattern Notebook env |
 | 8	| 2016-06-06 | New Java Script module - replaces previous Java Applet visualizer |

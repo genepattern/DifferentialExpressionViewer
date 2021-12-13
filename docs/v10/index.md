@@ -92,6 +92,11 @@ Gould et al. **Comparative Gene Marker Selection suite**. Bioinformatics Advance
 1. **differential expression filename** - An odf result file of model type "Comparative Marker Selection"
 2. **dataset filename** The dataset file used as input to the module which produce the ODF file, in GCT format.
 
+Example data can be found in the [DifferentialExpressionViewer Github repository](https://github.com/genepattern/DifferentialExpressionViewer/tree/v10/gpunit/input)
+
+## Source Repository
+[https://github.com/genepattern/DifferentialExpressionViewer/tree/v10](https://github.com/genepattern/DifferentialExpressionViewer/tree/v10)
+
 ## Platform Dependencies
 Task Type:
 javascript

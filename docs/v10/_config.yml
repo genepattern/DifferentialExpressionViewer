@@ -1,0 +1,6 @@
+description: "Documentation for the DifferentialExpressionViewer GenePattern module"
+
+# Markdown Processors
+# Force it to use GitHub renderer - tables not displaying in kramdown
+kramdown:
+  input: GFM

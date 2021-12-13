@@ -81,7 +81,7 @@ containing a listing of the selected features in the table in from the different
 Gould et al. **Comparative Gene Marker Selection suite**. Bioinformatics Advance Access published on May 18, 2006, DOI 10.1093/bioinformatics/btl196.
 
 ## Parameters
-| Name | Description|
+| Name | Description |
 | ---------| ---------------|
 | differential expression filename * | An odf result file of model type "Comparative Marker Selection" |
 | dataset filename * | The expression dataset file used as input to calculate differential expression |

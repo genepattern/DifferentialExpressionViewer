@@ -11,7 +11,7 @@ requiredPatchURLs=http\://www.broadinstitute.org/webservices/gpModuleRepository/
 taskType=javascript
 userid=GenePattern
 version=Renamed from ComparativeMarkerSelectionViewer
-taskDoc=doc.html
+taskDoc=
 src.repo=https://github.com/genepattern/ComparativeMarkerSelectionViewer.git
 
 p1_default_value=

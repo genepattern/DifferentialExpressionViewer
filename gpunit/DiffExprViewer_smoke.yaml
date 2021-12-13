@@ -1,0 +1,8 @@
+name: DifferentialExpressionViewer - smoke test
+description: Runs DEV with small example input - JS viewer so only tests for launch
+module: DifferentialExpressionViewer
+params:
+    differential.expression.filename: "input/short_results.odf"
+    dataset.filename: "input/short_results_pruned.gct"
+assertions:
+        jobStatus: success

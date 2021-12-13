@@ -1,0 +1,25 @@
+ODF 1.0
+HeaderLines=19
+COLUMN_NAMES:Rank	Feature	Description	Score	baseMean	log2FoldChange	lfcSE	stat	pvalue	padj
+COLUMN_TYPES:int	String	String	double	double	double	double	double	double	double
+Model=Comparative Marker Selection
+Dataset File=/opt/gpbeta_2/gp_home/users/test/uploads/tmp/run9010490168280084949.tmp/short_results.txt
+Class File=/opt/gpbeta_2/gp_home/users/test/uploads/tmp/run9010490168280084949.tmp/short_results.txt
+Permutations=1
+Balanced=false
+Complete=false
+Test Direction=2 Sided
+Class 0=normal
+Class 1=tumor
+Test Statistic=stat
+pi0=TBD
+lambda=TBD
+pi0(lambda)=TBD
+cubic spline(lambda)=TBD
+Random Seed=123456789
+Smooth p-values=true
+DataLines=4
+1	COL10A1	COL10A1	-17.6642283858687	4938.4697232574	-6.92006504687309	0.39175586364186293	-17.6642283858687	7.908686660854608e-70	3.0458724936949293e-65
+2	MMP11	MMP11	-16.914815838369	10269.7918646872	-6.2055444982342	0.3668703554050971	-16.914815838369	3.49908722124036e-64	6.738017307581498e-60
+3	MME	MME	14.473420589484	10363.957700410301	3.77121506742392	0.26056142320385395	14.473420589484	1.78376139728902e-47	2.2899334231263996e-43
+4	INHBA	INHBA	-14.103432961323099	2975.8521527362896	-3.91812117142019	0.27781329426425105	-14.103432961323099	3.61735516179836e-45	3.48287998365851e-41
